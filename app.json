@@ -1,13 +1,31 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Cadence Club",
+    "slug": "cadence-club",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "cadence",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.akcelgraca.cadence",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.515721507518-vnn8u53q207l2bami05inpu0v5c190q5"
+            ]
+          }
+        ],
+        "NSLocationWhenInUseUsageDescription": "Usamos a tua localizacao para gravar as tuas atividades fisicas.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Usamos a tua localizacao em segundo plano para gravar atividades enquanto usas outras apps.",
+        "NSMotionUsageDescription": "Usamos o movimento para melhorar a precisao do GPS.",
+        "NSHealthShareUsageDescription": "Sincronizamos os teus treinos com a app Saude.",
+        "NSHealthUpdateUsageDescription": "Guardamos os teus treinos na app Saude.",
+        "UIBackgroundModes": ["audio"]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -16,10 +34,63 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "package": "com.cadence.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "ACTIVITY_RECOGNITION",
+        "health_connect_permissions"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "@react-native-google-signin/google-signin",
+      "expo-router",
+      "expo-status-bar",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#c8f73a",
+          "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Usamos a tua localizacao em segundo plano para gravar atividades enquanto usas outras apps.",
+          "locationWhenInUsePermission": "Usamos a tua localizacao para gravar as tuas atividades fisicas."
+        }
+      ],
+      [
+        "expo-task-manager",
+        {}
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsImpl": "mapbox"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Cadence Club precisa de acesso a galeria para a tua foto de perfil.",
+          "cameraPermission": "O Cadence Club precisa de acesso a camara para a tua foto de perfil."
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "176e0b6a-21b6-4cc2-92aa-144a32cfbbf1"
+      }
+    },
+    "owner": "akcelgraca"
   }
 }

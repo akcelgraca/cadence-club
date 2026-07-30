@@ -1,0 +1,136 @@
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { formatDistance } from '../../utils/formatDistance';
+import { EQUIPMENT_TYPES } from '../../lib/constants';
+import { useSettingsStore } from '../../store/settingsStore';
+import type { Equipment } from '../../lib/types';
+import { colors, typography } from '../../lib/theme';
+
+interface EquipmentSectionProps {
+  equipment: Equipment[] | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  isOwnProfile?: boolean;
+}
+
+function getEquipmentIcon(type: string): string {
+  const eq = EQUIPMENT_TYPES.find((e) => e.key === type);
+  return eq?.icon ?? 'cube';
+}
+
+export function EquipmentSection({
+  equipment,
+  isLoading,
+  isError,
+  isOwnProfile = false,
+}: EquipmentSectionProps) {
+  const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Equipamento</Text>
+        <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 16 }} />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Equipamento</Text>
+        <Text style={styles.emptyText}>Erro ao carregar equipamento.</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>Equipamento</Text>
+        {isOwnProfile && (
+          <TouchableOpacity
+            onPress={() => router.push('/profile/equipment/add')}
+          >
+            <Text style={styles.addButton}>+ Adicionar</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {!equipment || equipment.length === 0 ? (
+        <View style={styles.emptyInner}>
+          <Text style={styles.emptyText}>Nenhum equipamento registado.</Text>
+          {isOwnProfile && (
+            <Text style={styles.emptySubtext}>
+              Adiciona o teu equipamento para acompanhar os kms.
+            </Text>
+          )}
+        </View>
+      ) : (
+        equipment.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={[styles.equipmentCard, item.is_retired && styles.retired]}
+            onPress={() => {
+              if (isOwnProfile) {
+                router.push(`/profile/equipment/${item.id}/edit`);
+              }
+            }}
+            activeOpacity={isOwnProfile ? 0.7 : 1}
+          >
+            <Ionicons name={getEquipmentIcon(item.type) as any} size={28} color={colors.primary} style={styles.equipmentIcon} />
+            <View style={styles.equipmentInfo}>
+              <Text style={styles.equipmentName}>
+                {item.name}
+                {item.is_retired ? ' (Retirado)' : ''}
+              </Text>
+              {item.brand ? (
+                <Text style={styles.equipmentDetail}>
+                  {[item.brand, item.model].filter(Boolean).join(' ')}
+                </Text>
+              ) : null}
+              <Text style={styles.equipmentDistance}>
+                Distância inicial: {formatDistance(item.initial_distance, unitSystem)}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: colors.card,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 16,
+    padding: 16,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  title: { ...typography.headline, fontSize: 18, color: colors.foreground },
+  addButton: { ...typography.bodyBold, color: colors.primary, fontSize: 14 },
+  emptyInner: { alignItems: 'center', paddingVertical: 16 },
+  emptyText: { ...typography.body, fontSize: 14, color: colors.mutedForeground, textAlign: 'center' },
+  emptySubtext: { ...typography.body, fontSize: 12, color: colors.mutedForeground, textAlign: 'center', marginTop: 4 },
+  equipmentCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.inputBackground,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+  },
+  retired: { opacity: 0.4 },
+  equipmentIcon: { fontSize: 28, marginRight: 12 },
+  equipmentInfo: { flex: 1 },
+  equipmentName: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
+  equipmentDetail: { ...typography.body, fontSize: 13, color: colors.mutedForeground, marginTop: 2 },
+  equipmentDistance: { ...typography.mono, fontSize: 12, color: colors.primary, marginTop: 2 },
+});
