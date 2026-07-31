@@ -331,7 +331,7 @@ export default function EditProfileScreen() {
         onPress={() =>
           openPicker(
             'Objetivo',
-            ACTIVITY_GOALS.map((g) => ({ key: g.key, label: g.label, icon: g.icon })),
+            ACTIVITY_GOALS.filter((g) => g.key !== 'run_weekly_km' && g.key !== 'cycle_weekly_km').map((g) => ({ key: g.key, label: g.label, icon: g.icon })),
             goal,
             (val) => setGoal(val as ActivityGoal),
           )

@@ -1,7 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
 import { useSettingsStore } from '../../store/settingsStore';
@@ -23,7 +22,7 @@ import { TrophyCase } from '../../components/profile/TrophyCase';
 import { RoutesSection } from '../../components/profile/RoutesSection';
 import { PersonalRecords } from '../../components/profile/PersonalRecords';
 import { HealthMetrics } from '../../components/profile/HealthMetrics';
-import { ACTIVITY_TYPES } from '../../lib/constants';
+import { ActivityIcon } from '../../components/common/ActivityIcon';
 import type { Activity } from '../../lib/types';
 import { colors, typography } from '../../lib/theme';
 
@@ -148,7 +147,7 @@ export default function ProfileScreen() {
               style={styles.activityItem}
               onPress={() => router.push(`/activity/${activity.id}`)}
             >
-              <Ionicons name={(ACTIVITY_TYPES.find(t => t.key === activity.type)?.icon ?? 'footsteps') as any} size={24} color={colors.primary} style={styles.activityIcon} />
+              <ActivityIcon activityKey={activity.type} size={24} tintColor={colors.primary} style={styles.activityIcon} />
               <View style={styles.activityInfo}>
                 <Text style={styles.activityType}>
                   {activity.type === 'run' ? 'Corrida' :

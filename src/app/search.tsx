@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { searchUsers, searchRoutes, type NearbyRouteResult } from '../services/search';
 import { Avatar } from '../components/common/Avatar';
 import { formatDistance } from '../utils/formatDistance';
-import { ACTIVITY_TYPES } from '../lib/constants';
+import { ActivityIcon } from '../components/common/ActivityIcon';
 import { colors, typography, withAlpha } from '../lib/theme';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -78,11 +78,10 @@ export default function SearchScreen() {
   );
 
   const renderRouteItem = ({ item }: { item: NearbyRouteResult }) => {
-    const typeIcon = (ACTIVITY_TYPES.find((t) => t.key === item.activity_type)?.icon ?? 'footsteps') as any;
     return (
       <TouchableOpacity style={styles.resultItem} onPress={() => handleRoutePress(item)}>
         <View style={styles.routeIconContainer}>
-          <Ionicons name={typeIcon} size={20} color={colors.primary} />
+          <ActivityIcon activityKey={item.activity_type ?? ''} size={20} tintColor={colors.primary} />
         </View>
         <View style={styles.resultContent}>
           <Text style={styles.resultName}>{item.name}</Text>

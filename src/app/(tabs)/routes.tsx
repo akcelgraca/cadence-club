@@ -160,7 +160,8 @@ export default function RoutesScreen() {
   }, [refetch]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <MapViewWrapper
         center={center}
         zoom={displayZoom}
@@ -252,9 +253,6 @@ export default function RoutesScreen() {
           />
         )}
       </MapViewWrapper>
-
-      {/* Filter bar */}
-      <FilterBar filters={filters} onFiltersChange={setFilters} topInset={insets.top} />
 
       {/* City overlay */}
       {cityName && (
@@ -362,6 +360,8 @@ export default function RoutesScreen() {
         isOwner={profile?.id === selectedRoute?.user_id}
       />
     </SafeAreaView>
+    <FilterBar filters={filters} onFiltersChange={setFilters} />
+    </View>
   );
 }
 

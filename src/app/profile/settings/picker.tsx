@@ -1,9 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import { router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../../../hooks/useColors';
 import { typography } from '../../../lib/theme';
+import { ActivityIcon } from '../../../components/common/ActivityIcon';
+import { getActivityImage } from '../../../lib/activityImages';
+import { getFocoImage } from '../../../lib/focoImages';
 
 // ============================================================
 // Module-level config — set before router.push() and consumed on mount
@@ -100,13 +103,17 @@ export default function PickerScreen() {
         onPress={() => handleSelect(opt.key)}
       >
         <View style={styles.optionContent}>
-          {opt.icon && (
-            <Ionicons
-              name={opt.icon as any}
-              size={20}
-              color={isSelected ? c.primary : '#FFFFFF'}
-            />
-          )}
+          {opt.icon && (() => {
+            const color = isSelected ? c.primary : '#FFFFFF';
+            if (getActivityImage(opt.key, 'white')) {
+              return <ActivityIcon activityKey={opt.key} size={20} tintColor={color} />;
+            }
+            const focoImg = getFocoImage(opt.key);
+            if (focoImg) {
+              return <Image source={focoImg} style={{ width: 20, height: 20, tintColor: color }} resizeMode="contain" />;
+            }
+            return <Ionicons name={opt.icon as any} size={20} color={color} />;
+          })()}
           <Text style={[styles.optionText, isSelected && styles.optionTextSelected, !isSelected && { color: '#FFFFFF' }]}>
             {opt.label}
           </Text>

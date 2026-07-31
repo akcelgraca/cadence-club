@@ -1,9 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import type { Activity } from '../../lib/types';
-import { ACTIVITY_TYPES } from '../../lib/constants';
+import { ActivityIcon } from '../common/ActivityIcon';
 import { formatDistance } from '../../utils/formatDistance';
 import { formatPace } from '../../utils/formatPace';
 import { useSettingsStore } from '../../store/settingsStore';
@@ -18,7 +17,6 @@ interface ActivityCardProps {
 export function ActivityCard({ activity }: ActivityCardProps) {
   const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
-  const typeIcon = (ACTIVITY_TYPES.find(t => t.key === activity.type)?.icon ?? 'footsteps') as any;
 
   return (
     <TouchableOpacity
@@ -38,7 +36,7 @@ export function ActivityCard({ activity }: ActivityCardProps) {
             <Text style={styles.timeAgo}>{formatRelativeTime(activity.created_at)}</Text>
           </View>
         </View>
-        <Ionicons name={typeIcon} size={24} color={colors.primary} />
+        <ActivityIcon activityKey={activity.type} size={24} tintColor={colors.primary} />
       </View>
 
       <View style={styles.statsRow}>

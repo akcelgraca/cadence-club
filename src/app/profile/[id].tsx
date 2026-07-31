@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { Ionicons } from '@expo/vector-icons';
 import { getProfile } from '../../services/auth';
 import { useSettingsStore } from '../../store/settingsStore';
 import { getStreak, getUserBadges } from '../../services/gamification';
@@ -13,7 +12,7 @@ import { Avatar } from '../../components/common/Avatar';
 import { FollowButton } from '../../components/social/FollowButton';
 import { StreakBadge } from '../../components/profile/StreakBadge';
 import { BadgeCollection } from '../../components/profile/BadgeCollection';
-import { ACTIVITY_TYPES } from '../../lib/constants';
+import { ActivityIcon } from '../../components/common/ActivityIcon';
 import { colors, typography } from '../../lib/theme';
 import type { Activity } from '../../lib/types';
 
@@ -141,7 +140,7 @@ export default function UserProfileScreen() {
               style={styles.activityItem}
               onPress={() => router.push(`/activity/${activity.id}`)}
             >
-              <Ionicons name={(ACTIVITY_TYPES.find(t => t.key === activity.type)?.icon ?? 'footsteps') as any} size={24} color={colors.primary} style={styles.activityIcon} />
+              <ActivityIcon activityKey={activity.type} size={24} tintColor={colors.primary} style={styles.activityIcon} />
               <View style={styles.activityInfo}>
                 <Text style={styles.activityType}>
                   {activity.type === 'run' ? 'Corrida' :

@@ -6,6 +6,7 @@ import type { TrainingPlanDay } from '../../lib/types';
 import { colors, typography } from '../../lib/theme';
 import { formatDuration } from '../../utils/dateHelpers';
 import { getActivityByKey } from '../../lib/constants';
+import { ActivityIcon } from '../common/ActivityIcon';
 import i18n from '../../lib/i18n';
 
 const DAY_LABELS = [
@@ -152,7 +153,7 @@ export function TrainingPlanCard({ plan, isLoading }: TrainingPlanCardProps) {
               </View>
             ) : selectedActivity ? (
               <View style={styles.activityRow}>
-                <Ionicons name={selectedActivity.icon as any} size={28} color={colors.primary} />
+                <ActivityIcon activityKey={selectedActivity.key} size={28} tintColor={colors.primary} />
                 <Text style={styles.activityLabel}>{t(selectedActivity.i18n_key as any)}</Text>
               </View>
             ) : null}

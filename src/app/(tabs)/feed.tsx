@@ -14,6 +14,19 @@ import { ActivityCard } from '../../components/activity/ActivityCard';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import { ACTIVITY_CATEGORIES } from '../../lib/constants';
 import type { Activity, ActivityCategory } from '../../lib/types';
+import { ActivityIcon } from '../../components/common/ActivityIcon';
+
+// Maps each category to a representative activity key for the icon image
+const CATEGORY_ACTIVITY_KEY: Record<string, string> = {
+  foot: 'run',
+  cycling: 'cycle',
+  strength: 'weight_training',
+  racquet: 'tennis',
+  water: 'swimming',
+  winter: 'snowboard',
+  team: 'football',
+  other: 'yoga',
+};
 
 const FILTER_OPTIONS: { key: ActivityCategory | 'all'; label: string; icon: string }[] = [
   { key: 'all', label: 'feed_filter_all', icon: 'apps' },
@@ -174,11 +187,10 @@ export default function FeedScreen() {
             style={[styles.filterChip, filter.category === opt.key && styles.filterChipActive]}
             onPress={() => setFilter({ category: opt.key })}
           >
-            <Ionicons
-              name={opt.icon as any}
-              size={12}
-              color={filter.category === opt.key ? colors.primaryForeground : colors.foreground}
-            />
+            {CATEGORY_ACTIVITY_KEY[opt.key]
+              ? <ActivityIcon activityKey={CATEGORY_ACTIVITY_KEY[opt.key]} size={12} tintColor={filter.category === opt.key ? colors.primaryForeground : colors.foreground} />
+              : <Ionicons name={opt.icon as any} size={12} color={filter.category === opt.key ? colors.primaryForeground : colors.foreground} />
+            }
             <Text
               style={[
                 styles.filterChipText,

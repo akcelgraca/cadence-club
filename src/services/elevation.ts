@@ -33,11 +33,12 @@ export async function getElevationProfile(
     const latitudes = sampled.map(([, lat]) => lat);
     const longitudes = sampled.map(([lng]) => lng);
 
-    const res = await fetch(OPEN_METEO_ELEVATION_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ latitudes, longitudes }),
+    const params = new URLSearchParams({
+      latitude: latitudes.join(','),
+      longitude: longitudes.join(','),
     });
+
+    const res = await fetch(`${OPEN_METEO_ELEVATION_URL}?${params}`);
 
     if (!res.ok) {
       console.error('[Elevation] API error:', res.status);

@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
 import { ActivityIndicator, View, StatusBar, Text, StyleSheet } from 'react-native';
 import { CustomHeader } from '../components/common/CustomHeader';
 import { useFonts } from 'expo-font';
+import { supabase } from '../services/supabase';
 import {
   Barlow_400Regular,
   Barlow_500Medium,
@@ -187,6 +189,28 @@ export default function RootLayout() {
 
   useEffect(() => {
     configureGoogleSignIn();
+  }, []);
+
+  useEffect(() => {
+    const handleDeepLink = async (url: string) => {
+      const hash = url.split('#')[1] ?? '';
+      if (!hash) return;
+      const params = new URLSearchParams(hash);
+      const access_token = params.get('access_token');
+      const refresh_token = params.get('refresh_token') ?? '';
+      if (access_token) {
+        await supabase.auth.setSession({ access_token, refresh_token });
+      }
+    };
+
+    // App opened from a cold start via deep link
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink(url);
+    });
+
+    // App already open, incoming deep link
+    const sub = Linking.addEventListener('url', ({ url }) => handleDeepLink(url));
+    return () => sub.remove();
   }, []);
 
   // Set up push notifications

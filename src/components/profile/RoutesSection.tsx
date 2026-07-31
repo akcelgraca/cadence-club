@@ -1,12 +1,11 @@
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { formatDistance } from '../../utils/formatDistance';
 import { formatDuration, formatRelativeTime } from '../../utils/dateHelpers';
 import { useSettingsStore } from '../../store/settingsStore';
 import { ActivityMap } from '../activity/ActivityMap';
 import type { Activity } from '../../lib/types';
-import { ACTIVITY_TYPES } from '../../lib/constants';
+import { ActivityIcon } from '../common/ActivityIcon';
 import { colors, typography } from '../../lib/theme';
 
 interface RoutesSectionProps {
@@ -53,7 +52,7 @@ export function RoutesSection({ activities, isLoading }: RoutesSectionProps) {
           </View>
           <View style={styles.routeInfo}>
             <View style={styles.routeTypeRow}>
-              <Ionicons name={(ACTIVITY_TYPES.find(t => t.key === activity.type)?.icon ?? 'footsteps') as any} size={14} color={colors.foreground} />
+              <ActivityIcon activityKey={activity.type} size={14} tintColor={colors.foreground} />
               <Text style={styles.routeType}>
                 {activity.type === 'run' ? 'Corrida' :
                  activity.type === 'cycle' ? 'Ciclismo' : 'Caminhada'}

@@ -16,6 +16,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import i18n from '../lib/i18n';
 import { ACTIVITY_CATEGORIES, getActivityByKey } from '../lib/constants';
+import { ActivityIcon } from '../components/common/ActivityIcon';
 import { formatDuration } from '../utils/dateHelpers';
 import { formatDistance } from '../utils/formatDistance';
 import { formatPace, formatSpeed, formatElevation } from '../utils/formatPace';
@@ -32,11 +33,11 @@ import type { RunType, NearbyRoute, SurfaceType } from '../lib/types';
 // Mood images
 // ============================================================
 const MOOD_IMAGES: Record<number, any> = {
-  1: require('../../assets/images/moods/mood_1.png'),
-  2: require('../../assets/images/moods/mood_2.png'),
-  3: require('../../assets/images/moods/mood_3.png'),
-  4: require('../../assets/images/moods/mood_4.png'),
-  5: require('../../assets/images/moods/mood_5.png'),
+  1: require('../../assets/images/moods/sentimento-1-muito-mal.png'),
+  2: require('../../assets/images/moods/sentimento-2-mal.png'),
+  3: require('../../assets/images/moods/sentimento-3-neutro.png'),
+  4: require('../../assets/images/moods/sentimento-4-bem.png'),
+  5: require('../../assets/images/moods/sentimento-5-muito-bem.png'),
 };
 
 // Unified type for route picker items (from nearby or search)
@@ -126,7 +127,6 @@ function IdleView({ isDistanceBased = true }: { isDistanceBased?: boolean }) {
 
   // Current activity info
   const currentActivity = getActivityByKey(type ?? '');
-  const activityIcon = (currentActivity?.icon as any) ?? 'footsteps';
 
   const openTypePicker = useCallback(() => {
     const sections = ACTIVITY_CATEGORIES.map((cat) => ({
@@ -186,10 +186,10 @@ function IdleView({ isDistanceBased = true }: { isDistanceBased?: boolean }) {
             style={[styles.idleSideButton, type && styles.idleSideButtonActive]}
             onPress={openTypePicker}
           >
-            <Ionicons
-              name={activityIcon}
+            <ActivityIcon
+              activityKey={type ?? ''}
               size={26}
-              color={type ? colors.primary : colors.mutedForeground}
+              tintColor={type ? colors.primary : colors.mutedForeground}
             />
           </TouchableOpacity>
           <Text style={styles.idleButtonLabel}>{t('activity_select_type')}</Text>
@@ -1415,6 +1415,10 @@ const styles = StyleSheet.create({
 
   // Selected route indicator
   routeSelectedBar: {
+    position: 'absolute',
+    bottom: 32,
+    left: 24,
+    right: 24,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -1422,8 +1426,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    marginHorizontal: 24,
-    marginBottom: 16,
   },
   routeSelectedText: { flex: 1, ...typography.body, color: colors.foreground, fontSize: 13 },
 
@@ -1884,7 +1886,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   moodButtonSelected: { borderColor: colors.primary, backgroundColor: colors.inputBackground },
-  moodImage: { width: 48, height: 48, borderRadius: 24 },
+  moodImage: { width: 48, height: 48, borderRadius: 24, tintColor: '#FFFFFF' },
 
   // Save button
   saveButton: {

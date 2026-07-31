@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Switch, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
@@ -30,6 +30,9 @@ export default function SettingsScreen() {
   const { settings, loadSettings, updateSettings } = useSettingsStore();
   const { profile, updateProfile, session } = useAuthStore();
   const [isPublic, setIsPublic] = useState(profile?.is_public ?? true);
+  const [emailModalVisible, setEmailModalVisible] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
 
   const styles = useMemo(() => createStyles(c), [c]);
 
@@ -142,6 +145,31 @@ export default function SettingsScreen() {
     Alert.alert(t('settings_wip_info'), t('settings_wip_message'));
   };
 
+  const handleChangeEmail = () => {
+    setNewEmail('');
+    setEmailModalVisible(true);
+  };
+
+  const submitEmailChange = async () => {
+    const trimmed = newEmail.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmed)) {
+      Alert.alert(t('settings_email_change_error'), t('settings_email_invalid'));
+      return;
+    }
+    setIsChangingEmail(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ email: trimmed });
+      if (error) throw error;
+      setEmailModalVisible(false);
+      Alert.alert(t('settings_email_change_success_title'), t('settings_email_change_success_message'));
+    } catch (err: any) {
+      Alert.alert(t('settings_email_change_error'), err.message || t('settings_password_error_generic'));
+    } finally {
+      setIsChangingEmail(false);
+    }
+  };
+
   // --- Main render ---
 
   return (
@@ -153,7 +181,7 @@ export default function SettingsScreen() {
         <Separator styles={styles} />
         <LinkRow label={t('settings_training_preferences')} onPress={() => router.push('/profile/questionnaire')} colors={c} />
         <Separator styles={styles} />
-        <LinkRow label={t('settings_change_email')} onPress={handleStub} colors={c} />
+        <LinkRow label={t('settings_change_email')} onPress={handleChangeEmail} colors={c} />
         <Separator styles={styles} />
         <SwitchRow
           label={t('settings_two_factor')}
@@ -489,6 +517,50 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.bottomSpacer} />
+
+      {/* Change Email Modal */}
+      <Modal
+        visible={emailModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEmailModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{t('settings_email_change_title')}</Text>
+            <Text style={styles.modalMessage}>{t('settings_email_change_message')}</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={newEmail}
+              onChangeText={setNewEmail}
+              placeholder={t('settings_email_change_placeholder')}
+              placeholderTextColor={c.mutedForeground}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoFocus
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnCancel]}
+                onPress={() => setEmailModalVisible(false)}
+                disabled={isChangingEmail}
+              >
+                <Text style={styles.modalBtnCancelText}>{t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnConfirm, isChangingEmail && { opacity: 0.6 }]}
+                onPress={submitEmailChange}
+                disabled={isChangingEmail}
+              >
+                <Text style={styles.modalBtnConfirmText}>{t('save')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </ScrollView>
   );
 }
@@ -635,5 +707,70 @@ function createStyles(c: ReturnType<typeof useColors>) {
     linkRowText: { ...typography.body, fontSize: 15, color: c.foreground },
     versionText: { ...typography.mono, fontSize: 13, color: c.mutedForeground },
     bottomSpacer: { height: 40 },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    modalCard: {
+      backgroundColor: c.card,
+      borderRadius: 16,
+      padding: 24,
+      width: '100%',
+    },
+    modalTitle: {
+      ...typography.headline,
+      fontSize: 18,
+      color: c.foreground,
+      marginBottom: 8,
+    },
+    modalMessage: {
+      ...typography.body,
+      fontSize: 14,
+      color: c.mutedForeground,
+      marginBottom: 16,
+    },
+    modalInput: {
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 15,
+      fontFamily: 'Barlow_400Regular',
+      color: c.foreground,
+      backgroundColor: c.inputBackground,
+      marginBottom: 20,
+    },
+    modalButtons: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    modalBtn: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 10,
+      alignItems: 'center',
+    },
+    modalBtnCancel: {
+      backgroundColor: c.inputBackground,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    modalBtnCancelText: {
+      ...typography.bodyMedium,
+      fontSize: 15,
+      color: c.mutedForeground,
+    },
+    modalBtnConfirm: {
+      backgroundColor: c.primary,
+    },
+    modalBtnConfirmText: {
+      ...typography.bodyMedium,
+      fontSize: 15,
+      color: '#fff',
+    },
   });
 }

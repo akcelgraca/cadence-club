@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import type { UserBadge } from '../../lib/types';
 import { colors, typography } from '../../lib/theme';
+import { getBadgeImage } from '../../lib/badgeImages';
 
 interface TrophyCaseProps {
   badges: UserBadge[];
@@ -34,7 +35,11 @@ export function TrophyCase({ badges }: TrophyCaseProps) {
               activeOpacity={0.7}
             >
               <View style={styles.badgeIconContainer}>
-                <Ionicons name={(ub.badge?.icon as any) ?? 'ribbon'} size={28} color={colors.primary} />
+                {getBadgeImage(ub.badge?.icon ?? '') ? (
+                  <Image source={getBadgeImage(ub.badge?.icon ?? '')} style={styles.badgeImage} resizeMode="contain" />
+                ) : (
+                  <Ionicons name={(ub.badge?.icon as any) ?? 'ribbon'} size={28} color={colors.primary} />
+                )}
               </View>
               <Text style={styles.badgeName} numberOfLines={2}>{ub.badge?.name}</Text>
             </TouchableOpacity>
@@ -54,7 +59,11 @@ export function TrophyCase({ badges }: TrophyCaseProps) {
           onPress={() => setSelectedBadge(null)}
         >
           <View style={styles.modalContent}>
-            <Ionicons name={(selectedBadge?.badge?.icon as any) ?? 'ribbon'} size={56} color={colors.primary} />
+            {getBadgeImage(selectedBadge?.badge?.icon ?? '') ? (
+          <Image source={getBadgeImage(selectedBadge?.badge?.icon ?? '')} style={styles.modalBadgeImage} resizeMode="contain" />
+        ) : (
+          <Ionicons name={(selectedBadge?.badge?.icon as any) ?? 'ribbon'} size={56} color={colors.primary} />
+        )}
             <Text style={styles.modalName}>{selectedBadge?.badge?.name}</Text>
             <Text style={styles.modalDescription}>{selectedBadge?.badge?.description}</Text>
             {selectedBadge?.activity_id ? (
@@ -96,6 +105,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   badgeIcon: { fontSize: 28 },
+  badgeImage: { width: 36, height: 36 },
+  modalBadgeImage: { width: 72, height: 72, marginBottom: 12 },
   badgeName: { ...typography.bodyBold, fontSize: 11, textAlign: 'center', color: colors.foreground },
   modalOverlay: {
     flex: 1,

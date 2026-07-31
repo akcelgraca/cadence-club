@@ -1,18 +1,21 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import { ACTIVITY_CATEGORIES } from '../../lib/constants';
+import { ActivityIcon } from '../common/ActivityIcon';
+import { getActivityImage } from '../../lib/activityImages';
 import type { ActivityType, RouteDifficulty, SurfaceType, RouteFilters } from '../../lib/types';
 
 interface FilterBarProps {
   filters: RouteFilters;
   onFiltersChange: (filters: RouteFilters) => void;
-  topInset?: number;
 }
 
-export function FilterBar({ filters, onFiltersChange, topInset = 0 }: FilterBarProps) {
+export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
+  const { top, bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
 
@@ -76,7 +79,7 @@ export function FilterBar({ filters, onFiltersChange, topInset = 0 }: FilterBarP
     <>
       {/* Floating filter button */}
       <TouchableOpacity
-        style={[styles.fab, { top: topInset + 8 }]}
+        style={[styles.fab, { top: top + 8 }]}
         onPress={() => setVisible(true)}
         activeOpacity={0.8}
       >
@@ -89,11 +92,11 @@ export function FilterBar({ filters, onFiltersChange, topInset = 0 }: FilterBarP
       </TouchableOpacity>
 
       {/* Filter modal */}
-      <Modal visible={visible} animationType="fade" transparent statusBarTranslucent>
+      <Modal visible={visible} animationType="slide" transparent statusBarTranslucent>
         <Pressable style={styles.backdrop} onPress={() => setVisible(false)}>
           <View />
         </Pressable>
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: bottom + 16 }]}>
           {/* Header */}
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>{t('routes_filters')}</Text>
@@ -109,70 +112,71 @@ export function FilterBar({ filters, onFiltersChange, topInset = 0 }: FilterBarP
             </View>
           </View>
 
-          {/* Activity type */}
-          <Text style={styles.sectionLabel}>{t('routes_activity')}</Text>
-          <View style={styles.chipRow}>
-            {activityOptions.map((opt) => {
-              const isActive = filters.activity_type === opt.key;
-              return (
-                <TouchableOpacity
-                  key={`act-${opt.label}`}
-                  style={[styles.chip, isActive && styles.chipActive]}
-                  onPress={() => {
-                    updateFilter('activity_type', opt.key);
-                    setVisible(false);
-                  }}
-                >
-                  <Ionicons
-                    name={opt.icon as any}
-                    size={14}
-                    color={isActive ? colors.primaryForeground : colors.foreground}
-                  />
-                  <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{opt.label}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+            {/* Activity type */}
+            <Text style={styles.sectionLabel}>{t('routes_activity')}</Text>
+            <View style={styles.chipRow}>
+              {activityOptions.map((opt) => {
+                const isActive = filters.activity_type === opt.key;
+                return (
+                  <TouchableOpacity
+                    key={`act-${opt.label}`}
+                    style={[styles.chip, isActive && styles.chipActive]}
+                    onPress={() => {
+                      updateFilter('activity_type', opt.key);
+                      setVisible(false);
+                    }}
+                  >
+                    {opt.key && getActivityImage(opt.key, 'white')
+                      ? <ActivityIcon activityKey={opt.key} size={14} tintColor={isActive ? colors.primaryForeground : colors.foreground} />
+                      : <Ionicons name={opt.icon as any} size={14} color={isActive ? colors.primaryForeground : colors.foreground} />
+                    }
+                    <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{opt.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
-          {/* Difficulty */}
-          <Text style={styles.sectionLabel}>{t('routes_difficulty')}</Text>
-          <View style={styles.chipRow}>
-            {difficultyOptions.map((opt) => {
-              const isActive = filters.difficulty === opt.key;
-              return (
-                <TouchableOpacity
-                  key={`diff-${opt.label}`}
-                  style={[styles.chip, isActive && styles.chipActive]}
-                  onPress={() => {
-                    updateFilter('difficulty', opt.key);
-                    setVisible(false);
-                  }}
-                >
-                  <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{opt.label}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+            {/* Difficulty */}
+            <Text style={styles.sectionLabel}>{t('routes_difficulty')}</Text>
+            <View style={styles.chipRow}>
+              {difficultyOptions.map((opt) => {
+                const isActive = filters.difficulty === opt.key;
+                return (
+                  <TouchableOpacity
+                    key={`diff-${opt.label}`}
+                    style={[styles.chip, isActive && styles.chipActive]}
+                    onPress={() => {
+                      updateFilter('difficulty', opt.key);
+                      setVisible(false);
+                    }}
+                  >
+                    <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{opt.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
-          {/* Surface type */}
-          <Text style={styles.sectionLabel}>{t('routes_surface')}</Text>
-          <View style={styles.chipRow}>
-            {surfaceOptions.map((opt) => {
-              const isActive = filters.surface_type === opt.key;
-              return (
-                <TouchableOpacity
-                  key={`surf-${opt.label}`}
-                  style={[styles.chip, isActive && styles.chipActive]}
-                  onPress={() => {
-                    updateFilter('surface_type', opt.key);
-                    setVisible(false);
-                  }}
-                >
-                  <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{opt.label}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+            {/* Surface type */}
+            <Text style={styles.sectionLabel}>{t('routes_surface')}</Text>
+            <View style={styles.chipRow}>
+              {surfaceOptions.map((opt) => {
+                const isActive = filters.surface_type === opt.key;
+                return (
+                  <TouchableOpacity
+                    key={`surf-${opt.label}`}
+                    style={[styles.chip, isActive && styles.chipActive]}
+                    onPress={() => {
+                      updateFilter('surface_type', opt.key);
+                      setVisible(false);
+                    }}
+                  >
+                    <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{opt.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </ScrollView>
         </View>
       </Modal>
     </>
@@ -217,12 +221,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    maxHeight: '70%',
     backgroundColor: colors.card,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 40,
     borderTopWidth: 1,
     borderColor: colors.border,
   },

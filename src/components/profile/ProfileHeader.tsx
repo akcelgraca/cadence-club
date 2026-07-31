@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Avatar } from '../common/Avatar';
 import type { Profile } from '../../lib/types';
-import { colors } from '../../lib/theme';
+import { colors, typography } from '../../lib/theme';
 
 interface ProfileHeaderProps {
   profile: Profile;
@@ -23,8 +23,6 @@ export function ProfileHeader({ profile, isOwnProfile = false }: ProfileHeaderPr
       name={displayName}
       size={80}
       radius={16}
-      borderWidth={2}
-      borderColor={colors.primary}
     />
   );
 
@@ -53,6 +51,9 @@ export function ProfileHeader({ profile, isOwnProfile = false }: ProfileHeaderPr
           </View>
         )}
       </View>
+      {!!profile.bio && (
+        <Text style={styles.bio}>{profile.bio}</Text>
+      )}
     </View>
   );
 }
@@ -88,5 +89,12 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 8,
     borderRadius: 20,
+  },
+  bio: {
+    ...typography.body,
+    fontSize: 14,
+    color: colors.mutedForeground,
+    marginTop: 12,
+    lineHeight: 20,
   },
 });

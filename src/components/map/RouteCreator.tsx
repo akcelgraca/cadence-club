@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import { useRouteStore } from '../../store/routeStore';
@@ -18,6 +19,7 @@ interface RouteCreatorProps {
 type Step = 'draw' | 'config' | 'saving';
 
 export function RouteCreator({ onSave, onCancel }: RouteCreatorProps) {
+  const { bottom } = useSafeAreaInsets();
   const { draftWaypoints, addWaypoint, removeWaypoint, clearWaypoints, cancelCreating } = useRouteStore();
   const [step, setStep] = useState<Step>('draw');
   const [loading, setLoading] = useState(false);
@@ -150,80 +152,82 @@ export function RouteCreator({ onSave, onCancel }: RouteCreatorProps) {
 
   if (step === 'config') {
     return (
-      <View style={styles.panel}>
+      <View style={[styles.panel, { maxHeight: '75%', paddingBottom: 0 }]}>
         <Text style={styles.panelTitle}>{t('save')}</Text>
 
-        <Text style={styles.label}>{t('route_creator_name_label')}</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder={t('route_creator_placeholder_name')}
-          placeholderTextColor={colors.mutedForeground}
-        />
+        <ScrollView showsVerticalScrollIndicator={false} bounces={false} style={{ flex: 1 }}>
+          <Text style={styles.label}>{t('route_creator_name_label')}</Text>
+          <TextInput
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+            placeholder={t('route_creator_placeholder_name')}
+            placeholderTextColor={colors.mutedForeground}
+          />
 
-        <Text style={styles.label}>{t('route_creator_activity_label')}</Text>
-        <View style={styles.chipRow}>
-          {activityOptions.map((opt) => (
-            <TouchableOpacity
-              key={opt.key}
-              style={[styles.chip, activityType === opt.key && styles.chipSelected]}
-              onPress={() => setActivityType(opt.key)}
-            >
-              <Text style={[styles.chipText, activityType === opt.key && styles.chipTextSelected]}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+          <Text style={styles.label}>{t('route_creator_activity_label')}</Text>
+          <View style={styles.chipRow}>
+            {activityOptions.map((opt) => (
+              <TouchableOpacity
+                key={opt.key}
+                style={[styles.chip, activityType === opt.key && styles.chipSelected]}
+                onPress={() => setActivityType(opt.key)}
+              >
+                <Text style={[styles.chipText, activityType === opt.key && styles.chipTextSelected]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-        <Text style={styles.label}>{t('route_creator_difficulty_label')}</Text>
-        <View style={styles.chipRow}>
-          {DIFFICULTY_OPTIONS.map((opt) => (
-            <TouchableOpacity
-              key={opt.key}
-              style={[styles.chip, difficulty === opt.key && styles.chipSelected]}
-              onPress={() => setDifficulty(opt.key)}
-            >
-              <Text style={[styles.chipText, difficulty === opt.key && styles.chipTextSelected]}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+          <Text style={styles.label}>{t('route_creator_difficulty_label')}</Text>
+          <View style={styles.chipRow}>
+            {DIFFICULTY_OPTIONS.map((opt) => (
+              <TouchableOpacity
+                key={opt.key}
+                style={[styles.chip, difficulty === opt.key && styles.chipSelected]}
+                onPress={() => setDifficulty(opt.key)}
+              >
+                <Text style={[styles.chipText, difficulty === opt.key && styles.chipTextSelected]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-        <Text style={styles.label}>{t('route_creator_surface_label')}</Text>
-        <View style={styles.chipRow}>
-          {SURFACE_OPTIONS.map((opt) => (
-            <TouchableOpacity
-              key={opt.key}
-              style={[styles.chip, surfaceType === opt.key && styles.chipSelected]}
-              onPress={() => setSurfaceType(opt.key)}
-            >
-              <Text style={[styles.chipText, surfaceType === opt.key && styles.chipTextSelected]}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+          <Text style={styles.label}>{t('route_creator_surface_label')}</Text>
+          <View style={styles.chipRow}>
+            {SURFACE_OPTIONS.map((opt) => (
+              <TouchableOpacity
+                key={opt.key}
+                style={[styles.chip, surfaceType === opt.key && styles.chipSelected]}
+                onPress={() => setSurfaceType(opt.key)}
+              >
+                <Text style={[styles.chipText, surfaceType === opt.key && styles.chipTextSelected]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-        <TouchableOpacity
-          style={styles.publicToggle}
-          onPress={() => setIsPublic(!isPublic)}
-        >
-          <Ionicons name={isPublic ? 'globe' : 'lock-closed'} size={16} color={colors.foreground} />
-          <Text style={styles.publicText}>{isPublic ? t('route_public') : t('route_private')}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.publicToggle}
+            onPress={() => setIsPublic(!isPublic)}
+          >
+            <Ionicons name={isPublic ? 'globe' : 'lock-closed'} size={16} color={colors.foreground} />
+            <Text style={styles.publicText}>{isPublic ? t('route_public') : t('route_private')}</Text>
+          </TouchableOpacity>
 
-        {/* Stats preview */}
-        <View style={styles.statsPreview}>
-          <Text style={styles.statsText}>
-            {(routeDistance / 1000).toFixed(1)} km · {Math.round(routeDuration / 60)} min
-            {routeElevationGain > 0 && ` · ${routeElevationGain}m D+`}
-          </Text>
-        </View>
+          {/* Stats preview */}
+          <View style={styles.statsPreview}>
+            <Text style={styles.statsText}>
+              {(routeDistance / 1000).toFixed(1)} km · {Math.round(routeDuration / 60)} min
+              {routeElevationGain > 0 && ` · ${routeElevationGain}m D+`}
+            </Text>
+          </View>
+        </ScrollView>
 
-        <View style={styles.buttonRow}>
+        <View style={[styles.buttonRow, { paddingTop: 12, paddingBottom: bottom + 12 }]}>
           <TouchableOpacity style={styles.backButton} onPress={() => setStep('draw')}>
             <Text style={styles.backButtonText}>{t('route_creator_back')}</Text>
           </TouchableOpacity>

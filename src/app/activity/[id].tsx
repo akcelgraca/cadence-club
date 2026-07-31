@@ -2,7 +2,6 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image } from 're
 import { useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { getActivity, getActivityPoints } from '../../services/activities';
 import { hasKudosed } from '../../services/social';
 import { formatDistance } from '../../utils/formatDistance';
@@ -14,15 +13,15 @@ import { BoostButton } from '../../components/social/BoostButton';
 import { CommentThread } from '../../components/social/CommentThread';
 import { ActivityMap } from '../../components/activity/ActivityMap';
 import { ElevationProfile } from '../../components/activity/ElevationProfile';
-import { ACTIVITY_TYPES } from '../../lib/constants';
+import { ActivityIcon } from '../../components/common/ActivityIcon';
 import { colors, typography } from '../../lib/theme';
 
 const MOOD_IMAGES: Record<number, any> = {
-  1: require('../../../assets/images/moods/mood_1.png'),
-  2: require('../../../assets/images/moods/mood_2.png'),
-  3: require('../../../assets/images/moods/mood_3.png'),
-  4: require('../../../assets/images/moods/mood_4.png'),
-  5: require('../../../assets/images/moods/mood_5.png'),
+  1: require('../../../assets/images/moods/sentimento-1-muito-mal.png'),
+  2: require('../../../assets/images/moods/sentimento-2-mal.png'),
+  3: require('../../../assets/images/moods/sentimento-3-neutro.png'),
+  4: require('../../../assets/images/moods/sentimento-4-bem.png'),
+  5: require('../../../assets/images/moods/sentimento-5-muito-bem.png'),
 };
 
 export default function ActivityDetailScreen() {
@@ -80,7 +79,7 @@ export default function ActivityDetailScreen() {
           </View>
         </View>
         <Text style={styles.typeIcon}>
-          <Ionicons name={(ACTIVITY_TYPES.find(t => t.key === activity.type)?.icon ?? 'footsteps') as any} size={32} color={colors.primary} />
+          <ActivityIcon activityKey={activity.type} size={32} tintColor={colors.primary} />
         </Text>
       </View>
 
@@ -176,7 +175,7 @@ const styles = StyleSheet.create({
   metricLabel: { ...typography.mono, fontSize: 12, color: colors.mutedForeground, marginTop: 4, textTransform: 'uppercase' },
   moodSection: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   moodLabel: { ...typography.body, fontSize: 14, color: colors.mutedForeground },
-  moodImage: { width: 32, height: 32, borderRadius: 16 },
+  moodImage: { width: 32, height: 32, borderRadius: 16, tintColor: '#FFFFFF' },
   title: { ...typography.bodyBold, fontSize: 20, marginBottom: 8, color: colors.foreground },
   description: { ...typography.body, fontSize: 15, color: colors.mutedForeground, marginBottom: 16, lineHeight: 22 },
   socialRow: { paddingVertical: 12, borderTopWidth: 1, borderColor: colors.border },

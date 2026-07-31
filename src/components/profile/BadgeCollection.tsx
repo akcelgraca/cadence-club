@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { UserBadge } from '../../lib/types';
 import { colors, typography } from '../../lib/theme';
+import { getBadgeImage } from '../../lib/badgeImages';
 
 interface BadgeCollectionProps {
   badges: UserBadge[];
@@ -23,7 +24,11 @@ export function BadgeCollection({ badges }: BadgeCollectionProps) {
         {badges.map((ub) => (
           <View key={ub.id} style={styles.badgeItem}>
             <View style={styles.badgeIconContainer}>
-              <Ionicons name={(ub.badge?.icon as any) ?? 'ribbon'} size={28} color={colors.primary} />
+              {getBadgeImage(ub.badge?.icon ?? '') ? (
+                <Image source={getBadgeImage(ub.badge?.icon ?? '')} style={styles.badgeImage} resizeMode="contain" />
+              ) : (
+                <Ionicons name={(ub.badge?.icon as any) ?? 'ribbon'} size={28} color={colors.primary} />
+              )}
             </View>
             <Text style={styles.badgeName} numberOfLines={2}>{ub.badge?.name}</Text>
           </View>
@@ -49,5 +54,6 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   badgeIcon: { fontSize: 28 },
+  badgeImage: { width: 36, height: 36 },
   badgeName: { ...typography.bodyBold, fontSize: 11, textAlign: 'center', color: colors.foreground },
 });
