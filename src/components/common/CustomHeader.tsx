@@ -3,7 +3,7 @@ import { useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '../../hooks/useColors';
-import type { NativeStackHeaderProps } from '@react-navigation/native-stack';
+import type { NativeStackHeaderProps } from 'expo-router';
 
 export function CustomHeader({ options, back }: NativeStackHeaderProps) {
   const c = useColors();
@@ -27,7 +27,13 @@ export function CustomHeader({ options, back }: NativeStackHeaderProps) {
         <Text style={[styles.title, { color: c.foreground }]} numberOfLines={1}>
           {options.title ?? ''}
         </Text>
-        <View style={styles.side} />
+        {/* Ações do ecrã (headerRight). Sem isto, qualquer ecrã que defina
+            headerRight ficava sem ele — o cabeçalho é personalizado. */}
+        <View style={[styles.side, styles.sideRight]}>
+          {options.headerRight
+            ? options.headerRight({ tintColor: c.primary, canGoBack: !!back })
+            : null}
+        </View>
       </View>
     </View>
   );
@@ -48,6 +54,10 @@ const styles = StyleSheet.create({
     width: 44,
     alignItems: 'flex-start',
     justifyContent: 'center',
+  },
+  sideRight: {
+    alignItems: 'flex-end',
+    paddingRight: 6,
   },
   backButton: {
     width: 36,

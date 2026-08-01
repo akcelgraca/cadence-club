@@ -1,10 +1,15 @@
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { useState, useRef, useCallback } from 'react';
+import {
+  View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert,
+  Animated, useWindowDimensions,
+} from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
 import { useSettingsStore } from '../../store/settingsStore';
-import { useQuery } from '@tanstack/react-query';
 import { getStreak, getUserBadges } from '../../services/gamification';
 import { getMyActivities } from '../../services/activities';
 import { getEquipment } from '../../services/equipment';
@@ -12,7 +17,7 @@ import { getFollowerCount, getFollowingCount } from '../../services/social';
 import { useWeeklySummary, useMonthlyStats, useProfileStats } from '../../hooks/useProfileStats';
 import { formatDistance } from '../../utils/formatDistance';
 import { formatDuration, formatRelativeTime } from '../../utils/dateHelpers';
-import { ProfileHeader } from '../../components/profile/ProfileHeader';
+import { ProfileHero } from '../../components/profile/ProfileHero';
 import { StreakBadge } from '../../components/profile/StreakBadge';
 import { WeeklySummary } from '../../components/profile/WeeklySummary';
 import { MonthlyChart } from '../../components/profile/MonthlyChart';
@@ -23,14 +28,34 @@ import { RoutesSection } from '../../components/profile/RoutesSection';
 import { PersonalRecords } from '../../components/profile/PersonalRecords';
 import { HealthMetrics } from '../../components/profile/HealthMetrics';
 import { ActivityIcon } from '../../components/common/ActivityIcon';
+import { getActivityByKey } from '../../lib/constants';
 import type { Activity } from '../../lib/types';
-import { colors, typography } from '../../lib/theme';
+import { colors, typography, withAlpha } from '../../lib/theme';
+
+const TABS = [
+  { key: 'resumo', label: 'Resumo' },
+  { key: 'atividades', label: 'Atividades' },
+  { key: 'conquistas', label: 'Conquistas' },
+] as const;
+
+const RECENT_LIMIT = 6;
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const { profile, signOut } = useAuthStore();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   const userId = profile?.id;
+  const { width } = useWindowDimensions();
+
+  const pagerRef = useRef<any>(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [tabLayouts, setTabLayouts] = useState<{ x: number; width: number }[]>([]);
+
+  const goToTab = useCallback((index: number) => {
+    pagerRef.current?.scrollTo({ x: index * width, animated: true });
+    setActiveIndex(index);
+  }, [width]);
 
   const { data: streak } = useQuery({
     queryKey: ['streak', userId],
@@ -81,142 +106,213 @@ export default function ProfileScreen() {
 
   if (!profile) return null;
 
-  const runCount = profileStats?.activity_count ?? 0;
+  const recent = (activities ?? []).slice(0, RECENT_LIMIT) as Activity[];
+
+  const ready = tabLayouts.length === TABS.length && tabLayouts.every(Boolean);
+  const indicatorLeft = ready
+    ? scrollX.interpolate({
+        inputRange: TABS.map((_, i) => i * width),
+        outputRange: tabLayouts.map((l) => l.x),
+        extrapolate: 'clamp',
+      })
+    : new Animated.Value(0);
+  const indicatorWidth = ready
+    ? scrollX.interpolate({
+        inputRange: TABS.map((_, i) => i * width),
+        outputRange: tabLayouts.map((l) => l.width),
+        extrapolate: 'clamp',
+      })
+    : new Animated.Value(0);
+
+  const renderActivityRow = (activity: Activity) => {
+    const def = getActivityByKey(activity.type);
+    return (
+      <TouchableOpacity
+        key={activity.id}
+        style={styles.activityItem}
+        onPress={() => router.push(`/activity/${activity.id}`)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.activityIconWrap}>
+          <ActivityIcon activityKey={activity.type} size={18} tintColor={colors.primary} />
+        </View>
+        <View style={styles.activityInfo}>
+          <Text style={styles.activityType} numberOfLines={1}>
+            {activity.title || (def ? t(def.i18n_key as any) : activity.type)}
+          </Text>
+          <Text style={styles.activityMeta} numberOfLines={1}>
+            {formatDistance(activity.distance, unitSystem)} · {formatDuration(activity.duration)} · {formatRelativeTime(activity.created_at)}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
+      </TouchableOpacity>
+    );
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView>
-        {/* 1. ProfileHeader - redesigned */}
-        <ProfileHeader profile={profile} isOwnProfile />
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ProfileHero
+        profile={profile}
+        isOwnProfile
+        streakDays={streak?.current_streak ?? 0}
+        activityCount={profileStats?.activity_count ?? 0}
+        followerCount={followerCount}
+        followingCount={followingCount}
+      />
 
-      {/* 2. Stats row */}
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{runCount}</Text>
-          <Text style={styles.statLabel}>Atividades</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.statCard}
-          onPress={() => router.push(`/profile/${userId}/follow-list?type=followers`)}
-        >
-          <Text style={styles.statValue}>{followerCount}</Text>
-          <Text style={styles.statLabel}>Seguidores</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.statCard}
-          onPress={() => router.push(`/profile/${userId}/follow-list?type=following`)}
-        >
-          <Text style={styles.statValue}>{followingCount}</Text>
-          <Text style={styles.statLabel}>Seguindo</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 3. Personal Records */}
-      <PersonalRecords userId={userId} />
-
-      {/* 4. Health Metrics */}
-      <HealthMetrics />
-
-      {/* 5. StreakBadge */}
-      {streak && (
-        <View style={styles.streakWrapper}>
-          <StreakBadge
-            currentStreak={streak.current_streak}
-            longestStreak={streak.longest_streak}
-            isActive
-          />
-        </View>
-      )}
-
-      {/* 6. WeeklySummary */}
-      <WeeklySummary data={weeklySummary} isLoading={weeklyLoading} isError={weeklyError} />
-
-      {/* 7. MonthlyChart */}
-      <MonthlyChart data={monthlyStats} isLoading={monthlyLoading} isError={monthlyError} />
-
-      {/* 8. StatsGrid */}
-      <StatsGrid data={profileStats} isLoading={statsLoading} isError={statsError} />
-
-      {/* 9. Activities */}
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionCardTitle}>{t('completed_activities')}</Text>
-        {activities && activities.length > 0 ? (
-          activities.map((activity: Activity) => (
+      {/* Abas */}
+      <View style={styles.tabs} accessibilityRole="tablist">
+        {TABS.map((tab, i) => {
+          const isActive = i === activeIndex;
+          return (
             <TouchableOpacity
-              key={activity.id}
-              style={styles.activityItem}
-              onPress={() => router.push(`/activity/${activity.id}`)}
+              key={tab.key}
+              style={styles.tab}
+              onPress={() => goToTab(i)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isActive }}
+              onLayout={(e) => {
+                const { x, width: w } = e.nativeEvent.layout;
+                setTabLayouts((prev) => {
+                  const next = [...prev];
+                  next[i] = { x, width: w };
+                  return next;
+                });
+              }}
             >
-              <ActivityIcon activityKey={activity.type} size={24} tintColor={colors.primary} style={styles.activityIcon} />
-              <View style={styles.activityInfo}>
-                <Text style={styles.activityType}>
-                  {activity.type === 'run' ? 'Corrida' :
-                   activity.type === 'cycle' ? 'Ciclismo' : 'Caminhada'}
-                </Text>
-                <Text style={styles.activityMeta}>
-                  {formatDistance(activity.distance, unitSystem)} · {formatDuration(activity.duration)} · {formatRelativeTime(activity.created_at)}
-                </Text>
-              </View>
+              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{tab.label}</Text>
             </TouchableOpacity>
-          ))
-        ) : (
-          <Text style={styles.emptyText}>Ainda sem atividades. Grava a tua primeira!</Text>
+          );
+        })}
+        {ready && (
+          <Animated.View style={[styles.tabIndicator, { left: indicatorLeft, width: indicatorWidth }]} />
         )}
       </View>
 
-      {/* 10. RoutesSection */}
-      <RoutesSection activities={activities} isLoading={false} />
+      {/* Pager */}
+      <Animated.ScrollView
+        ref={pagerRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: false },
+        )}
+        onMomentumScrollEnd={(e) => setActiveIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
+        style={styles.pager}
+      >
+        {/* ── Resumo ── */}
+        <View style={{ width }}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.pageContent}>
+            <WeeklySummary data={weeklySummary} isLoading={weeklyLoading} isError={weeklyError} />
+            <MonthlyChart data={monthlyStats} isLoading={monthlyLoading} isError={monthlyError} />
+            <StatsGrid data={profileStats} isLoading={statsLoading} isError={statsError} />
+            <HealthMetrics stats={profileStats} />
+            <EquipmentSection
+              equipment={equipment}
+              isLoading={false}
+              isError={false}
+              isOwnProfile
+            />
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <Ionicons name="log-out-outline" size={17} color={colors.destructive} />
+              <Text style={styles.logoutText}>Terminar sessão</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
 
-      {/* 11. EquipmentSection */}
-      <EquipmentSection
-        equipment={equipment}
-        isLoading={false}
-        isError={false}
-        isOwnProfile
-      />
+        {/* ── Atividades ── */}
+        <View style={{ width }}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.pageContent}>
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionCardTitle}>Recentes</Text>
+                <TouchableOpacity
+                  style={styles.viewAll}
+                  onPress={() => router.push('/(tabs)/history')}
+                >
+                  <Text style={styles.viewAllText}>Ver histórico</Text>
+                  <Ionicons name="chevron-forward" size={12} color={colors.primary} />
+                </TouchableOpacity>
+              </View>
 
-      {/* 12. TrophyCase */}
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionCardTitle}>{t('badges_title')}</Text>
-        <TrophyCase badges={badges ?? []} />
-      </View>
+              {recent.length > 0 ? (
+                recent.map(renderActivityRow)
+              ) : (
+                <View style={styles.emptyBlock}>
+                  <Ionicons name="pulse-outline" size={36} color={colors.mutedForeground} />
+                  <Text style={styles.emptyTitle}>Ainda sem atividades</Text>
+                  <Text style={styles.emptyText}>Grava a primeira e ela aparece aqui.</Text>
+                  <TouchableOpacity
+                    style={styles.emptyBtn}
+                    onPress={() => router.push('/(tabs)/recordTab')}
+                  >
+                    <Text style={styles.emptyBtnText}>Registar atividade</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
 
-      {/* 13. Logout */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Sair</Text>
-      </TouchableOpacity>
+            <PersonalRecords userId={userId} />
+            <RoutesSection activities={activities} isLoading={false} />
+          </ScrollView>
+        </View>
 
-      <View style={{ height: 40 }} />
-      </ScrollView>
+        {/* ── Conquistas ── */}
+        <View style={{ width }}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.pageContent}>
+            {streak && (
+              <View style={styles.streakWrapper}>
+                <StreakBadge
+                  currentStreak={streak.current_streak}
+                  longestStreak={streak.longest_streak}
+                  isActive
+                />
+              </View>
+            )}
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionCardTitle}>{t('badges_title')}</Text>
+              <TrophyCase badges={badges ?? []} />
+            </View>
+          </ScrollView>
+        </View>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  statsRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 20 },
-  statCard: {
-    flex: 1,
+  pager: { flex: 1 },
+  pageContent: { paddingBottom: 32 },
+
+  // Abas
+  tabs: {
+    flexDirection: 'row',
     backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    position: 'relative',
   },
-  statValue: {
-    fontFamily: 'BarlowCondensed_900Black',
-    fontSize: 24,
-    color: colors.foreground,
-    lineHeight: 26,
-  },
-  statLabel: {
-    fontFamily: 'DMMono_400Regular',
-    fontSize: 12,
+  tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
+  tabText: {
+    fontFamily: 'Barlow_500Medium',
+    fontSize: 13,
+    letterSpacing: 0.3,
     color: colors.mutedForeground,
-    marginTop: 2,
   },
-  streakWrapper: { marginHorizontal: 20, marginTop: 16 },
-  section: { marginTop: 20, paddingHorizontal: 20 },
-  sectionTitle: { ...typography.headline, fontSize: 18, marginBottom: 12, color: colors.foreground },
+  tabTextActive: { fontFamily: 'Barlow_600SemiBold', color: colors.foreground },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    height: 2,
+    backgroundColor: colors.primary,
+    borderRadius: 1,
+  },
+
+  // Secções
   sectionCard: {
     backgroundColor: colors.card,
     marginHorizontal: 16,
@@ -224,13 +320,64 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
   },
-  sectionCardTitle: { ...typography.headline, fontSize: 18, marginBottom: 12, color: colors.foreground },
-  emptyText: { ...typography.body, fontSize: 14, color: colors.mutedForeground, textAlign: 'center', padding: 20 },
-  activityItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.inputBackground, borderRadius: 12, padding: 14, marginBottom: 8 },
-  activityIcon: { fontSize: 24, marginRight: 12 },
-  activityInfo: { flex: 1 },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  sectionCardTitle: { ...typography.headline, fontSize: 18, color: colors.foreground },
+  viewAll: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  viewAllText: { fontFamily: 'Barlow_600SemiBold', fontSize: 12, color: colors.primary },
+
+  streakWrapper: { marginHorizontal: 16, marginTop: 16 },
+
+  // Atividades
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 11,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  activityIconWrap: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: withAlpha(colors.primary, 0.1),
+    alignItems: 'center', justifyContent: 'center',
+  },
+  activityInfo: { flex: 1, minWidth: 0 },
   activityType: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
-  activityMeta: { ...typography.body, fontSize: 13, color: colors.mutedForeground, marginTop: 2 },
-  logoutButton: { marginHorizontal: 20, marginTop: 24, padding: 14, borderRadius: 12, backgroundColor: colors.card, alignItems: 'center' },
-  logoutText: { ...typography.bodyBold, color: colors.destructive },
+  activityMeta: {
+    fontFamily: 'DMMono_400Regular',
+    fontSize: 12,
+    color: colors.mutedForeground,
+    marginTop: 2,
+  },
+
+  // Estado vazio
+  emptyBlock: { alignItems: 'center', paddingVertical: 28, gap: 8 },
+  emptyTitle: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
+  emptyText: { ...typography.body, fontSize: 13, color: colors.mutedForeground, textAlign: 'center' },
+  emptyBtn: {
+    marginTop: 8,
+    paddingHorizontal: 18, paddingVertical: 10,
+    borderRadius: 20, backgroundColor: colors.primary,
+  },
+  emptyBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: colors.primaryForeground },
+
+  // Sair
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 24,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: withAlpha(colors.destructive, 0.35),
+  },
+  logoutText: { fontFamily: 'Barlow_600SemiBold', fontSize: 14, color: colors.destructive },
 });

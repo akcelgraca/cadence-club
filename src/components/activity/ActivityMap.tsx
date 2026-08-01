@@ -1,7 +1,8 @@
 import { View, StyleSheet } from 'react-native';
-import { MapViewWrapper } from '../map/MapViewWrapper';
+import { MapViewWrapper, MAPBOX_STYLES } from '../map/MapViewWrapper';
 import { RoutePolyline } from '../map/RoutePolyline';
 import { RouteMarker } from '../map/RouteMarker';
+import { useSettingsStore } from '../../store/settingsStore';
 import { colors } from '../../lib/theme';
 
 interface ActivityMapProps {
@@ -22,6 +23,7 @@ export function ActivityMap({
   showContours = true,
 }: ActivityMapProps) {
   const coords: [number, number][] = (points ?? []).map((p) => [p.lng, p.lat]);
+  const defaultMapStyle = useSettingsStore((s) => s.settings.defaultMapStyle);
 
   const center: [number, number] | undefined =
     coords.length > 0 ? [coords[0][0], coords[0][1]] : undefined;
@@ -30,6 +32,7 @@ export function ActivityMap({
     <View style={[styles.container, { height }]}>
       <MapViewWrapper
         center={center}
+        mapStyle={MAPBOX_STYLES[defaultMapStyle] ?? MAPBOX_STYLES.light}
         zoom={14}
         showUserLocation={false}
         terrain={terrain}

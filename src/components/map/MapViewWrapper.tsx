@@ -92,7 +92,7 @@ function TerrainLayers({ showHillshade, showContours }: { showHillshade: boolean
 export function MapViewWrapper({
   center,
   zoom = 12,
-  mapStyle = MAPBOX_STYLES.dark,
+  mapStyle = MAPBOX_STYLES.light,
   showUserLocation = true,
   followUser = false,
   followUserMode = UserTrackingMode.Follow,

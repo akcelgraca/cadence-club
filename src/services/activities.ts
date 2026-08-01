@@ -1,5 +1,7 @@
 import { supabase } from './supabase';
-import type { Activity, ActivityPoint, ActivityType, ActivityCategory, RunType, SurfaceType } from '../lib/types';
+import type {
+  Activity, ActivityPoint, ActivityPhoto, ActivityType, ActivityCategory, RunType, SurfaceType,
+} from '../lib/types';
 import { ACTIVITY_CATEGORIES } from '../lib/constants';
 
 export interface SaveActivityPayload {
@@ -19,6 +21,126 @@ export interface SaveActivityPayload {
   is_public: boolean;
   surface_type?: SurfaceType | null;
   equipment_id?: string | null;
+  // Fotos não entram aqui: guarda-se a atividade e depois chama-se
+  // addActivityPhotos, que escreve em activity_photos (migração 037).
+}
+
+export async function uploadActivityPhoto(userId: string, uri: string, mimeType?: string): Promise<string> {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+  const fixedBlob = blob.slice(0, blob.size, mimeType || 'image/jpeg');
+  const ext = mimeType ? mimeType.split('/')[1] : 'jpg';
+  const filePath = `${userId}/${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from('activity-photos').upload(filePath, fixedBlob);
+  if (error) throw error;
+  const { data: urlData } = supabase.storage.from('activity-photos').getPublicUrl(filePath);
+  return urlData.publicUrl;
+}
+
+/**
+ * Colunas pedidas sempre que se lê uma atividade para mostrar num cartão.
+ * `photos` traz a galeria (migração 037) para o carrossel do feed.
+ */
+export const ACTIVITY_SELECT =
+  '*, profile:profiles(*), kudos:kudos(count), comments:comments(count), photos:activity_photos(id, url, position)';
+
+/** Máximo de fotos por atividade — limite da app, não da base de dados. */
+export const MAX_ACTIVITY_PHOTOS = 6;
+
+/** Galeria de uma atividade, por ordem. Schema: migração 037. */
+export async function getActivityPhotos(activityId: string): Promise<ActivityPhoto[]> {
+  const { data, error } = await supabase
+    .from('activity_photos')
+    .select('*')
+    .eq('activity_id', activityId)
+    .order('position', { ascending: true })
+    .order('created_at', { ascending: true });
+  if (error) return [];
+  return (data ?? []) as ActivityPhoto[];
+}
+
+/**
+ * Carrega as imagens locais e associa-as à atividade. A capa
+ * (activities.photo_url) é atualizada pelo trigger da migração 037.
+ */
+export async function addActivityPhotos(
+  activityId: string,
+  photos: { uri: string; mimeType?: string }[],
+  startPosition = 0,
+  isGenerated = false,
+): Promise<void> {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user || photos.length === 0) return;
+
+  const urls: string[] = [];
+  for (const photo of photos) {
+    urls.push(await uploadActivityPhoto(user.user.id, photo.uri, photo.mimeType));
+  }
+
+  const { error } = await supabase.from('activity_photos').insert(
+    urls.map((url, i) => ({
+      activity_id: activityId,
+      url,
+      position: startPosition + i,
+      is_generated: isGenerated,
+    })),
+  );
+  if (error) throw error;
+}
+
+/**
+ * Grava a nova ordem da galeria. A capa (activities.photo_url) é recalculada
+ * pelo trigger a cada linha atualizada.
+ */
+export async function reorderActivityPhotos(photoIds: string[]): Promise<void> {
+  for (let i = 0; i < photoIds.length; i++) {
+    const { error } = await supabase
+      .from('activity_photos')
+      .update({ position: i })
+      .eq('id', photoIds[i]);
+    if (error) throw error;
+  }
+}
+
+export async function deleteActivityPhoto(photoId: string): Promise<void> {
+  const { error } = await supabase.from('activity_photos').delete().eq('id', photoId);
+  if (error) throw error;
+}
+
+export async function deleteActivity(activityId: string): Promise<void> {
+  const { error } = await supabase.from('activities').delete().eq('id', activityId);
+  if (error) throw error;
+}
+
+/**
+ * Campos editáveis depois de guardar. Distância, duração e GPS ficam de fora
+ * de propósito: são o registo do que aconteceu, não metadados.
+ */
+export interface UpdateActivityPayload {
+  type?: ActivityType;
+  title?: string | null;
+  description?: string | null;
+  is_public?: boolean;
+  mood?: number | null;
+  surface_type?: SurfaceType | null;
+  equipment_id?: string | null;
+  run_type?: RunType | null;
+  // A capa (photo_url) é derivada de activity_photos pelo trigger — não se
+  // escreve à mão, senão dessincroniza da galeria.
+}
+
+export async function updateActivity(
+  activityId: string,
+  updates: UpdateActivityPayload,
+): Promise<Activity> {
+  const { data, error } = await supabase
+    .from('activities')
+    .update(updates)
+    .eq('id', activityId)
+    .select(ACTIVITY_SELECT)
+    .single();
+  if (error) throw error;
+  return mapCounts(data);
 }
 
 export async function saveActivity(payload: SaveActivityPayload): Promise<Activity> {
@@ -69,7 +191,7 @@ export async function saveActivity(payload: SaveActivityPayload): Promise<Activi
   return activity;
 }
 
-function mapCounts(row: any): any {
+export function mapCounts(row: any): any {
   return {
     ...row,
     kudos_count: row.kudos?.[0]?.count ?? 0,
@@ -79,14 +201,31 @@ function mapCounts(row: any): any {
   };
 }
 
+/** Marca cada atividade com has_kudosed do utilizador atual (uma única query). */
+export async function attachHasKudosed<T extends { id: string }>(rows: T[]): Promise<T[]> {
+  if (!rows.length) return rows;
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) return rows;
+
+  const { data: myKudos } = await supabase
+    .from('kudos')
+    .select('activity_id')
+    .eq('user_id', user.user.id)
+    .in('activity_id', rows.map((r) => r.id));
+
+  const kudosed = new Set((myKudos ?? []).map((k: any) => k.activity_id));
+  return rows.map((r) => ({ ...r, has_kudosed: kudosed.has(r.id) }));
+}
+
 export async function getActivity(id: string): Promise<Activity | null> {
   const { data, error } = await supabase
     .from('activities')
-    .select('*, profile:profiles(*), kudos:kudos(count), comments:comments(count)')
+    .select(ACTIVITY_SELECT)
     .eq('id', id)
     .single();
   if (error) throw error;
-  return mapCounts(data);
+  const [row] = await attachHasKudosed([mapCounts(data)]);
+  return row;
 }
 
 export async function getActivityPoints(activityId: string): Promise<ActivityPoint[]> {
@@ -102,12 +241,12 @@ export async function getActivityPoints(activityId: string): Promise<ActivityPoi
 export async function getMyActivities(userId: string, page: number = 0, limit: number = 15) {
   const { data, error } = await supabase
     .from('activities')
-    .select('*, profile:profiles(*), kudos:kudos(count), comments:comments(count)')
+    .select(ACTIVITY_SELECT)
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .range(page * limit, (page + 1) * limit - 1);
   if (error) throw error;
-  return data?.map(mapCounts) ?? [];
+  return attachHasKudosed(data?.map(mapCounts) ?? []);
 }
 
 export interface FeedFilter {
@@ -131,7 +270,7 @@ export async function getFeed(page: number = 0, limit: number = 15, filter?: Fee
 
   let query = supabase
     .from('activities')
-    .select('*, profile:profiles(*), kudos:kudos(count), comments:comments(count)')
+    .select(ACTIVITY_SELECT)
     .eq('is_public', true)
     .order('created_at', { ascending: false })
     .range(page * limit, (page + 1) * limit - 1);
@@ -160,5 +299,83 @@ export async function getFeed(page: number = 0, limit: number = 15, filter?: Fee
 
   const { data, error } = await query;
   if (error) throw error;
-  return data?.map(mapCounts) ?? [];
+  return attachHasKudosed(data?.map(mapCounts) ?? []);
+}
+
+export interface PaceComparison {
+  /** Ritmo médio das outras atividades da mesma modalidade, em seg/km. */
+  averagePace: number;
+  /** Nº de atividades usadas na média (exclui a atual). */
+  sampleSize: number;
+  /** Positivo = esta atividade foi mais rápida do que a média. */
+  percentDiff: number;
+}
+
+/**
+ * Compara o ritmo de uma atividade com a média do utilizador na mesma
+ * modalidade. Exclui a própria atividade da média — senão comparava-se a si
+ * mesma — e exige um mínimo de amostras para o número significar algo.
+ */
+export async function getPaceComparison(
+  userId: string,
+  activityId: string,
+  type: string,
+  activityPace: number,
+  minSample = 3,
+): Promise<PaceComparison | null> {
+  if (!activityPace || activityPace <= 0) return null;
+
+  const { data, error } = await supabase
+    .from('activities')
+    .select('distance, duration')
+    .eq('user_id', userId)
+    .eq('type', type)
+    .neq('id', activityId)
+    .gt('distance', 0)
+    .gt('duration', 0)
+    .limit(200);
+
+  if (error || !data || data.length < minSample) return null;
+
+  const totalDistance = data.reduce((sum, a: any) => sum + a.distance, 0);
+  const totalDuration = data.reduce((sum, a: any) => sum + a.duration, 0);
+  if (totalDistance <= 0) return null;
+
+  const averagePace = totalDuration / (totalDistance / 1000);
+  if (averagePace <= 0) return null;
+
+  return {
+    averagePace,
+    sampleSize: data.length,
+    // Ritmo menor = mais rápido, daí a diferença invertida
+    percentDiff: ((averagePace - activityPace) / averagePace) * 100,
+  };
+}
+
+/**
+ * Atividades públicas recentes da comunidade, excluindo as minhas e as de quem
+ * já sigo. Alimenta o estado vazio do feed — um utilizador novo não segue
+ * ninguém e via o feed em branco.
+ */
+export async function getDiscoverActivities(limit = 10) {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) return [];
+
+  const { data: follows } = await supabase
+    .from('follows')
+    .select('following_id')
+    .eq('follower_id', user.user.id);
+
+  const excluded = [user.user.id, ...(follows ?? []).map((f: any) => f.following_id)];
+
+  const { data, error } = await supabase
+    .from('activities')
+    .select(ACTIVITY_SELECT)
+    .eq('is_public', true)
+    .not('user_id', 'in', `(${excluded.join(',')})`)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) return [];
+  return attachHasKudosed((data ?? []).map(mapCounts));
 }

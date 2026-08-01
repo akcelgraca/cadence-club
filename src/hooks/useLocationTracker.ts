@@ -6,24 +6,9 @@ import * as Speech from 'expo-speech';
 import { useActivityStore } from '../store/activityStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { GPS_INTERVAL, GPS_DISTANCE_THRESHOLD, MIN_ACTIVITY_DURATION, MIN_ACTIVITY_DISTANCE, AUTO_PAUSE_SPEED_THRESHOLD, AUTO_PAUSE_DELAY_MS } from '../lib/constants';
+import { haversineDistance } from '../utils/geo';
 
 const BACKGROUND_TRACKING_TASK = 'BACKGROUND_LOCATION_TRACKING';
-
-// Haversine distance between two coordinates in meters
-function haversineDistance(
-  lat1: number, lng1: number,
-  lat2: number, lng2: number
-): number {
-  const R = 6371000; // Earth radius in meters
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
 
 // Define the background location task
 TaskManager.defineTask(BACKGROUND_TRACKING_TASK, async ({ data, error }) => {

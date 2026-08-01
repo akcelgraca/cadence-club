@@ -24,7 +24,12 @@
         "NSMotionUsageDescription": "Usamos o movimento para melhorar a precisao do GPS.",
         "NSHealthShareUsageDescription": "Sincronizamos os teus treinos com a app Saude.",
         "NSHealthUpdateUsageDescription": "Guardamos os teus treinos na app Saude.",
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ],
+        "NSPhotoLibraryUsageDescription": "O Cadence Club precisa de acesso à tua galeria para guardar o cartão de atividade.",
+        "NSPhotoLibraryAddUsageDescription": "O Cadence Club guarda o cartão da tua atividade na galeria.",
+        "LSApplicationQueriesSchemes": ["instagram-stories"]
       }
     },
     "android": {
@@ -82,6 +87,15 @@
         {
           "photosPermission": "O Cadence Club precisa de acesso a galeria para a tua foto de perfil.",
           "cameraPermission": "O Cadence Club precisa de acesso a camara para a tua foto de perfil."
+        }
+      ],
+      "expo-sharing",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "O Cadence Club precisa de acesso à tua galeria para guardar o cartão de atividade.",
+          "savePhotosPermission": "O Cadence Club guarda o cartão da tua atividade na galeria.",
+          "isAccessMediaLocationEnabled": false
         }
       ]
     ],

@@ -1,7 +1,8 @@
 import { View, Text, StyleSheet, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
-import { useWeeklyDailyBreakdown } from '../../hooks/useProfileStats';
-import { colors, typography } from '../../lib/theme';
+import { useWeeklyDailyBreakdown, useWeeklySummary } from '../../hooks/useProfileStats';
+import { useAuthStore } from '../../store/authStore';
+import { colors, typography, withAlpha } from '../../lib/theme';
 import { formatDuration } from '../../utils/dateHelpers';
 import type { WeeklyDaySummary } from '../../lib/types';
 
@@ -28,12 +29,54 @@ function buildChartData(rows: WeeklyDaySummary[]) {
   }));
 }
 
+/** Tempo total da semana em "1h 20" / "45". */
+function formatWeeklyTime(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600);
+  const mins = Math.round((totalSeconds % 3600) / 60);
+  return hours > 0 ? `${hours}h ${mins}` : `${mins}`;
+}
+
+/** Ritmo médio da semana em min:seg por km. */
+function formatWeeklyPace(distanceMeters: number, durationSeconds: number): string {
+  if (!distanceMeters || !durationSeconds) return '--';
+  const secPerKm = durationSeconds / (distanceMeters / 1000);
+  const mins = Math.floor(secPerKm / 60);
+  const secs = Math.round(secPerKm % 60);
+  return `${mins}:${String(secs).padStart(2, '0')}`;
+}
+
 interface WeeklyChartCardProps {
   userId: string | undefined;
 }
 
 export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
   const { data, isLoading, isError } = useWeeklyDailyBreakdown(userId);
+  const { data: weekly } = useWeeklySummary(userId);
+  const weightKg = useAuthStore((s) => s.profile?.weight_kg) ?? 70;
+
+  // Estimativa MET simples — sem frequência cardíaca não dá para ser exato
+  const estCalories = Math.round(weightKg * ((weekly?.total_duration ?? 0) / 3600) * 7);
+
+  const footerStats = [
+    {
+      icon: 'time-outline' as const,
+      value: weekly?.total_duration ? formatWeeklyTime(weekly.total_duration) : '--',
+      unit: 'min',
+      label: 'Tempo',
+    },
+    {
+      icon: 'flash-outline' as const,
+      value: formatWeeklyPace(weekly?.total_distance ?? 0, weekly?.total_duration ?? 0),
+      unit: '/km',
+      label: 'Ritmo médio',
+    },
+    {
+      icon: 'flame-outline' as const,
+      value: estCalories > 0 ? estCalories.toLocaleString('pt-PT') : '--',
+      unit: 'kcal',
+      label: 'Calorias (est.)',
+    },
+  ];
   const chartData = buildChartData(data ?? []);
   const totalKm = chartData.reduce((sum, d) => sum + d.value, 0);
   const todayIndex = getTodayIndex();
@@ -149,11 +192,60 @@ export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
           </View>
         </View>
       )}
+
+      {/* Tempo · ritmo · calorias da semana — antes eram três cartões soltos
+          sem indicação de período, o que os fazia parecer dados de hoje. */}
+      <View style={styles.footer}>
+        {footerStats.map((stat, i) => (
+          <View key={stat.label} style={styles.footerItem}>
+            {i > 0 && <View style={styles.footerDivider} />}
+            <View style={styles.footerValueRow}>
+              <Text style={styles.footerValue}>{stat.value}</Text>
+              <Text style={styles.footerUnit}>{stat.unit}</Text>
+            </View>
+            <Text style={styles.footerLabel} numberOfLines={1}>{stat.label}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  footer: {
+    flexDirection: 'row',
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: withAlpha(colors.foreground, 0.08),
+  },
+  footerItem: { flex: 1, alignItems: 'center' },
+  footerDivider: {
+    position: 'absolute',
+    left: 0, top: 2, bottom: 2,
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: withAlpha(colors.foreground, 0.08),
+  },
+  footerValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 2 },
+  footerValue: {
+    fontFamily: 'BarlowCondensed_900Black',
+    fontSize: 20,
+    lineHeight: 22,
+    color: colors.foreground,
+  },
+  footerUnit: {
+    fontFamily: 'Barlow_500Medium',
+    fontSize: 11,
+    color: colors.mutedForeground,
+  },
+  footerLabel: {
+    fontFamily: 'Barlow_500Medium',
+    fontSize: 9,
+    letterSpacing: 0.8,
+    color: colors.mutedForeground,
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
   card: {
     backgroundColor: colors.card,
     borderRadius: 16,

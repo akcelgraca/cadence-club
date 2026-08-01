@@ -192,9 +192,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.overlayDark,
+    // Fundo claro com sombra — sobre mapas claros um fundo escuro
+    // translúcido com ícone escuro fica ilegível
+    backgroundColor: colors.card,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   badge: {
     position: 'absolute',

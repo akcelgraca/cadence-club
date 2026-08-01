@@ -425,6 +425,8 @@ const en = {
   search_initial_subtext: 'Find people and routes in the community.',
   search_users: 'People',
   search_routes: 'Routes',
+  search_cities: 'Cities',
+  search_cities_subtext: 'Search a city to see community routes.',
   search_no_results: 'No results',
   search_no_results_subtext: 'Try a different search term.',
 
@@ -448,6 +450,11 @@ const en = {
   activity_equipment_label: 'Equipment',
   activity_title_label: 'Title',
   activity_description_label: 'Description',
+  activity_photo_label: 'Photo',
+  activity_photo_add: 'Add photo',
+  activity_photo_title: 'Activity photo',
+  activity_photo_camera: 'Camera',
+  activity_photo_gallery: 'Gallery',
   activity_save_button: 'Save Activity',
   activity_pause_button: 'Pause',
 

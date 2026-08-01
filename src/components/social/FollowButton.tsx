@@ -6,9 +6,11 @@ import { colors, typography } from '../../lib/theme';
 interface FollowButtonProps {
   userId: string;
   initialFollowing: boolean;
+  /** Ocupa a largura disponível — usado na barra de ações do perfil. */
+  fullWidth?: boolean;
 }
 
-export function FollowButton({ userId, initialFollowing }: FollowButtonProps) {
+export function FollowButton({ userId, initialFollowing, fullWidth }: FollowButtonProps) {
   const [following, setFollowing] = useState(initialFollowing);
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +33,11 @@ export function FollowButton({ userId, initialFollowing }: FollowButtonProps) {
 
   return (
     <TouchableOpacity
-      style={[styles.button, following ? styles.buttonFollowing : styles.buttonFollow]}
+      style={[
+        styles.button,
+        following ? styles.buttonFollowing : styles.buttonFollow,
+        fullWidth && styles.buttonFullWidth,
+      ]}
       onPress={handlePress}
       disabled={loading}
     >
@@ -44,6 +50,7 @@ export function FollowButton({ userId, initialFollowing }: FollowButtonProps) {
 
 const styles = StyleSheet.create({
   button: { paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8 },
+  buttonFullWidth: { flex: 1, alignItems: 'center', borderRadius: 22, paddingVertical: 11 },
   buttonFollow: { backgroundColor: colors.primary },
   buttonFollowing: { backgroundColor: colors.inputBackground, borderWidth: 1, borderColor: colors.border },
   text: { ...typography.bodyBold, fontSize: 14 },

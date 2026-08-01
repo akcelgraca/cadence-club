@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Stack } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
@@ -89,7 +90,9 @@ function AppStack() {
   const { isConnected } = useNetworkStatus();
 
   return (
-    <View style={{ flex: 1, backgroundColor: c.background }}>
+    // GestureHandlerRootView é obrigatório para os gestos do react-native-
+    // gesture-handler funcionarem (sem ele, no Android não chega nada).
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.background }}>
       <StatusBar
         barStyle={c.background === '#FAFAFA' ? 'dark-content' : 'light-content'}
         backgroundColor={c.background}
@@ -104,7 +107,6 @@ function AppStack() {
           headerShown: false,
           header: (props) => <CustomHeader {...props} />,
           contentStyle: { backgroundColor: c.background },
-          cardStyle: { backgroundColor: c.background },
         }}
       >
         <Stack.Screen name="(auth)" />
@@ -116,6 +118,18 @@ function AppStack() {
         <Stack.Screen
           name="activity/[id]"
           options={{ headerShown: true, title: t('activity_detail_screen') }}
+        />
+        <Stack.Screen
+          name="activity/[id]/edit"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="activity/[id]/segment-new"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="segment/[id]"
+          options={{ headerShown: true, title: 'Troço' }}
         />
         <Stack.Screen
           name="profile/[id]"
@@ -161,8 +175,48 @@ function AppStack() {
           name="search"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="club/[id]"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="club/[id]/chat"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="club/[id]/event-new"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="club/create"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="club/discover"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="challenges"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="events"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="saved"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="messages/[id]"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="messages/new"
+          options={{ headerShown: false }}
+        />
       </Stack>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 

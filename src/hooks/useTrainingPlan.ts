@@ -55,6 +55,8 @@ export function useWeeklyPlan(
       ...day,
       today: day.day_of_week === todayIndex,
       actual_distance: actual?.total_distance ?? 0,
+      // Atividades sem deslocação medem-se em tempo, não em distância
+      actual_duration: actual?.total_duration ?? 0,
     };
   });
 

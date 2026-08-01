@@ -180,11 +180,15 @@ export function TrainingPlanCard({ plan, isLoading }: TrainingPlanCardProps) {
                     <Text style={styles.metricLabel}>{t('duration')}</Text>
                   </View>
                 )}
-                {selectedDay.is_completed && selectedDay.actual_distance != null && (
+                {/* O realizado segue a métrica da meta: km para quem se desloca,
+                    minutos para treinos parados */}
+                {selectedDay.is_completed && (
                   <View style={styles.metricItem}>
                     <Ionicons name="checkmark-circle" size={16} color={colors.success} />
                     <Text style={[styles.metricValue, styles.metricDone]}>
-                      {(selectedDay.actual_distance / 1000).toFixed(2)} km
+                      {selectedDay.target_distance != null
+                        ? `${((selectedDay.actual_distance ?? 0) / 1000).toFixed(2)} km`
+                        : formatDuration(selectedDay.actual_duration ?? 0)}
                     </Text>
                     <Text style={styles.metricLabel}>{t('training_actual')}</Text>
                   </View>

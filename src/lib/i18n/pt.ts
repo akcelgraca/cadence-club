@@ -425,6 +425,8 @@ const pt = {
   search_initial_subtext: 'Encontra pessoas e rotas na comunidade.',
   search_users: 'Pessoas',
   search_routes: 'Rotas',
+  search_cities: 'Cidades',
+  search_cities_subtext: 'Pesquisa uma cidade para veres as rotas da comunidade.',
   search_no_results: 'Sem resultados',
   search_no_results_subtext: 'Tenta outro termo de pesquisa.',
 
@@ -448,6 +450,11 @@ const pt = {
   activity_equipment_label: 'Equipamento',
   activity_title_label: 'Título',
   activity_description_label: 'Descrição',
+  activity_photo_label: 'Foto',
+  activity_photo_add: 'Adicionar foto',
+  activity_photo_title: 'Foto da atividade',
+  activity_photo_camera: 'Câmara',
+  activity_photo_gallery: 'Galeria',
   activity_save_button: 'Guardar Atividade',
   activity_pause_button: 'Pausar',
 

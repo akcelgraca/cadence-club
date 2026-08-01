@@ -215,6 +215,44 @@ export async function incrementUsageCount(id: string): Promise<void> {
   }
 }
 
+// ── Rotas guardadas (favoritos) ───────────────────────────────────────────────
+// Schema e RLS: supabase/migrations/030_saved_routes.sql
+
+export async function getSavedRouteIds(): Promise<Set<string>> {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) return new Set();
+
+  const { data, error } = await supabase
+    .from('saved_routes')
+    .select('route_id')
+    .eq('user_id', user.user.id);
+  if (error) return new Set();
+  return new Set((data ?? []).map((r: any) => r.route_id));
+}
+
+export async function saveRoute(routeId: string): Promise<void> {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error('Not authenticated');
+
+  const { error } = await supabase
+    .from('saved_routes')
+    .insert({ user_id: user.user.id, route_id: routeId });
+  // 23505 = já guardada — não é erro para o utilizador
+  if (error && error.code !== '23505') throw error;
+}
+
+export async function unsaveRoute(routeId: string): Promise<void> {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error('Not authenticated');
+
+  const { error } = await supabase
+    .from('saved_routes')
+    .delete()
+    .eq('user_id', user.user.id)
+    .eq('route_id', routeId);
+  if (error) throw error;
+}
+
 export interface CreateWaypointPayload {
   route_id: string;
   name: string;

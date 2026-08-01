@@ -50,9 +50,9 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="feed"
+        name="social"
         options={{
-          title: t('tab_feed'),
+          title: 'Social',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'people' : 'people-outline'}
@@ -62,6 +62,7 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="feed" options={{ href: null }} />
       <Tabs.Screen
         name="history"
         options={{

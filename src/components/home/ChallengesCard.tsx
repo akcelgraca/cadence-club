@@ -1,0 +1,135 @@
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
+import { getActiveChallenges, formatChallengeValue } from '../../services/challenges';
+import { colors, typography, withAlpha } from '../../lib/theme';
+import type { Challenge } from '../../lib/types';
+
+/**
+ * Resumo dos desafios no ecrã Hoje: mostra o desafio em que participo com mais
+ * progresso; se ainda não participo em nenhum, convida a começar.
+ */
+export function ChallengesCard() {
+  const { data: challenges = [] } = useQuery({
+    queryKey: ['activeChallenges'],
+    queryFn: getActiveChallenges,
+  });
+
+  if (challenges.length === 0) return null;
+
+  const joined = challenges.filter((c) => c.joined);
+  const featured: Challenge | undefined = joined.length > 0
+    ? joined.reduce((best, c) =>
+        (c.my_progress / (c.goal || 1)) > (best.my_progress / (best.goal || 1)) ? c : best)
+    : undefined;
+
+  return (
+    <View style={styles.wrapper}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Desafios</Text>
+        <TouchableOpacity style={styles.viewAll} onPress={() => router.push('/challenges')}>
+          <Text style={styles.viewAllText}>Ver todos</Text>
+          <Ionicons name="chevron-forward" size={12} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
+
+      {featured ? (
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => router.push('/challenges')}
+          activeOpacity={0.8}
+        >
+          <View style={styles.cardHeader}>
+            <View style={styles.iconWrap}>
+              <Ionicons name="trophy" size={16} color={colors.primary} />
+            </View>
+            <Text style={styles.cardTitle} numberOfLines={1}>{featured.name}</Text>
+          </View>
+
+          <View style={styles.progressRow}>
+            <Text style={styles.progressValue}>
+              {formatChallengeValue(featured.my_progress, featured.type)}
+              <Text style={styles.progressGoal}>
+                {' '}/ {formatChallengeValue(featured.goal, featured.type)}
+              </Text>
+            </Text>
+            <Text style={styles.progressPct}>
+              {Math.round(Math.min(1, featured.my_progress / (featured.goal || 1)) * 100)}%
+            </Text>
+          </View>
+          <View style={styles.track}>
+            <View
+              style={[
+                styles.fill,
+                { width: `${Math.min(1, featured.my_progress / (featured.goal || 1)) * 100}%` },
+              ]}
+            />
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={styles.inviteCard}
+          onPress={() => router.push('/challenges')}
+          activeOpacity={0.8}
+        >
+          <View style={styles.iconWrap}>
+            <Ionicons name="trophy-outline" size={18} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.inviteTitle}>
+              {challenges.length} {challenges.length === 1 ? 'desafio ativo' : 'desafios ativos'}
+            </Text>
+            <Text style={styles.inviteSub}>Junta-te e acompanha o teu progresso.</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrapper: { marginBottom: 24 },
+  sectionHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12,
+  },
+  sectionTitle: { ...typography.headline, fontSize: 18, color: colors.foreground },
+  viewAll: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  viewAllText: { fontFamily: 'Barlow_600SemiBold', fontSize: 12, color: colors.primary },
+
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  iconWrap: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: withAlpha(colors.primary, 0.12),
+    alignItems: 'center', justifyContent: 'center',
+  },
+  cardTitle: { ...typography.bodyBold, fontSize: 15, color: colors.foreground, flex: 1 },
+
+  progressRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 },
+  progressValue: { fontFamily: 'BarlowCondensed_900Black', fontSize: 20, color: colors.foreground },
+  progressGoal: { fontFamily: 'Barlow_500Medium', fontSize: 12, color: colors.mutedForeground },
+  progressPct: { fontFamily: 'DMMono_400Regular', fontSize: 12, color: colors.primary },
+  track: {
+    height: 6, borderRadius: 3,
+    backgroundColor: withAlpha(colors.foreground, 0.08),
+    overflow: 'hidden',
+  },
+  fill: { height: '100%', borderRadius: 3, backgroundColor: colors.primary },
+
+  inviteCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: colors.card,
+    borderRadius: 16, padding: 14,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
+  },
+  inviteTitle: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
+  inviteSub: { ...typography.body, fontSize: 12, color: colors.mutedForeground, marginTop: 2 },
+});

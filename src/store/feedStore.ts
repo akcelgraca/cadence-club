@@ -9,8 +9,11 @@ interface FeedFilter {
 
 interface FeedState {
   filter: FeedFilter;
+  /** Há atividades novas de outros utilizadores desde o último refresh (realtime). */
+  hasNewActivities: boolean;
   setFilter: (filter: Partial<FeedFilter>) => void;
   resetFilter: () => void;
+  setHasNewActivities: (value: boolean) => void;
 }
 
 const defaultFilter: FeedFilter = {
@@ -21,6 +24,8 @@ const defaultFilter: FeedFilter = {
 
 export const useFeedStore = create<FeedState>((set) => ({
   filter: defaultFilter,
+  hasNewActivities: false,
   setFilter: (filter) => set((s) => ({ filter: { ...s.filter, ...filter } })),
   resetFilter: () => set({ filter: defaultFilter }),
+  setHasNewActivities: (hasNewActivities) => set({ hasNewActivities }),
 }));

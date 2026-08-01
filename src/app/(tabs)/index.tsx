@@ -11,12 +11,13 @@ import { useWeeklyPlan } from '../../hooks/useTrainingPlan';
 import type { QuestionnairePreferences } from '../../lib/types';
 import { HomeHeader } from '../../components/home/HomeHeader';
 import { TodayGoalCard } from '../../components/home/TodayGoalCard';
-import { StatsRow } from '../../components/home/StatsRow';
 import { WeeklyChartCard } from '../../components/home/WeeklyChartCard';
 import { TrainingPlanCard } from '../../components/home/TrainingPlanCard';
+import { ChallengesCard } from '../../components/home/ChallengesCard';
+import { UpcomingEventsCard } from '../../components/home/UpcomingEventsCard';
 import { RunCard } from '../../components/common/RunCard';
 import type { Activity } from '../../lib/types';
-import { colors, typography } from '../../lib/theme';
+import { colors, typography, withAlpha } from '../../lib/theme';
 
 export default function HomeScreen() {
   const { profile } = useAuthStore();
@@ -31,6 +32,8 @@ export default function HomeScreen() {
       queryClient.invalidateQueries({ queryKey: ['weeklyPlan'] });
       queryClient.invalidateQueries({ queryKey: ['weeklySummary'] });
       queryClient.invalidateQueries({ queryKey: ['weeklyDailyBreakdown'] });
+      queryClient.invalidateQueries({ queryKey: ['activeChallenges'] });
+      queryClient.invalidateQueries({ queryKey: ['myEvents'] });
     }, [queryClient, userId]),
   );
 
@@ -64,14 +67,15 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <HomeHeader profile={profile} />
         <TodayGoalCard todayPlan={todayPlan} isLoading={isPlanLoading} />
-        <StatsRow />
         <WeeklyChartCard userId={userId} />
         <TrainingPlanCard
           plan={plan}
           isLoading={isPlanLoading}
         />
+        <ChallengesCard />
+        <UpcomingEventsCard />
 
-        {latestRun && (
+        {latestRun ? (
           <View>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Última atividade</Text>
@@ -79,12 +83,30 @@ export default function HomeScreen() {
                 style={styles.viewAll}
                 onPress={() => router.push('/(tabs)/history')}
               >
-                <Text style={styles.viewAllText}>Ver tudo</Text>
+                <Text style={styles.viewAllText}>Ver histórico</Text>
                 <Ionicons name="chevron-forward" size={12} color={colors.primary} />
               </TouchableOpacity>
             </View>
             <RunCard run={latestRun as Activity} />
           </View>
+        ) : (
+          // Conta nova: o ecrã não pode acabar em nada — aponta o caminho
+          <TouchableOpacity
+            style={styles.firstRun}
+            onPress={() => router.push('/record')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.firstRunIcon}>
+              <Ionicons name="pulse-outline" size={22} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.firstRunTitle}>A tua primeira atividade</Text>
+              <Text style={styles.firstRunSub}>
+                Grava um treino e começa a construir a tua sequência.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
+          </TouchableOpacity>
         )}
 
         <View style={{ height: 20 }} />
@@ -112,5 +134,25 @@ const styles = StyleSheet.create({
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 12,
     color: colors.primary,
+  },
+  firstRun: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: colors.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  firstRunIcon: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: withAlpha(colors.primary, 0.1),
+    alignItems: 'center', justifyContent: 'center',
+  },
+  firstRunTitle: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
+  firstRunSub: {
+    ...typography.body, fontSize: 12,
+    color: colors.mutedForeground, marginTop: 2, lineHeight: 16,
   },
 });

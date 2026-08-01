@@ -28,7 +28,10 @@ export default function FollowListScreen() {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['followList', id, type],
-    queryFn: () => (isFollowers ? getFollowers(id) : getFollowing(id)),
+    queryFn: async (): Promise<FollowItem[]> => {
+      const rows = isFollowers ? await getFollowers(id) : await getFollowing(id);
+      return rows as unknown as FollowItem[];
+    },
     enabled: !!id,
   });
 

@@ -1,11 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { searchUsers, searchRoutes, type NearbyRouteResult } from '../services/search';
+import { searchUsers, searchRoutes, searchRoutesByCity, type NearbyRouteResult } from '../services/search';
+import { getSavedRouteIds, saveRoute, unsaveRoute } from '../services/routes';
+import { supabase } from '../services/supabase';
 import { Avatar } from '../components/common/Avatar';
+import { FollowButton } from '../components/social/FollowButton';
 import { formatDistance } from '../utils/formatDistance';
 import { ActivityIcon } from '../components/common/ActivityIcon';
 import { colors, typography, withAlpha } from '../lib/theme';
@@ -13,8 +16,14 @@ import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import type { Profile } from '../lib/types';
 
-type SearchTab = 'users' | 'routes';
+type SearchTab = 'users' | 'routes' | 'cities';
 type SearchResult = Profile | NearbyRouteResult;
+
+const TABS: { key: SearchTab; icon: keyof typeof Ionicons.glyphMap; i18n: string }[] = [
+  { key: 'users', icon: 'people', i18n: 'search_users' },
+  { key: 'routes', icon: 'map', i18n: 'search_routes' },
+  { key: 'cities', icon: 'location', i18n: 'search_cities' },
+];
 
 export default function SearchScreen() {
   const { t } = useTranslation();
@@ -25,6 +34,20 @@ export default function SearchScreen() {
   const [users, setUsers] = useState<Profile[]>([]);
   const [routes, setRoutes] = useState<NearbyRouteResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Quem eu sigo + rotas guardadas — para os botões de ação nos resultados
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!currentProfileId) return;
+    supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', currentProfileId)
+      .then(({ data }) => setFollowingIds(new Set((data ?? []).map((f: any) => f.following_id))));
+    getSavedRouteIds().then(setSavedIds).catch(() => {});
+  }, [currentProfileId]);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -37,11 +60,11 @@ export default function SearchScreen() {
       setIsLoading(true);
       try {
         if (activeTab === 'users') {
-          const results = await searchUsers(query);
-          setUsers(results);
+          setUsers(await searchUsers(query));
+        } else if (activeTab === 'routes') {
+          setRoutes(await searchRoutes(query));
         } else {
-          const results = await searchRoutes(query);
-          setRoutes(results);
+          setRoutes(await searchRoutesByCity(query));
         }
       } catch {
         // ignore
@@ -65,19 +88,46 @@ export default function SearchScreen() {
     router.push({ pathname: '/record', params: { routeId: route.id } });
   };
 
-  const renderUserItem = ({ item }: { item: Profile }) => (
-    <TouchableOpacity style={styles.resultItem} onPress={() => handleUserPress(item)}>
-      <Avatar uri={item.avatar_url} name={item.full_name} size={44} />
-      <View style={styles.resultContent}>
-        <Text style={styles.resultName}>{item.full_name}</Text>
-        <Text style={styles.resultSub}>@{item.username}</Text>
-        {item.bio && <Text style={styles.resultBio} numberOfLines={1}>{item.bio}</Text>}
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
-    </TouchableOpacity>
-  );
+  const toggleSaveRoute = async (route: NearbyRouteResult) => {
+    const isSaved = savedIds.has(route.id);
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      if (isSaved) next.delete(route.id); else next.add(route.id);
+      return next;
+    });
+    try {
+      if (isSaved) await unsaveRoute(route.id);
+      else await saveRoute(route.id);
+    } catch {
+      // reverter em caso de erro
+      setSavedIds((prev) => {
+        const next = new Set(prev);
+        if (isSaved) next.add(route.id); else next.delete(route.id);
+        return next;
+      });
+    }
+  };
+
+  const renderUserItem = ({ item }: { item: Profile }) => {
+    const isSelf = item.id === currentProfileId;
+    return (
+      <TouchableOpacity style={styles.resultItem} onPress={() => handleUserPress(item)}>
+        <Avatar uri={item.avatar_url} name={item.full_name} size={44} />
+        <View style={styles.resultContent}>
+          <Text style={styles.resultName}>{item.full_name}</Text>
+          <Text style={styles.resultSub}>
+            @{item.username}{item.city ? ` · ${item.city}` : ''}
+          </Text>
+        </View>
+        {!isSelf && (
+          <FollowButton userId={item.id} initialFollowing={followingIds.has(item.id)} />
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   const renderRouteItem = ({ item }: { item: NearbyRouteResult }) => {
+    const isSaved = savedIds.has(item.id);
     return (
       <TouchableOpacity style={styles.resultItem} onPress={() => handleRoutePress(item)}>
         <View style={styles.routeIconContainer}>
@@ -92,7 +142,13 @@ export default function SearchScreen() {
             </Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
+        <TouchableOpacity onPress={() => toggleSaveRoute(item)} hitSlop={10} style={styles.saveBtn}>
+          <Ionicons
+            name={isSaved ? 'bookmark' : 'bookmark-outline'}
+            size={20}
+            color={isSaved ? colors.primary : colors.mutedForeground}
+          />
+        </TouchableOpacity>
       </TouchableOpacity>
     );
   };
@@ -105,7 +161,7 @@ export default function SearchScreen() {
           <Ionicons name="search-outline" size={48} color={colors.mutedForeground} />
           <Text style={styles.emptyTitle}>{t('search_title')}</Text>
           <Text style={styles.emptySubtitle}>
-            {t('search_initial_subtext')}
+            {activeTab === 'cities' ? t('search_cities_subtext') : t('search_initial_subtext')}
           </Text>
         </View>
       );
@@ -149,32 +205,25 @@ export default function SearchScreen() {
 
       {/* Tabs */}
       <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'users' && styles.tabActive]}
-          onPress={() => setActiveTab('users')}
-        >
-          <Ionicons
-            name="people"
-            size={16}
-            color={activeTab === 'users' ? colors.primary : colors.mutedForeground}
-          />
-          <Text style={[styles.tabText, activeTab === 'users' && styles.tabTextActive]}>
-            {t('search_users')}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'routes' && styles.tabActive]}
-          onPress={() => setActiveTab('routes')}
-        >
-          <Ionicons
-            name="map"
-            size={16}
-            color={activeTab === 'routes' ? colors.primary : colors.mutedForeground}
-          />
-          <Text style={[styles.tabText, activeTab === 'routes' && styles.tabTextActive]}>
-            {t('search_routes')}
-          </Text>
-        </TouchableOpacity>
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.tab, isActive && styles.tabActive]}
+              onPress={() => setActiveTab(tab.key)}
+            >
+              <Ionicons
+                name={tab.icon}
+                size={16}
+                color={isActive ? colors.primary : colors.mutedForeground}
+              />
+              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
+                {t(tab.i18n as any)}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Results */}
@@ -294,12 +343,6 @@ const styles = StyleSheet.create({
     color: colors.mutedForeground,
     marginTop: 2,
   },
-  resultBio: {
-    ...typography.body,
-    fontSize: 13,
-    color: colors.mutedForeground,
-    marginTop: 4,
-  },
   routeIconContainer: {
     width: 44,
     height: 44,
@@ -314,6 +357,7 @@ const styles = StyleSheet.create({
     gap: 4,
     marginTop: 2,
   },
+  saveBtn: { padding: 4 },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',

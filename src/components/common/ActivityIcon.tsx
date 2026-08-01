@@ -14,7 +14,7 @@ interface ActivityIconProps {
 
 export function ActivityIcon({ activityKey, size = 24, variant, tintColor, style }: ActivityIconProps) {
   const c = useColors();
-  const isDark = c.background === '#0c0c0c';
+  const isDark = (c.background as string) === '#0c0c0c';
   const resolvedVariant = variant ?? (isDark ? 'white' : 'black');
   const source = getActivityImage(activityKey, resolvedVariant);
 

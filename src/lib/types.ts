@@ -102,6 +102,69 @@ export type RunType = 'road' | 'trail';
 export type ActivityState = 'idle' | 'countdown' | 'recording' | 'paused' | 'finished';
 export type ActivitySource = 'app' | 'healthkit' | 'healthconnect';
 
+// --- Troços da comunidade (migração 039) ---
+
+/** Troço percorrido numa atividade, com o meu histórico e a média do grupo. */
+export interface ActivitySegment {
+  segment_id: string;
+  name: string;
+  distance: number;
+  elevation_gain: number;
+  /** Tempo desta passagem, em segundos. */
+  duration: number;
+  pace: number | null;
+  my_best: number | null;
+  my_attempts: number;
+  community_avg: number | null;
+  community_people: number;
+}
+
+export interface SegmentDetail {
+  id: string;
+  name: string;
+  description: string | null;
+  city: string | null;
+  activity_type: string;
+  distance: number;
+  elevation_gain: number;
+  my_attempts: number;
+  my_best: number | null;
+  my_last: number | null;
+  my_average: number | null;
+  community_avg: number | null;
+  community_people: number;
+}
+
+export interface SegmentEffort {
+  id: string;
+  activity_id: string;
+  duration: number;
+  pace: number | null;
+  started_at: string;
+}
+
+export interface NearbySegment {
+  id: string;
+  name: string;
+  city: string | null;
+  activity_type: string;
+  distance: number;
+  elevation_gain: number;
+  my_attempts: number;
+  people: number;
+  meters_away: number;
+}
+
+export interface ActivityPhoto {
+  id: string;
+  activity_id: string;
+  url: string;
+  position: number;
+  created_at?: string;
+  /** Cartão de estatísticas gerado pela app (PNG transparente). */
+  is_generated?: boolean;
+}
+
 export interface ActivityPoint {
   id?: string;
   activity_id: string;
@@ -129,6 +192,10 @@ export interface Activity {
   is_public: boolean;
   surface_type?: SurfaceType | null;
   equipment_id?: string | null;
+  /** Capa — primeira foto da galeria, mantida por trigger na base de dados. */
+  photo_url?: string | null;
+  /** Galeria completa (activity_photos), quando pedida na query. */
+  photos?: ActivityPhoto[];
   source: ActivitySource;
   created_at: string;
   profile?: Profile;
@@ -208,15 +275,22 @@ export interface Notification {
 }
 
 // --- Challenges (futuro) ---
+export type ChallengeType = 'distance' | 'duration' | 'count' | 'elevation';
+
 export interface Challenge {
   id: string;
   name: string;
   description: string;
-  type: string;
+  type: ChallengeType;
   goal: number;
   start_date: string;
   end_date: string;
-  created_at: string;
+  created_at?: string;
+  // Devolvidos por get_challenges_with_progress
+  participants: number;
+  joined: boolean;
+  my_progress: number;
+  community_progress: number;
 }
 
 // --- Equipment ---
@@ -331,6 +405,7 @@ export interface TrainingPlanDay {
   // Client-side computed fields
   today?: boolean;
   actual_distance?: number; // meters from daily breakdown
+  actual_duration?: number; // seconds from daily breakdown
 }
 
 // --- Settings ---
@@ -365,6 +440,110 @@ export interface UserSettings {
   language: 'pt' | 'en';
   weeklySummaryNotifications: boolean;
   trainingReminderNotifications: boolean;
+}
+
+// --- Clubs ---
+export type ClubRole = 'admin' | 'member';
+
+export interface Club {
+  id: string;
+  name: string;
+  description: string | null;
+  avatar_url: string | null;
+  city: string | null;
+  category: ActivityCategory | null;
+  is_private: boolean;
+  owner_id: string;
+  member_count: number;
+  created_at: string;
+  // client-side enrichment
+  is_member?: boolean;
+  role?: ClubRole;
+  /** Estado do meu pedido de adesão (clubes privados). */
+  request_status?: 'pending' | 'accepted' | 'rejected';
+}
+
+export interface ClubChat {
+  club_id: string;
+  name: string;
+  avatar_url: string | null;
+  last_message_body: string | null;
+  last_message_at: string | null;
+  unread_count: number;
+}
+
+export interface ClubStats {
+  total_activities: number;
+  total_distance: number;
+  month_distance: number;
+  active_members: number;
+}
+
+export interface ClubEvent {
+  id: string;
+  club_id: string;
+  created_by: string;
+  title: string;
+  description: string | null;
+  activity_type: string | null;
+  location: string | null;
+  starts_at: string;
+  distance: number | null;
+  created_at: string;
+  // client-side enrichment
+  attendee_count?: number;
+  is_attending?: boolean;
+  club?: Pick<Club, 'id' | 'name' | 'avatar_url'>;
+}
+
+export interface ClubJoinRequest {
+  id: string;
+  club_id: string;
+  user_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  profile?: Pick<Profile, 'id' | 'full_name' | 'username' | 'avatar_url'>;
+  club?: Pick<Club, 'id' | 'name'>;
+}
+
+export interface ClubMember {
+  id: string;
+  club_id: string;
+  user_id: string;
+  role: ClubRole;
+  joined_at: string;
+  profile?: Profile;
+}
+
+export interface ClubMessage {
+  id: string;
+  club_id: string;
+  user_id: string;
+  body: string;
+  created_at: string;
+  profile?: Pick<Profile, 'id' | 'full_name' | 'username' | 'avatar_url'>;
+}
+
+// --- Messages ---
+export interface Conversation {
+  id: string;
+  created_at: string;
+  last_message_at: string | null;
+  last_message_body: string | null;
+  last_message_sender_id: string | null;
+  unread_count: number;
+  other_user: Pick<Profile, 'id' | 'full_name' | 'username' | 'avatar_url' | 'city'>;
+}
+
+export interface DirectMessage {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+  is_read: boolean;
 }
 
 // --- Navigation ---

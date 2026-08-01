@@ -1,37 +1,72 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
-import { colors, typography, healthColors } from '../../lib/theme';
+import { formatPace } from '../../utils/formatPace';
+import { formatDistance } from '../../utils/formatDistance';
+import { formatDuration } from '../../utils/dateHelpers';
+import { useSettingsStore } from '../../store/settingsStore';
+import { colors, typography, withAlpha } from '../../lib/theme';
+import type { ProfileStats } from '../../lib/types';
 
-interface MetricItem {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  value: string;
-  color: string;
+/**
+ * Médias calculadas a partir das atividades reais do utilizador.
+ *
+ * Frequência cardíaca e VO₂ máx. não aparecem porque a app ainda não lê dados
+ * de wearables — mostrar valores aqui seria inventá-los.
+ */
+
+interface HealthMetricsProps {
+  stats: ProfileStats | null | undefined;
 }
 
-export function HealthMetrics() {
-  const { t } = useTranslation();
-  const metrics: MetricItem[] = [
-    { icon: 'heart-outline', label: 'Freq. cardíaca em repouso', value: '52 bpm', color: healthColors.heart },
-    { icon: 'fitness-outline', label: 'VO2 Max estimado', value: '56 ml/kg/min', color: healthColors.vo2max },
-    { icon: 'flash-outline', label: 'Índice de forma', value: 'Alta', color: healthColors.shape },
+export function HealthMetrics({ stats }: HealthMetricsProps) {
+  const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
+
+  if (!stats || stats.activity_count === 0) return null;
+
+  const avgPaceSecPerKm = stats.total_distance > 0
+    ? stats.total_duration / (stats.total_distance / 1000)
+    : 0;
+
+  const rows = [
+    {
+      icon: 'speedometer-outline' as const,
+      label: 'Ritmo médio',
+      value: avgPaceSecPerKm > 0 ? formatPace(avgPaceSecPerKm, unitSystem) : '—',
+    },
+    {
+      icon: 'resize-outline' as const,
+      label: 'Distância média',
+      value: formatDistance(stats.total_distance / stats.activity_count, unitSystem),
+    },
+    {
+      icon: 'time-outline' as const,
+      label: 'Duração média',
+      value: formatDuration(stats.total_duration / stats.activity_count),
+    },
+    {
+      icon: 'trending-up-outline' as const,
+      label: 'Elevação acumulada',
+      value: `${Math.round(stats.total_elevation)} m`,
+    },
   ];
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>{t('health_section_title')}</Text>
+      <Text style={styles.sectionTitle}>Médias</Text>
       <View style={styles.list}>
-        {metrics.map((item) => (
+        {rows.map((item) => (
           <View key={item.label} style={styles.row}>
             <View style={styles.iconGroup}>
-              <Ionicons name={item.icon} size={16} color={item.color} />
+              <Ionicons name={item.icon} size={15} color={colors.mutedForeground} />
               <Text style={styles.label}>{item.label}</Text>
             </View>
-            <Text style={[styles.value, { color: item.color }]}>{item.value}</Text>
+            <Text style={styles.value}>{item.value}</Text>
           </View>
         ))}
       </View>
+      <Text style={styles.note}>
+        Frequência cardíaca e VO₂ máx. ficam disponíveis quando ligares um relógio.
+      </Text>
     </View>
   );
 }
@@ -45,23 +80,19 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionTitle: { ...typography.headline, fontSize: 18, marginBottom: 12, color: colors.foreground },
-  list: { gap: 12 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.inputBackground,
-    borderRadius: 12,
-    padding: 12,
-  },
-  iconGroup: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  label: {
-    fontFamily: 'Barlow_500Medium',
-    fontSize: 14,
-    color: colors.foreground,
-  },
-  value: {
-    fontFamily: 'BarlowCondensed_900Black',
-    fontSize: 14,
+  list: { gap: 14 },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  iconGroup: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  label: { fontFamily: 'Barlow_500Medium', fontSize: 14, color: colors.mutedForeground },
+  value: { fontFamily: 'DMMono_400Regular', fontSize: 14, color: colors.foreground },
+  note: {
+    ...typography.body,
+    fontSize: 11,
+    lineHeight: 15,
+    color: colors.mutedForeground,
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: withAlpha(colors.foreground, 0.08),
   },
 });

@@ -1,16 +1,16 @@
 export const colors = {
-  background: '#0c0c0c',
-  card: '#161616',
-  primary: '#C7F732',
-  primaryForeground: '#0c0c0c',
-  foreground: '#f0f0f0',
-  mutedForeground: '#888888',
-  border: 'rgba(255, 255, 255, 0.08)',
-  destructive: '#ff4444',
+  background: '#FAFAFA',
+  card: '#FFFFFF',
+  primary: '#7BA823',
+  primaryForeground: '#FFFFFF',
+  foreground: '#1a1a1a',
+  mutedForeground: '#6b6b6b',
+  border: 'rgba(0, 0, 0, 0.1)',
+  destructive: '#dc2626',
   destructiveForeground: '#ffffff',
-  inputBackground: '#1a1a1a',
-  tabBarBackground: '#0a0a0a',
-  tabBarInactive: '#666666',
+  inputBackground: '#f3f3f3',
+  tabBarBackground: '#FFFFFF',
+  tabBarInactive: '#9ca3af',
   // GPS signal
   gpsGood: '#2ecc71',
   gpsWeak: '#f39c12',
@@ -30,8 +30,8 @@ export const colors = {
   markerCafe: '#8e44ad',
   markerLandmark: '#f39c12',
   // Overlays
-  overlayDark: 'rgba(0, 0, 0, 0.7)',
-  overlayLight: 'rgba(0, 0, 0, 0.1)',
+  overlayDark: 'rgba(0, 0, 0, 0.5)',
+  overlayLight: 'rgba(0, 0, 0, 0.05)',
 } as const;
 
 export const lightColors = {

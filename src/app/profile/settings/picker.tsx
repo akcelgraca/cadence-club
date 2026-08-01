@@ -104,7 +104,7 @@ export default function PickerScreen() {
       >
         <View style={styles.optionContent}>
           {opt.icon && (() => {
-            const color = isSelected ? c.primary : '#FFFFFF';
+            const color = isSelected ? c.primary : c.foreground;
             if (getActivityImage(opt.key, 'white')) {
               return <ActivityIcon activityKey={opt.key} size={20} tintColor={color} />;
             }
@@ -114,7 +114,7 @@ export default function PickerScreen() {
             }
             return <Ionicons name={opt.icon as any} size={20} color={color} />;
           })()}
-          <Text style={[styles.optionText, isSelected && styles.optionTextSelected, !isSelected && { color: '#FFFFFF' }]}>
+          <Text style={[styles.optionText, { color: c.foreground }, isSelected && styles.optionTextSelected]}>
             {opt.label}
           </Text>
         </View>
@@ -180,6 +180,6 @@ const styles = StyleSheet.create({
   },
   optionTextSelected: {
     ...typography.bodyBold,
-    color: '#C7F732', // primary — can't use useColors here since it wouldn't be dynamic per-item
+    color: '#7BA823',
   },
 });

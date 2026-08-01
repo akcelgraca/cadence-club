@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { router } from 'expo-router';
 import { Avatar } from '../common/Avatar';
 import type { Profile } from '../../lib/types';
 import { useColors } from '../../hooks/useColors';
@@ -12,6 +13,16 @@ function getGreetingKey(): 'greeting_morning' | 'greeting_afternoon' | 'greeting
   return 'greeting_evening';
 }
 
+/** "Sábado, 1 de agosto" — o contexto que falta num ecrã chamado Hoje. */
+function todayLabel(): string {
+  const formatted = new Date().toLocaleDateString('pt-PT', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
 interface HomeHeaderProps {
   profile: Profile;
 }
@@ -21,31 +32,30 @@ export function HomeHeader({ profile }: HomeHeaderProps) {
   const { t } = useAppTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
 
-  const displayName = (() => {
-    const parts = profile.full_name?.split(' ') || [];
-    if (parts.length >= 2) return `${parts[0]} ${parts[parts.length - 1]}`;
-    return parts[0] || '';
-  })();
+  const firstName = profile.full_name?.split(' ')[0] ?? '';
 
   return (
     <View style={styles.container}>
       <View style={styles.textGroup}>
-        <Text style={styles.greeting}>{t(getGreetingKey())}</Text>
-        <Text style={styles.name}>{displayName}</Text>
+        <Text style={styles.greeting} numberOfLines={1}>
+          {t(getGreetingKey())}{firstName ? `, ${firstName}` : ''}
+        </Text>
+        <Text style={styles.date} numberOfLines={1}>{todayLabel()}</Text>
       </View>
-      <View style={styles.avatarGroup}>
+
+      <TouchableOpacity
+        onPress={() => router.push('/(tabs)/profile')}
+        activeOpacity={0.8}
+        accessibilityLabel="Abrir perfil"
+      >
         <Avatar
           uri={profile.avatar_url}
           name={profile.full_name}
-          size={48}
-          radius={14}
-          borderWidth={2}
+          size={44}
+          borderWidth={1.5}
           borderColor={c.primary}
         />
-        <View style={styles.proBadge}>
-          <Text style={styles.proBadgeText}>PRO</Text>
-        </View>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -55,35 +65,24 @@ function createStyles(c: ReturnType<typeof useColors>) {
     container: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: 24,
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 20,
     },
-    textGroup: { flex: 1 },
+    textGroup: { flex: 1, minWidth: 0 },
     greeting: {
-      fontFamily: 'Barlow_500Medium',
-      fontSize: 14,
-      color: c.mutedForeground,
-    },
-    name: {
       fontFamily: 'BarlowCondensed_900Black',
-      fontSize: 44,
+      fontSize: 26,
+      lineHeight: 28,
       color: c.foreground,
       textTransform: 'uppercase',
-      lineHeight: 44,
+      letterSpacing: 0.3,
     },
-    avatarGroup: { position: 'relative' },
-    proBadge: {
-      position: 'absolute',
-      bottom: -2,
-      right: -2,
-      backgroundColor: c.primary,
-      paddingHorizontal: 4,
-      borderRadius: 4,
-    },
-    proBadgeText: {
-      fontFamily: 'BarlowCondensed_900Black',
-      fontSize: 9,
-      color: c.primaryForeground,
+    date: {
+      fontFamily: 'DMMono_400Regular',
+      fontSize: 12,
+      color: c.mutedForeground,
+      marginTop: 2,
     },
   });
 }

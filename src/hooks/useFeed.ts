@@ -54,8 +54,15 @@ export function useFeed() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'activities' },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['feed'] });
+        (payload: any) => {
+          const row = payload.new;
+          if (row?.user_id === userId) {
+            // Atividade própria — atualizar já, sem banner
+            queryClient.invalidateQueries({ queryKey: ['feed'] });
+          } else if (row?.is_public) {
+            // De outra pessoa — mostrar o banner "novas atividades"
+            useFeedStore.getState().setHasNewActivities(true);
+          }
         }
       )
       .subscribe();

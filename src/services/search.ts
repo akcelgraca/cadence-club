@@ -57,6 +57,33 @@ export async function searchRoutesForUser(query: string, userId: string, limit: 
   return (data ?? []).map(mapSearchRouteRow);
 }
 
+/** Rotas públicas da comunidade numa cidade (pesquisa por cidade). */
+export async function searchRoutesByCity(city: string, limit: number = 30): Promise<NearbyRouteResult[]> {
+  if (!city.trim()) return [];
+
+  const { data, error } = await supabase
+    .from('routes')
+    .select('id, name, description, city, activity_type, difficulty, distance, user_id')
+    .ilike('city', `%${city.trim()}%`)
+    .eq('is_public', true)
+    .order('usage_count', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []).map((raw: any) => ({
+    id: raw.id,
+    name: raw.name,
+    description: raw.description ?? undefined,
+    city: raw.city ?? undefined,
+    activity_type: raw.activity_type,
+    difficulty: raw.difficulty ?? undefined,
+    distance: raw.distance,
+    path: [],
+    start_point: [0, 0] as [number, number],
+    user_id: raw.user_id,
+  }));
+}
+
 function mapSearchRouteRow(raw: any): NearbyRouteResult {
   return {
     id: raw.id,
