@@ -18,8 +18,6 @@ const DEFAULTS: UserSettings = {
   autoPause: true,
   voiceFeedback: true,
   defaultActivityPrivacy: 'everyone',
-  privacyZoneEnabled: false,
-  privacyZoneRadius: 500,
   gpsAccuracy: 'high',
   theme: 'light',
   defaultMapStyle: 'light',

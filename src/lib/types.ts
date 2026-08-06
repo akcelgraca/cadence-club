@@ -432,8 +432,6 @@ export interface UserSettings {
   autoPause: boolean;
   voiceFeedback: boolean;
   defaultActivityPrivacy: ActivityPrivacy;
-  privacyZoneEnabled: boolean;
-  privacyZoneRadius: number;
   gpsAccuracy: GpsAccuracy;
   theme: ThemeMode;
   defaultMapStyle: MapboxStyleKey;

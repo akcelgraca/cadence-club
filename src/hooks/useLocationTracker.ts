@@ -7,6 +7,7 @@ import { useActivityStore } from '../store/activityStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { GPS_INTERVAL, GPS_DISTANCE_THRESHOLD, MIN_ACTIVITY_DURATION, MIN_ACTIVITY_DISTANCE, AUTO_PAUSE_SPEED_THRESHOLD, AUTO_PAUSE_DELAY_MS } from '../lib/constants';
 import { haversineDistance } from '../utils/geo';
+import { useTranslation } from 'react-i18next';
 
 const BACKGROUND_TRACKING_TASK = 'BACKGROUND_LOCATION_TRACKING';
 
@@ -32,6 +33,7 @@ TaskManager.defineTask(BACKGROUND_TRACKING_TASK, async ({ data, error }) => {
 });
 
 export function useLocationTracker() {
+  const { t } = useTranslation();
   const [hasPermission, setHasPermission] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
 
@@ -51,7 +53,7 @@ export function useLocationTracker() {
     (async () => {
       const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
       if (fgStatus !== 'granted') {
-        Alert.alert('Permissão necessária', 'É necessário permitir o acesso à localização.');
+        Alert.alert(t('location_permission_title'), t('location_permission_body'));
         return;
       }
 
@@ -219,8 +221,8 @@ export function useLocationTracker() {
           timeInterval: GPS_INTERVAL,
           showsBackgroundLocationIndicator: true,
           foregroundService: {
-            notificationTitle: 'Cadence Club',
-            notificationBody: 'A gravar a tua atividade...',
+            notificationTitle: t('location_tracking_title'),
+            notificationBody: t('location_tracking_body'),
             notificationColor: '#4A90D9',
           },
         });

@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ActivityType, ActivityState, RunType, SurfaceType } from '../lib/types';
 
 interface GpsPoint {
@@ -91,7 +93,16 @@ const initialState = {
   pauseStartTime: null,
 };
 
-export const useActivityStore = create<ActivityRecording>((set) => ({
+/**
+ * A gravação é persistida no telemóvel.
+ *
+ * Sem isto, a app ser morta a meio de um treino (falta de memória, crash,
+ * reinício) apagava tudo — pior ainda do que uma falha de rede no fim, porque
+ * não havia sequer nada para reenviar.
+ */
+export const useActivityStore = create<ActivityRecording>()(
+  persist(
+    (set) => ({
   ...initialState,
 
   selectType: (type, runType) => set({ type, runType: runType ?? null }),
@@ -158,4 +169,43 @@ export const useActivityStore = create<ActivityRecording>((set) => ({
   reset: () => set(initialState),
 
   restoreState: (savedState) => set({ ...savedState }),
-}));
+    }),
+    {
+      name: 'activity-recording',
+      storage: createJSONStorage(() => AsyncStorage),
+      // Só o que descreve o treino. O GPS, o sinal e a contagem decrescente
+      // são estado do momento e não fazem sentido restaurados.
+      partialize: (s) => ({
+        type: s.type,
+        runType: s.runType,
+        state: s.state,
+        startTime: s.startTime,
+        elapsedTime: s.elapsedTime,
+        distance: s.distance,
+        avgPace: s.avgPace,
+        elevationGain: s.elevationGain,
+        points: s.points,
+        mood: s.mood,
+        title: s.title,
+        description: s.description,
+        isPublic: s.isPublic,
+        surfaceType: s.surfaceType,
+        equipmentId: s.equipmentId,
+        selectedRouteId: s.selectedRouteId,
+        selectedRouteName: s.selectedRouteName,
+        selectedRoutePath: s.selectedRoutePath,
+        totalPausedDuration: s.totalPausedDuration,
+        pauseStartTime: s.pauseStartTime,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        // Depois de um reinício o GPS já não está a correr: retomar como
+        // "a gravar" contaria tempo parado. Fica em pausa, à espera de decisão.
+        if (state.state === 'recording' || state.state === 'countdown') {
+          state.state = 'paused';
+          state.pauseStartTime = Date.now();
+        }
+      },
+    },
+  ),
+);

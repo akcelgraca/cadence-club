@@ -228,14 +228,25 @@ export async function getActivity(id: string): Promise<Activity | null> {
   return row;
 }
 
+/**
+ * Pontos de GPS visíveis para quem chama.
+ *
+ * Passa pela função get_activity_points_visible (migração 040): o dono recebe
+ * o rasto completo, os outros recebem-no sem os pontos dentro das zonas de
+ * privacidade. A leitura direta da tabela está reservada ao dono pela RLS.
+ */
 export async function getActivityPoints(activityId: string): Promise<ActivityPoint[]> {
-  const { data, error } = await supabase
-    .from('activity_points')
-    .select('*')
-    .eq('activity_id', activityId)
-    .order('timestamp', { ascending: true });
-  if (error) throw error;
-  return data;
+  const { data, error } = await supabase.rpc('get_activity_points_visible', {
+    p_activity_id: activityId,
+  });
+  if (error) return [];
+  return (data ?? []).map((p: any) => ({
+    activity_id: activityId,
+    lat: p.lat,
+    lng: p.lng,
+    elevation: p.elevation,
+    timestamp: p.timestamp,
+  })) as ActivityPoint[];
 }
 
 export async function getMyActivities(userId: string, page: number = 0, limit: number = 15) {
