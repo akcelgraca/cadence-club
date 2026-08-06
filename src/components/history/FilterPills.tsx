@@ -48,7 +48,7 @@ export function FilterPills({ selected, onSelect, availableCategories }: FilterP
           color={selected === 'all' ? colors.primaryForeground : colors.mutedForeground}
         />
         <Text style={[styles.pillText, selected === 'all' ? styles.pillTextActive : styles.pillTextInactive]}>
-          Todas
+          {t('filter_all')}
         </Text>
       </TouchableOpacity>
 

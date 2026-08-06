@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { colors, typography } from '../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho',
@@ -36,6 +37,7 @@ interface DateWheelPickerProps {
 }
 
 export default function DateWheelPicker({ visible, value, onConfirm, onCancel }: DateWheelPickerProps) {
+  const { t } = useTranslation();
   const parsed = useMemo(() => {
     const parts = value.split('-');
     const y = parts[0] ? parseInt(parts[0], 10) : 2000;
@@ -132,11 +134,11 @@ export default function DateWheelPicker({ visible, value, onConfirm, onCancel }:
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={onCancel} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-              <Text style={styles.cancelText}>Cancelar</Text>
+              <Text style={styles.cancelText}>{t('cancel')}</Text>
             </TouchableOpacity>
-            <Text style={styles.title}>Data de nascimento</Text>
+            <Text style={styles.title}>{t('edit_profile_birth_date')}</Text>
             <TouchableOpacity onPress={handleConfirm} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-              <Text style={styles.confirmText}>OK</Text>
+              <Text style={styles.confirmText}>{t('ok')}</Text>
             </TouchableOpacity>
           </View>
 

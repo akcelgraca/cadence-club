@@ -5,6 +5,7 @@ import { colors, typography, withAlpha } from '../../lib/theme';
 import { formatPace } from '../../utils/formatPace';
 import { useSettingsStore } from '../../store/settingsStore';
 import { haversineDistance } from '../../utils/geo';
+import { useTranslation } from 'react-i18next';
 
 export interface PacePoint {
   lat: number;
@@ -19,6 +20,7 @@ interface PaceProfileProps {
 }
 
 export function PaceProfile({ points, height = 160, style }: PaceProfileProps) {
+  const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   const { width: screenWidth } = useWindowDimensions();
   const [containerWidth, setContainerWidth] = useState(0);
@@ -29,9 +31,9 @@ export function PaceProfile({ points, height = 160, style }: PaceProfileProps) {
   if (!points || points.length < 2) {
     return (
       <View style={[styles.card, style]}>
-        <Text style={styles.title}>Ritmo</Text>
+        <Text style={styles.title}>{t('pace')}</Text>
         <View style={[styles.emptyContainer, { height }]}>
-          <Text style={styles.emptyText}>Dados insuficientes para o grafico de ritmo</Text>
+          <Text style={styles.emptyText}>{t('pace_profile_empty')}</Text>
         </View>
       </View>
     );
@@ -64,9 +66,9 @@ export function PaceProfile({ points, height = 160, style }: PaceProfileProps) {
   if (segments.length < 2) {
     return (
       <View style={[styles.card, style]}>
-        <Text style={styles.title}>Ritmo</Text>
+        <Text style={styles.title}>{t('pace')}</Text>
         <View style={[styles.emptyContainer, { height }]}>
-          <Text style={styles.emptyText}>Dados insuficientes para o grafico de ritmo</Text>
+          <Text style={styles.emptyText}>{t('pace_profile_empty')}</Text>
         </View>
       </View>
     );
@@ -100,7 +102,7 @@ export function PaceProfile({ points, height = 160, style }: PaceProfileProps) {
   return (
     <View style={[styles.card, style]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Ritmo</Text>
+        <Text style={styles.title}>{t('pace')}</Text>
         <Text style={styles.total}>
           {formatPace(bestPace, unitSystem)} / {formatPace(worstPace, unitSystem)}
         </Text>

@@ -8,16 +8,18 @@ import { joinClub, leaveClub, requestToJoinClub, cancelJoinRequest } from '../..
 import { ACTIVITY_CATEGORIES } from '../../lib/constants';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { Club } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 /** Linha de clube usada na aba Clubes e no ecrã de descoberta. */
 export function ClubCard({ club, onAction }: { club: Club; onAction: (club: Club) => void }) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const catDef = ACTIVITY_CATEGORIES.find((c) => c.key === club.category);
 
   const handleJoinLeave = () => {
     if (club.is_member) {
-      Alert.alert('Sair do clube', `Tens a certeza que queres sair de "${club.name}"?`, [
-        { text: 'Cancelar', style: 'cancel' },
+      Alert.alert(t('club_leave'), `Tens a certeza que queres sair de "${club.name}"?`, [
+        { text: t('cancel'), style: 'cancel' },
         {
           text: 'Sair', style: 'destructive',
           onPress: async () => {
@@ -26,7 +28,7 @@ export function ClubCard({ club, onAction }: { club: Club; onAction: (club: Club
               await leaveClub(club.id);
               onAction({ ...club, is_member: false });
             } catch {
-              Alert.alert('Erro', 'Não foi possível sair do clube.');
+              Alert.alert(t('club_leave_error'));
             } finally {
               setBusy(false);
             }
@@ -36,17 +38,17 @@ export function ClubCard({ club, onAction }: { club: Club; onAction: (club: Club
     } else if (club.is_private) {
       // Clube privado — pedir para entrar / cancelar pedido pendente
       if (club.request_status === 'pending') {
-        Alert.alert('Pedido pendente', 'Queres cancelar o pedido de adesão?', [
+        Alert.alert(t('club_request_pending'), t('club_request_cancel_confirm'), [
           { text: 'Manter', style: 'cancel' },
           {
-            text: 'Cancelar pedido', style: 'destructive',
+            text: t('club_request_cancel'), style: 'destructive',
             onPress: async () => {
               setBusy(true);
               try {
                 await cancelJoinRequest(club.id);
                 onAction({ ...club, request_status: undefined });
               } catch {
-                Alert.alert('Erro', 'Não foi possível cancelar o pedido.');
+                Alert.alert(t('club_request_cancel_error'));
               } finally {
                 setBusy(false);
               }
@@ -57,14 +59,14 @@ export function ClubCard({ club, onAction }: { club: Club; onAction: (club: Club
         setBusy(true);
         requestToJoinClub(club.id)
           .then(() => onAction({ ...club, request_status: 'pending' }))
-          .catch(() => Alert.alert('Erro', 'Não foi possível enviar o pedido.'))
+          .catch(() => Alert.alert(t('club_request_error')))
           .finally(() => setBusy(false));
       }
     } else {
       setBusy(true);
       joinClub(club.id)
         .then(() => onAction({ ...club, is_member: true, role: 'member' }))
-        .catch(() => Alert.alert('Erro', 'Não foi possível entrar no clube.'))
+        .catch(() => Alert.alert(t('club_join_error')))
         .finally(() => setBusy(false));
     }
   };

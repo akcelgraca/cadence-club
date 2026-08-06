@@ -4,12 +4,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { getMyUpcomingEvents } from '../../services/events';
 import { colors, typography, withAlpha } from '../../lib/theme';
+import { useTranslation } from 'react-i18next';
+import { MONTH_SHORT_KEYS } from '../../lib/constants';
 
-const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+/** Índice 0 = domingo, como o Date.getDay(). */
+const WEEKDAY_KEYS = [
+  'training_day_sun', 'training_day_mon', 'training_day_tue', 'training_day_wed',
+  'training_day_thu', 'training_day_fri', 'training_day_sat',
+];
 
 /** Próximos encontros dos meus clubes, no ecrã Hoje. */
 export function UpcomingEventsCard() {
+  const { t } = useTranslation();
   const { data: events = [] } = useQuery({
     queryKey: ['myEvents'],
     queryFn: () => getMyUpcomingEvents(3),
@@ -20,9 +26,9 @@ export function UpcomingEventsCard() {
   return (
     <View style={styles.wrapper}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Próximos eventos</Text>
+        <Text style={styles.sectionTitle}>{t('home_upcoming_events')}</Text>
         <TouchableOpacity style={styles.viewAll} onPress={() => router.push('/events')}>
-          <Text style={styles.viewAllText}>Ver todos</Text>
+          <Text style={styles.viewAllText}>{t('view_all')}</Text>
           <Ionicons name="chevron-forward" size={12} color={colors.primary} />
         </TouchableOpacity>
       </View>
@@ -37,9 +43,9 @@ export function UpcomingEventsCard() {
             activeOpacity={0.8}
           >
             <View style={styles.dateBox}>
-              <Text style={styles.dateWeekday}>{WEEKDAYS[date.getDay()]}</Text>
+              <Text style={styles.dateWeekday}>{t(WEEKDAY_KEYS[date.getDay()] as any)}</Text>
               <Text style={styles.dateDay}>{date.getDate()}</Text>
-              <Text style={styles.dateMonth}>{MONTHS[date.getMonth()]}</Text>
+              <Text style={styles.dateMonth}>{t(MONTH_SHORT_KEYS[date.getMonth()] as any)}</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.title} numberOfLines={1}>{event.title}</Text>

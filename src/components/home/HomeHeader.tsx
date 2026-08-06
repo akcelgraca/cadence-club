@@ -14,8 +14,8 @@ function getGreetingKey(): 'greeting_morning' | 'greeting_afternoon' | 'greeting
 }
 
 /** "Sábado, 1 de agosto" — o contexto que falta num ecrã chamado Hoje. */
-function todayLabel(): string {
-  const formatted = new Date().toLocaleDateString('pt-PT', {
+function todayLabel(locale: string): string {
+  const formatted = new Date().toLocaleDateString(locale, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -29,7 +29,7 @@ interface HomeHeaderProps {
 
 export function HomeHeader({ profile }: HomeHeaderProps) {
   const c = useColors();
-  const { t } = useAppTranslation();
+  const { t, language } = useAppTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
 
   const firstName = profile.full_name?.split(' ')[0] ?? '';
@@ -40,13 +40,13 @@ export function HomeHeader({ profile }: HomeHeaderProps) {
         <Text style={styles.greeting} numberOfLines={1}>
           {t(getGreetingKey())}{firstName ? `, ${firstName}` : ''}
         </Text>
-        <Text style={styles.date} numberOfLines={1}>{todayLabel()}</Text>
+        <Text style={styles.date} numberOfLines={1}>{todayLabel(language)}</Text>
       </View>
 
       <TouchableOpacity
         onPress={() => router.push('/(tabs)/profile')}
         activeOpacity={0.8}
-        accessibilityLabel="Abrir perfil"
+        accessibilityLabel={t('home_open_profile')}
       >
         <Avatar
           uri={profile.avatar_url}

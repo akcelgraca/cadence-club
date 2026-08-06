@@ -15,11 +15,12 @@ import { formatDistance } from '../../utils/formatDistance';
 import { ACTIVITY_CATEGORIES } from '../../lib/constants';
 import type { Activity, ActivityCategory } from '../../lib/types';
 import { colors, typography, withAlpha } from '../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 20;
 
 const MONTH_NAMES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'month_jan', 'month_feb', 'month_mar', 'month_apr', 'month_may', 'month_jun',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
 
@@ -40,6 +41,7 @@ interface MonthSection {
 }
 
 export default function HistoryScreen() {
+  const { t } = useTranslation();
   const { profile } = useAuthStore();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   const userId = profile?.id;
@@ -139,7 +141,7 @@ export default function HistoryScreen() {
   if (isError) {
     return (
       <SafeAreaView style={styles.center}>
-        <EmptyState title="Erro ao carregar" subtitle="Tenta novamente mais tarde." />
+        <EmptyState title={t('error_loading')} subtitle={t('error_try_later')} />
       </SafeAreaView>
     );
   }
@@ -167,7 +169,7 @@ export default function HistoryScreen() {
         ListHeaderComponent={
           <View>
             <View style={styles.headerArea}>
-              <Text style={styles.pageTitle}>Histórico</Text>
+              <Text style={styles.pageTitle}>{t('tab_history')}</Text>
               <Text style={styles.yearLine}>
                 {new Date().getFullYear()} · {formatDistance(yearSummary.distance, unitSystem)} em{' '}
                 {yearSummary.count} {yearSummary.count === 1 ? 'atividade' : 'atividades'}
@@ -186,19 +188,19 @@ export default function HistoryScreen() {
               <View style={styles.emptyIcon}>
                 <Ionicons name="calendar-outline" size={40} color={colors.primary} />
               </View>
-              <Text style={styles.emptyTitle}>O teu diário começa aqui</Text>
+              <Text style={styles.emptyTitle}>{t('history_empty_title')}</Text>
               <Text style={styles.emptyBody}>
-                Cada atividade que gravares fica registada por mês, para veres a tua evolução.
+                {t('history_empty_body')}
               </Text>
               <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/record')}>
                 <Ionicons name="play" size={14} color={colors.primaryForeground} />
-                <Text style={styles.emptyBtnText}>Registar atividade</Text>
+                <Text style={styles.emptyBtnText}>{t('history_record_activity')}</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>Sem atividades nesta modalidade</Text>
-              <Text style={styles.emptyBody}>Escolhe outro filtro para veres o resto.</Text>
+              <Text style={styles.emptyTitle}>{t('history_empty_filter')}</Text>
+              <Text style={styles.emptyBody}>{t('history_empty_filter_body')}</Text>
             </View>
           )
         }
@@ -208,7 +210,7 @@ export default function HistoryScreen() {
               <ActivityIndicator size="small" color={colors.primary} />
             </View>
           ) : sections.length > 0 && !hasNextPage ? (
-            <Text style={styles.endText}>· fim do histórico ·</Text>
+            <Text style={styles.endText}>{t('history_end')}</Text>
           ) : null
         }
         onEndReached={() => { if (hasNextPage) fetchNextPage(); }}

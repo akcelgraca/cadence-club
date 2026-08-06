@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
 import { ACTIVITY_GOALS, GENDERS } from '../../lib/constants';
+import { useTranslation } from 'react-i18next';
 import { CountryCodePicker } from '../../components/ui/CountryCodePicker';
 import QuestionnaireForm from '../../components/questionnaire/QuestionnaireForm';
 import DateWheelPicker from '../../components/common/DateWheelPicker';
@@ -22,6 +23,7 @@ import type { ActivityGoal, QuestionnairePreferences } from '../../lib/types';
 import { colors, typography } from '../../lib/theme';
 
 export default function RegisterScreen() {
+  const { t } = useTranslation();
   const [step, setStep] = useState<'form' | 'goal' | 'questionnaire'>('form');
 
   // Form fields
@@ -55,12 +57,12 @@ export default function RegisterScreen() {
       !email.trim() ||
       !password.trim()
     ) {
-      Alert.alert('Erro', 'Preenche todos os campos obrigatórios (Nome, Apelido, Utilizador, Email, Palavra-passe).');
+      Alert.alert(t('register_required_fields'));
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Erro', 'A palavra-passe deve ter pelo menos 6 caracteres.');
+      Alert.alert(t('register_password_short'));
       return;
     }
 
@@ -103,8 +105,8 @@ export default function RegisterScreen() {
         });
 
         Alert.alert(
-          'Verifica o teu email',
-          'Enviámos-te um link de confirmacao. Depois de confirmares o email, faz login para comecar.'
+          t('register_check_email_title'),
+          t('register_check_email_body')
         );
         router.replace('/(auth)/login');
         return;
@@ -145,7 +147,7 @@ export default function RegisterScreen() {
 
       router.replace('/(tabs)/feed');
     } catch (err: any) {
-      Alert.alert('Erro', err.message || 'Algo correu mal.');
+      Alert.alert(err.message || t('error_generic'));
     } finally {
       setLoading(false);
     }
@@ -173,21 +175,21 @@ export default function RegisterScreen() {
               <Ionicons name="arrow-back" size={24} color={colors.foreground} />
             </TouchableOpacity>
 
-            <Text style={styles.title}>Criar conta</Text>
-            <Text style={styles.subtitle}>Junta-te ao Cadence Club e começa a registrar as tuas atividades.</Text>
+            <Text style={styles.title}>{t('signup_title')}</Text>
+            <Text style={styles.subtitle}>{t('register_subtitle')}</Text>
 
             {/* First Name & Last Name row */}
             <View style={styles.row}>
               <TextInput
                 style={[styles.input, styles.halfInput]}
-                placeholder="Nome *"
+                placeholder={t('register_first_name')}
                 placeholderTextColor={colors.mutedForeground}
                 value={firstName}
                 onChangeText={setFirstName}
               />
               <TextInput
                 style={[styles.input, styles.halfInput]}
-                placeholder="Apelido *"
+                placeholder={t('register_last_name')}
                 placeholderTextColor={colors.mutedForeground}
                 value={lastName}
                 onChangeText={setLastName}
@@ -196,7 +198,7 @@ export default function RegisterScreen() {
 
             <TextInput
               style={styles.input}
-              placeholder="Nome de utilizador *"
+              placeholder={t('register_username')}
               placeholderTextColor={colors.mutedForeground}
               value={username}
               onChangeText={setUsername}
@@ -205,7 +207,7 @@ export default function RegisterScreen() {
 
             <TextInput
               style={styles.input}
-              placeholder="Email *"
+              placeholder={t('register_email')}
               placeholderTextColor={colors.mutedForeground}
               value={email}
               onChangeText={setEmail}
@@ -215,14 +217,14 @@ export default function RegisterScreen() {
 
             <TextInput
               style={styles.input}
-              placeholder="Palavra-passe *"
+              placeholder={t('register_password')}
               placeholderTextColor={colors.mutedForeground}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
             />
 
-            <Text style={styles.sectionLabel}>Número de telemóvel</Text>
+            <Text style={styles.sectionLabel}>{t('onboarding_phone_label')}</Text>
             <CountryCodePicker
               value={countryCode}
               onSelect={setCountryCode}
@@ -230,7 +232,7 @@ export default function RegisterScreen() {
               onPhoneChange={setPhone}
             />
 
-            <Text style={styles.sectionLabel}>Data de nascimento</Text>
+            <Text style={styles.sectionLabel}>{t('edit_profile_birth_date')}</Text>
             <TouchableOpacity
               style={styles.dateRow}
               onPress={() => setShowDatePicker(true)}
@@ -255,7 +257,7 @@ export default function RegisterScreen() {
 
             <TextInput
               style={styles.input}
-              placeholder="País"
+              placeholder={t('register_country')}
               placeholderTextColor={colors.mutedForeground}
               value={country}
               onChangeText={setCountry}
@@ -270,7 +272,7 @@ export default function RegisterScreen() {
             />
 
             {/* Gender selector */}
-            <Text style={styles.sectionLabel}>Género</Text>
+            <Text style={styles.sectionLabel}>{t('onboarding_gender')}</Text>
             <View style={styles.chipRow}>
               {GENDERS.map((g) => (
                 <TouchableOpacity
@@ -279,7 +281,7 @@ export default function RegisterScreen() {
                   onPress={() => setGender(g.key)}
                 >
                   <Text style={[styles.chipText, gender === g.key && styles.chipTextActive]}>
-                    {g.label}
+                    {t(g.i18n_key as any)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -288,7 +290,7 @@ export default function RegisterScreen() {
             <View style={styles.metricsRow}>
               <TextInput
                 style={[styles.input, styles.halfInput]}
-                placeholder="Peso (kg)"
+                placeholder={t('register_weight')}
                 placeholderTextColor={colors.mutedForeground}
                 value={weightKg}
                 onChangeText={setWeightKg}
@@ -296,7 +298,7 @@ export default function RegisterScreen() {
               />
               <TextInput
                 style={[styles.input, styles.halfInput]}
-                placeholder="Altura (cm)"
+                placeholder={t('register_height')}
                 placeholderTextColor={colors.mutedForeground}
                 value={heightCm}
                 onChangeText={setHeightCm}
@@ -309,7 +311,7 @@ export default function RegisterScreen() {
               onPress={handleContinue}
               activeOpacity={0.85}
             >
-              <Text style={styles.buttonText}>Continuar</Text>
+              <Text style={styles.buttonText}>{t('onboarding_continue')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -317,7 +319,7 @@ export default function RegisterScreen() {
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
               <Text style={styles.switchText}>
-                Já tens conta? Entra
+                {t('register_has_account')}
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -339,8 +341,8 @@ export default function RegisterScreen() {
           <Ionicons name="arrow-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
 
-        <Text style={styles.title}>Qual é o teu objetivo?</Text>
-        <Text style={styles.subtitle}>Escolhe o que mais se adequa a ti. Podes mudar depois.</Text>
+        <Text style={styles.title}>{t('onboarding_goal_title')}</Text>
+        <Text style={styles.subtitle}>{t('register_goal_subtitle')}</Text>
 
         <View style={styles.goalGrid}>
           {ACTIVITY_GOALS.map((g) => (
@@ -354,7 +356,7 @@ export default function RegisterScreen() {
                 size={32}
                 color={goal === g.key ? colors.primary : colors.foreground}
               />
-              <Text style={styles.goalLabel}>{g.label}</Text>
+              <Text style={styles.goalLabel}>{t(g.i18n_key as any)}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -362,7 +364,7 @@ export default function RegisterScreen() {
         {(goal === 'run_weekly_km' || goal === 'cycle_weekly_km') && (
           <TextInput
             style={styles.input}
-            placeholder="Meta semanal (km)"
+            placeholder={t('register_weekly_target')}
             placeholderTextColor={colors.mutedForeground}
             value={weeklyKmTarget}
             onChangeText={setWeeklyKmTarget}
@@ -374,7 +376,7 @@ export default function RegisterScreen() {
           style={styles.skipLink}
           onPress={() => setGoal(null)}
         >
-          <Text style={styles.skipText}>Saltar — escolho depois</Text>
+          <Text style={styles.skipText}>{t('register_skip_goal')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -382,7 +384,7 @@ export default function RegisterScreen() {
           onPress={() => setStep('questionnaire')}
           activeOpacity={0.85}
         >
-          <Text style={styles.buttonText}>Continuar</Text>
+          <Text style={styles.buttonText}>{t('onboarding_continue')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -404,7 +406,7 @@ export default function RegisterScreen() {
         style={styles.skipLink}
         onPress={() => handleRegister(null)}
       >
-        <Text style={styles.skipText}>Saltar — respondo depois</Text>
+        <Text style={styles.skipText}>{t('questionnaire_skip')}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

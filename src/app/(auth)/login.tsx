@@ -25,27 +25,26 @@ import { colors, typography } from '../../lib/theme';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ---- Welcome Slides Data ----
+// O texto é resolvido dentro do componente — aqui só ficam as chaves, porque
+// no topo do módulo o idioma ainda não está escolhido.
 const SLIDES = [
   {
     id: '1',
     image: require('../../../assets/images/images_initial01.jpg'),
-    title: 'O teu progresso ao detalhe',
-    description:
-      'Corrida, ciclismo, caminhada, regista tudo com GPS, sincroniza com a app Saúde e vê a tua evolução em tempo real.',
+    title_key: 'login_slide1_title',
+    description_key: 'login_slide1_body',
   },
   {
     id: '2',
     image: require('../../../assets/images/images_initial02.jpg'),
-    title: 'Cada dia conta para algo maior',
-    description:
-      'Constrói streaks, desbloqueia badges e entra em desafios da comunidade. A motivação nunca foi tão viciante.',
+    title_key: 'login_slide2_title',
+    description_key: 'login_slide2_body',
   },
   {
     id: '3',
     image: require('../../../assets/images/images_initial03.jpg'),
-    title: 'O teu bairro também treina',
-    description:
-      'Descobre atletas perto de ti, junta-te a treinos e explora novos percursos com quem partilha a tua paixão.',
+    title_key: 'login_slide3_title',
+    description_key: 'login_slide3_body',
   },
 ];
 
@@ -59,6 +58,7 @@ function Slide({
   index: number;
   scrollX: Animated.Value;
 }) {
+  const { t } = useTranslation();
   const inputRange = [
     (index - 1) * SCREEN_WIDTH,
     index * SCREEN_WIDTH,
@@ -86,8 +86,8 @@ function Slide({
         ]}
       >
         <Image source={item.image} style={styles.slideImage} resizeMode="cover" />
-        <Text style={styles.slideTitle}>{item.title}</Text>
-        <Text style={styles.slideDescription}>{item.description}</Text>
+        <Text style={styles.slideTitle}>{t(item.title_key as any)}</Text>
+        <Text style={styles.slideDescription}>{t(item.description_key as any)}</Text>
       </Animated.View>
     </View>
   );

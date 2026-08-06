@@ -101,7 +101,7 @@ export default function UserProfileScreen() {
   if (!profile) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Utilizador não encontrado.</Text>
+        <Text style={styles.errorText}>{t('profile_not_found')}</Text>
       </View>
     );
   }
@@ -211,13 +211,13 @@ export default function UserProfileScreen() {
             <PersonalRecords userId={id} />
 
             <View style={styles.sectionCard}>
-              <Text style={styles.sectionCardTitle}>Recentes</Text>
+              <Text style={styles.sectionCardTitle}>{t('profile_recent')}</Text>
               {activities && activities.length > 0 ? (
                 (activities as Activity[]).map(renderActivityRow)
               ) : (
                 <View style={styles.emptyBlock}>
                   <Ionicons name="pulse-outline" size={36} color={colors.mutedForeground} />
-                  <Text style={styles.emptyTitle}>Ainda sem atividades</Text>
+                  <Text style={styles.emptyTitle}>{t('profile_no_activities')}</Text>
                   <Text style={styles.emptyText}>
                     Quando {profile.full_name?.split(' ')[0] ?? 'este atleta'} registar atividades, aparecem aqui.
                   </Text>
@@ -239,7 +239,7 @@ export default function UserProfileScreen() {
               </View>
             )}
             <View style={styles.sectionCard}>
-              <Text style={styles.sectionCardTitle}>Medalhas</Text>
+              <Text style={styles.sectionCardTitle}>{t('badges_title')}</Text>
               <BadgeCollection badges={badges ?? []} />
             </View>
           </ScrollView>

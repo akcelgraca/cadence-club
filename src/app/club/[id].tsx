@@ -22,16 +22,18 @@ import { ActivityIcon } from '../../components/common/ActivityIcon';
 import { ACTIVITY_CATEGORIES } from '../../lib/constants';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { ClubMember, ClubJoinRequest, Activity } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 type ClubTab = 'posts' | 'events' | 'members';
 
-const TABS: { key: ClubTab; label: string }[] = [
-  { key: 'posts', label: 'Publicações' },
-  { key: 'events', label: 'Eventos' },
-  { key: 'members', label: 'Membros' },
+const TABS: { key: ClubTab; i18n_key: string }[] = [
+  { key: 'posts', i18n_key: 'club_tab_posts' },
+  { key: 'events', i18n_key: 'club_tab_events' },
+  { key: 'members', i18n_key: 'club_tab_members' },
 ];
 
 export default function ClubDetailScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const myId = useAuthStore((s) => s.profile?.id);
   const { width } = useWindowDimensions();
@@ -125,21 +127,21 @@ export default function ClubDetailScreen() {
         refetchRequests();
         if (accept) { refetchMembers(); refetchClub(); }
       })
-      .catch(() => Alert.alert('Erro', 'Não foi possível processar o pedido.'));
+      .catch(() => Alert.alert(t('club_request_process_error')));
   };
 
   const handleJoinLeave = () => {
     if (!club) return;
     if (!club.is_member && club.is_private) {
       if (club.request_status === 'pending') {
-        Alert.alert('Pedido pendente', 'Queres cancelar o pedido de adesão?', [
-          { text: 'Manter', style: 'cancel' },
+        Alert.alert(t('club_request_pending'), t('club_request_cancel_confirm'), [
+          { text: t('club_request_keep'), style: 'cancel' },
           {
-            text: 'Cancelar pedido', style: 'destructive',
+            text: t('club_request_cancel'), style: 'destructive',
             onPress: async () => {
               setJoiningLeaving(true);
               try { await cancelJoinRequest(club.id); refetchClub(); }
-              catch { Alert.alert('Erro', 'Não foi possível cancelar o pedido.'); }
+              catch { Alert.alert(t('club_request_cancel_error')); }
               finally { setJoiningLeaving(false); }
             },
           },
@@ -149,22 +151,22 @@ export default function ClubDetailScreen() {
         requestToJoinClub(club.id)
           .then(() => {
             refetchClub();
-            Alert.alert('Pedido enviado', 'Um administrador do clube vai rever o teu pedido.');
+            Alert.alert(t('club_request_sent_title'), t('club_request_sent_body'));
           })
-          .catch(() => Alert.alert('Erro', 'Não foi possível enviar o pedido.'))
+          .catch(() => Alert.alert(t('club_request_error')))
           .finally(() => setJoiningLeaving(false));
       }
       return;
     }
     if (club.is_member) {
-      Alert.alert('Sair do clube', `Tens a certeza que queres sair de "${club.name}"?`, [
-        { text: 'Cancelar', style: 'cancel' },
+      Alert.alert(t('club_leave'), t('club_leave_confirm', { name: club.name }), [
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Sair', style: 'destructive',
+          text: t('club_leave_action'), style: 'destructive',
           onPress: async () => {
             setJoiningLeaving(true);
             try { await leaveClub(club.id); refetchClub(); }
-            catch { Alert.alert('Erro', 'Não foi possível sair do clube.'); }
+            catch { Alert.alert(t('club_leave_error')); }
             finally { setJoiningLeaving(false); }
           },
         },
@@ -173,7 +175,7 @@ export default function ClubDetailScreen() {
       setJoiningLeaving(true);
       joinClub(club.id)
         .then(() => { refetchClub(); markClubRead(club.id); })
-        .catch(() => Alert.alert('Erro', 'Não foi possível entrar no clube.'))
+        .catch(() => Alert.alert(t('club_join_error')))
         .finally(() => setJoiningLeaving(false));
     }
   };
@@ -193,17 +195,17 @@ export default function ClubDetailScreen() {
     if (!club) return;
     const makingPrivate = !club.is_private;
     Alert.alert(
-      makingPrivate ? 'Tornar privado' : 'Tornar público',
+      makingPrivate ? t('club_make_private') : t('club_make_public'),
       makingPrivate
-        ? 'Continua a aparecer na pesquisa, mas só entra quem for aceite por um administrador.'
-        : 'Qualquer pessoa passa a poder entrar diretamente.',
+        ? t('club_make_private_body')
+        : t('club_make_public_body'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Confirmar',
+          text: t('club_confirm'),
           onPress: async () => {
             try { await setClubPrivacy(club.id, makingPrivate); refetchClub(); }
-            catch { Alert.alert('Erro', 'Não foi possível alterar a privacidade.'); }
+            catch { Alert.alert(t('club_privacy_error')); }
           },
         },
       ],
@@ -213,15 +215,15 @@ export default function ClubDetailScreen() {
   const confirmDeleteClub = () => {
     if (!club) return;
     Alert.alert(
-      'Apagar clube',
-      `Apagar "${club.name}"? Os membros, o chat, os eventos e os pedidos serão removidos. Esta ação não pode ser desfeita.`,
+      t('club_delete'),
+      t('club_delete_confirm', { name: club.name }),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Apagar', style: 'destructive',
+          text: t('delete'), style: 'destructive',
           onPress: async () => {
             try { await deleteClub(club.id); router.back(); }
-            catch { Alert.alert('Erro', 'Não foi possível apagar o clube.'); }
+            catch { Alert.alert(t('club_delete_error')); }
           },
         },
       ],
@@ -230,10 +232,10 @@ export default function ClubDetailScreen() {
 
   const handleOwnerMenu = () => {
     if (!club) return;
-    Alert.alert(club.name, 'Gerir clube', [
-      { text: club.is_private ? 'Tornar público' : 'Tornar privado', onPress: handleTogglePrivacy },
-      { text: 'Apagar clube', style: 'destructive', onPress: confirmDeleteClub },
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert(club.name, t('club_manage'), [
+      { text: club.is_private ? t('club_make_public') : t('club_make_private'), onPress: handleTogglePrivacy },
+      { text: t('club_delete'), style: 'destructive', onPress: confirmDeleteClub },
+      { text: t('cancel'), style: 'cancel' },
     ]);
   };
 
@@ -258,7 +260,7 @@ export default function ClubDetailScreen() {
             <Ionicons name="chevron-back" size={24} color={colors.foreground} />
           </TouchableOpacity>
         </View>
-        <View style={styles.center}><Text style={styles.errorText}>Clube não encontrado</Text></View>
+        <View style={styles.center}><Text style={styles.errorText}>{t('club_not_found')}</Text></View>
       </SafeAreaView>
     );
   }
@@ -267,10 +269,10 @@ export default function ClubDetailScreen() {
   const visibleActivities = (activities as Activity[]).filter((a) => !deletedActivityIds.has(a.id));
 
   const joinLabel = club.is_member
-    ? club.role === 'admin' ? 'Admin' : 'Membro'
+    ? club.role === 'admin' ? t('club_role_admin') : t('club_role_member')
     : club.is_private
-      ? club.request_status === 'pending' ? 'Pendente' : 'Pedir para entrar'
-      : 'Aderir';
+      ? club.request_status === 'pending' ? t('club_join_pending') : t('club_join_request')
+      : t('club_join');
   const joinSecondary = club.is_member || club.request_status === 'pending';
 
   // Indicador que interpola com o gesto do pager (como no menu Social)
@@ -307,7 +309,7 @@ export default function ClubDetailScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{club.name}</Text>
         {isOwner ? (
-          <TouchableOpacity onPress={handleOwnerMenu} hitSlop={12} accessibilityLabel="Gerir clube">
+          <TouchableOpacity onPress={handleOwnerMenu} hitSlop={12} accessibilityLabel={t('club_manage')}>
             <Ionicons name="ellipsis-horizontal" size={20} color={colors.foreground} />
           </TouchableOpacity>
         ) : (
@@ -347,7 +349,7 @@ export default function ClubDetailScreen() {
             {club.is_private && (
               <View style={styles.metaItem}>
                 <Ionicons name="lock-closed" size={11} color={colors.warning} />
-                <Text style={[styles.metaText, { color: colors.warning }]}>Privado</Text>
+                <Text style={[styles.metaText, { color: colors.warning }]}>{t('club_private')}</Text>
               </View>
             )}
           </View>
@@ -381,13 +383,13 @@ export default function ClubDetailScreen() {
           <TouchableOpacity
             style={styles.iconBtn}
             onPress={() => router.push(`/club/${club.id}/chat`)}
-            accessibilityLabel="Abrir chat do clube"
+            accessibilityLabel={t('club_open_chat')}
           >
             <Ionicons name="chatbubble-ellipses-outline" size={18} color={colors.primary} />
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={styles.iconBtn} onPress={handleShare} accessibilityLabel="Partilhar clube">
+        <TouchableOpacity style={styles.iconBtn} onPress={handleShare} accessibilityLabel={t('club_share')}>
           <Ionicons name="share-social-outline" size={18} color={colors.primary} />
         </TouchableOpacity>
       </View>
@@ -396,22 +398,22 @@ export default function ClubDetailScreen() {
       <View style={styles.statsStrip}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{stats ? (stats.total_distance / 1000).toFixed(0) : '—'}</Text>
-          <Text style={styles.statLabel}>km totais</Text>
+          <Text style={styles.statLabel}>{t('club_stat_total_km')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{stats ? (stats.month_distance / 1000).toFixed(0) : '—'}</Text>
-          <Text style={styles.statLabel}>km este mês</Text>
+          <Text style={styles.statLabel}>{t('club_stat_month_km')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{stats?.total_activities ?? '—'}</Text>
-          <Text style={styles.statLabel}>atividades</Text>
+          <Text style={styles.statLabel}>{t('club_stat_activities')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{stats?.active_members ?? '—'}</Text>
-          <Text style={styles.statLabel}>ativos (30d)</Text>
+          <Text style={styles.statLabel}>{t('club_stat_active')}</Text>
         </View>
       </View>
 
@@ -437,7 +439,7 @@ export default function ClubDetailScreen() {
               }}
             >
               <View style={styles.tabLabelRow}>
-                <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{tab.label}</Text>
+                <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{t(tab.i18n_key as any)}</Text>
                 {showBadge && (
                   <View style={styles.tabBadge}>
                     <Text style={styles.tabBadgeText}>{pendingRequests.length}</Text>
@@ -483,8 +485,8 @@ export default function ClubDetailScreen() {
             )}
             ListEmptyComponent={emptyBlock(
               'pulse-outline',
-              'Sem atividades',
-              isMember ? 'Regista a tua primeira atividade!' : 'As atividades dos membros aparecem aqui.',
+              t('club_no_activities'),
+              isMember ? t('club_no_activities_member') : t('club_no_activities_visitor'),
             )}
             showsVerticalScrollIndicator={false}
             refreshControl={
@@ -502,8 +504,8 @@ export default function ClubDetailScreen() {
               <View style={styles.eventsBar}>
                 <View style={styles.segment}>
                   {[
-                    { key: false, label: 'Próximos' },
-                    { key: true, label: 'Anteriores' },
+                    { key: false, label: t('club_events_upcoming') },
+                    { key: true, label: t('club_events_past') },
                   ].map((opt) => (
                     <TouchableOpacity
                       key={String(opt.key)}
@@ -522,7 +524,7 @@ export default function ClubDetailScreen() {
                     onPress={() => router.push(`/club/${club.id}/event-new`)}
                   >
                     <Ionicons name="add" size={16} color={colors.primaryForeground} />
-                    <Text style={styles.newEventText}>Evento</Text>
+                    <Text style={styles.newEventText}>{t('club_event')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -537,12 +539,12 @@ export default function ClubDetailScreen() {
             )}
             ListEmptyComponent={emptyBlock(
               'calendar-outline',
-              eventsPast ? 'Sem eventos anteriores' : 'Sem eventos marcados',
+              eventsPast ? t('club_no_past_events') : t('club_no_events'),
               eventsPast
-                ? 'Os encontros já realizados aparecem aqui.'
+                ? t('club_no_past_events_body')
                 : isAdmin
-                  ? 'Cria o primeiro encontro do clube.'
-                  : 'Os administradores ainda não marcaram encontros.',
+                  ? t('club_no_events_admin')
+                  : t('club_no_events_member'),
             )}
             showsVerticalScrollIndicator={false}
             refreshControl={
@@ -577,7 +579,7 @@ export default function ClubDetailScreen() {
                       </TouchableOpacity>
                     </View>
                   ))}
-                  <Text style={styles.sectionHeader}>Membros</Text>
+                  <Text style={styles.sectionHeader}>{t('club_tab_members')}</Text>
                 </View>
               ) : null
             }
@@ -595,13 +597,13 @@ export default function ClubDetailScreen() {
                 {item.role === 'admin' && (
                   <View style={styles.adminPill}>
                     <Ionicons name="shield-checkmark" size={11} color={colors.primary} />
-                    <Text style={styles.adminText}>Admin</Text>
+                    <Text style={styles.adminText}>{t('club_role_admin')}</Text>
                   </View>
                 )}
                 <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
             )}
-            ListEmptyComponent={emptyBlock('people-outline', 'Sem membros', 'Sê o primeiro a juntar-te!')}
+            ListEmptyComponent={emptyBlock('people-outline', t('club_no_members'), t('club_no_members_body'))}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl refreshing={membersFetching} onRefresh={refetchMembers} tintColor={colors.primary} />

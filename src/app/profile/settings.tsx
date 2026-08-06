@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Switch, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Switch, Modal, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
@@ -10,6 +10,7 @@ import { supabase } from '../../services/supabase';
 import { typography } from '../../lib/theme';
 import { useColors } from '../../hooks/useColors';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
+import { useHealthSync } from '../../hooks/useHealthSync';
 import { setPickerConfig } from './settings/picker';
 import type {
   IntensityPreference,
@@ -34,6 +35,7 @@ export default function SettingsScreen() {
   const [newEmail, setNewEmail] = useState('');
   const [isChangingEmail, setIsChangingEmail] = useState(false);
 
+  const health = useHealthSync();
   const styles = useMemo(() => createStyles(c), [c]);
 
   useEffect(() => {
@@ -92,7 +94,69 @@ export default function SettingsScreen() {
     { key: 'en', label: t('settings_language_en') },
   ], [t]);
 
-  const PRIVACY_ZONE_RADII = [200, 500, 1000, 2000];
+  // --- Sincronização com a Saúde ---
+
+  const handleHealthPress = async () => {
+    if (!health.isConnected) {
+      const ligou = await health.connect();
+      if (!ligou) {
+        Alert.alert(
+          t('health_sync_denied_title'),
+          t('health_sync_denied_body', { platform: health.platformName }),
+        );
+      }
+      return;
+    }
+
+    const resultado = await health.sync();
+    if (!resultado) return;
+
+    // Uma falha tem de se ver. Sem isto, um erro aparecia como "não havia
+    // treinos novos" — a mesma mentira que os stubs antigos contavam.
+    if (resultado.error) {
+      Alert.alert(t('health_sync_error_title'), resultado.error);
+      return;
+    }
+
+    const importados = resultado.imported === 0
+      ? t('health_sync_imported_none')
+      : resultado.imported === 1
+        ? t('health_sync_imported_one')
+        : t('health_sync_imported_other', { count: resultado.imported });
+
+    // Discriminar o motivo é o que distingue "não havia nada" de "havia e foi
+    // tudo descartado por engano".
+    const motivos = (Object.entries(resultado.skippedReasons) as [string, number][])
+      .filter(([, n]) => n > 0)
+      .map(([razao, n]) => t(`health_skip_${razao}` as any, { count: n }));
+
+    const detalhe = motivos.length > 0
+      ? `\n\n${t('health_sync_skipped_intro')} ${motivos.join(', ')}.`
+      : '';
+
+    Alert.alert(t('health_sync_result_title'), importados + detalhe);
+  };
+
+  const handleSeedPress = async () => {
+    const r = await health.seedAndSync();
+    if (r.error) {
+      Alert.alert(t('health_sync_error_title'), r.error);
+      return;
+    }
+    const importados = r.outcome?.imported ?? 0;
+    const motivos = r.outcome
+      ? (Object.entries(r.outcome.skippedReasons) as [string, number][])
+          .filter(([, n]) => n > 0)
+          .map(([razao, n]) => t(`health_skip_${razao}` as any, { count: n }))
+      : [];
+
+    Alert.alert(
+      t('health_sync_result_title'),
+      t('health_seed_result', { seeded: r.seeded })
+        + '\n' + t('health_sync_imported_other', { count: importados })
+        + (motivos.length > 0 ? `\n\n${t('health_sync_skipped_intro')} ${motivos.join(', ')}.` : ''),
+    );
+  };
 
   // --- Profile & Account handlers ---
 
@@ -197,6 +261,54 @@ export default function SettingsScreen() {
       {/* Section 2: Rastreamento & Dispositivos */}
       <SectionTitle title={t('settings_tracking_devices')} styles={styles} />
       <View style={styles.card}>
+        {/* Só aparece onde a plataforma o suporta — oferecer um botão que não
+            faz nada foi exatamente o problema dos stubs antigos. */}
+        {health.isAvailable && (
+          <>
+            <TouchableOpacity
+              style={styles.linkRow}
+              onPress={handleHealthPress}
+              disabled={health.isSyncing || health.isChecking}
+              activeOpacity={0.6}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.linkLabel}>{t('health_sync_row')}</Text>
+                <Text style={styles.linkSub}>{health.platformName}</Text>
+              </View>
+              {health.isSyncing
+                ? <ActivityIndicator size="small" color={c.primary} />
+                : (
+                  <Text style={[styles.rowLabel, { color: c.primary }]}>
+                    {health.isConnected ? t('health_sync_now') : t('health_sync_connect')}
+                  </Text>
+                )}
+            </TouchableOpacity>
+            <Separator styles={styles} />
+          </>
+        )}
+
+        {/* Um Apple Watch não se emparelha com o simulador — este atalho é a
+            única forma de lá pôr treinos. Nunca aparece em produção. */}
+        {health.canSeed && (
+          <>
+            <TouchableOpacity
+              style={styles.linkRow}
+              onPress={handleSeedPress}
+              disabled={health.isSyncing}
+              activeOpacity={0.6}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.linkLabel}>{t('health_seed_row')}</Text>
+                <Text style={styles.linkSub}>{t('health_seed_sub')}</Text>
+              </View>
+              {health.isSyncing
+                ? <ActivityIndicator size="small" color={c.primary} />
+                : <Ionicons name="flask-outline" size={18} color={c.mutedForeground} />}
+            </TouchableOpacity>
+            <Separator styles={styles} />
+          </>
+        )}
+
         <SwitchRow
           label={t('settings_auto_pause')}
           value={settings.autoPause}
@@ -418,39 +530,21 @@ export default function SettingsScreen() {
 
         <Separator styles={styles} />
 
-        <SwitchRow
-          label={t('settings_privacy_zone')}
-          value={settings.privacyZoneEnabled}
-          onValueChange={(val) => updateSettings({ privacyZoneEnabled: val })}
-          styles={styles}
-          colors={c}
-        />
-        {settings.privacyZoneEnabled && (
-          <>
-            <Text style={styles.subLabel}>{t('settings_privacy_radius')}</Text>
-            <View style={styles.chipGrid}>
-              {PRIVACY_ZONE_RADII.map((radius) => (
-                <TouchableOpacity
-                  key={radius}
-                  style={[
-                    styles.chip,
-                    settings.privacyZoneRadius === radius && styles.chipSelected,
-                  ]}
-                  onPress={() => updateSettings({ privacyZoneRadius: radius })}
-                >
-                  <Text
-                    style={[
-                      styles.chipLabel,
-                      settings.privacyZoneRadius === radius && styles.chipLabelSelected,
-                    ]}
-                  >
-                    {radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </>
-        )}
+        {/* As zonas vivem no servidor (migração 040) — o interruptor local
+            que existia aqui não protegia nada. */}
+        <TouchableOpacity
+          style={styles.linkRow}
+          onPress={() => router.push('/profile/privacy-zones')}
+          activeOpacity={0.7}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.linkLabel}>{t('settings_privacy_zone')}</Text>
+            <Text style={styles.linkSub}>
+              {t('settings_privacy_zone_hint')}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={c.mutedForeground} />
+        </TouchableOpacity>
 
         <Separator styles={styles} />
 
@@ -705,6 +799,15 @@ function createStyles(c: ReturnType<typeof useColors>) {
       paddingVertical: 6,
     },
     linkRowText: { ...typography.body, fontSize: 15, color: c.foreground },
+    linkLabel: { ...typography.body, fontSize: 15, color: c.foreground },
+    linkSub: {
+      ...typography.body,
+      fontSize: 12,
+      color: c.mutedForeground,
+      marginTop: 2,
+      lineHeight: 16,
+      paddingRight: 12,
+    },
     versionText: { ...typography.mono, fontSize: 13, color: c.mutedForeground },
     bottomSpacer: { height: 40 },
     modalOverlay: {

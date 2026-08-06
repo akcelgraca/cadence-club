@@ -4,13 +4,25 @@ import { Ionicons } from '@expo/vector-icons';
 import { MAPBOX_STYLES, type MapboxStyleKey } from '../map/MapViewWrapper';
 import { colors } from '../../lib/theme';
 import { styles } from './recordStyles';
+import { useTranslation } from 'react-i18next';
 
-const STYLE_LABELS: Record<MapboxStyleKey, string> = {
-  dark: 'Escuro',
-  light: 'Claro',
-  streets: 'Ruas',
-  satellite: 'Satélite',
-  outdoors: 'Ar livre',
+/**
+ * Altura da pilha de controlos, para quem precise de se desviar dela — a
+ * bússola do Mapbox nasce no mesmo canto e ficava por baixo dos botões.
+ */
+export const MAP_CONTROL_COUNT = 4;
+export const MAP_CONTROL_SIZE = 40;
+export const MAP_CONTROL_GAP = 8;
+export function mapControlsHeight(count = MAP_CONTROL_COUNT): number {
+  return count * MAP_CONTROL_SIZE + (count - 1) * MAP_CONTROL_GAP;
+}
+
+const STYLE_KEYS: Record<MapboxStyleKey, string> = {
+  dark: 'settings_map_dark',
+  light: 'settings_map_light',
+  streets: 'settings_map_streets',
+  satellite: 'settings_map_satellite',
+  outdoors: 'settings_map_outdoors',
 };
 
 /**
@@ -39,6 +51,7 @@ export function MapControls({
   onToggle3D: () => void;
   onCenterOnUser: () => void;
 }) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const top = insets.top + 8;
 
@@ -58,7 +71,7 @@ export function MapControls({
           style={styles.mapControlBtn}
           onPress={onToggleStyleMenu}
           activeOpacity={0.7}
-          accessibilityLabel="Estilo do mapa"
+          accessibilityLabel={t('settings_map_style')}
         >
           <Ionicons name="layers-outline" size={18} color={colors.foreground} />
         </TouchableOpacity>
@@ -80,7 +93,7 @@ export function MapControls({
           style={[styles.mapControlBtn, show3D && styles.mapControlBtnActive]}
           onPress={onToggle3D}
           activeOpacity={0.7}
-          accessibilityLabel="Vista 3D"
+          accessibilityLabel={t('routes_3d')}
         >
           <Ionicons
             name="cube-outline"
@@ -93,7 +106,7 @@ export function MapControls({
           style={styles.mapControlBtn}
           onPress={onCenterOnUser}
           activeOpacity={0.7}
-          accessibilityLabel="Centrar em mim"
+          accessibilityLabel={t('map_center_on_me')}
         >
           <Ionicons name="locate-outline" size={18} color={colors.foreground} />
         </TouchableOpacity>
@@ -108,7 +121,7 @@ export function MapControls({
               onPress={() => onSelectStyle(key)}
             >
               <Text style={[styles.styleMenuText, mapStyle === key && styles.styleMenuTextActive]}>
-                {STYLE_LABELS[key]}
+                {t(STYLE_KEYS[key] as any)}
               </Text>
             </TouchableOpacity>
           ))}

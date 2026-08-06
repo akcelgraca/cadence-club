@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from './Button';
+// Componente de classe: não pode usar hooks, por isso lê a instância do i18n.
+import i18n from '../../lib/i18n';
 import { colors, typography } from '../../lib/theme';
 
 interface Props {
@@ -32,11 +34,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
       return (
         <View style={styles.container}>
           <Ionicons name="alert-circle" size={48} color={colors.mutedForeground} />
-          <Text style={styles.title}>Algo correu mal</Text>
+          <Text style={styles.title}>{i18n.t('error_something_wrong')}</Text>
           <Text style={styles.message}>
-            {this.state.error?.message ?? 'Ocorreu um erro inesperado.'}
+            {this.state.error?.message ?? i18n.t('error_unexpected')}
           </Text>
-          <Button title="Tentar novamente" onPress={this.handleRetry} variant="primary" />
+          <Button title={i18n.t('retry')} onPress={this.handleRetry} variant="primary" />
         </View>
       );
     }

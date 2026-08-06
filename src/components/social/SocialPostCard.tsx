@@ -216,8 +216,8 @@ export function SocialPostCard({ activity, onDeleted }: SocialPostCardProps) {
   }, [activity.profile, activity.user_id]);
 
   const handleOptionsMenu = useCallback(() => {
-    const ownOptions = ['Cancelar', 'Apagar post'];
-    const otherOptions = ['Cancelar', 'Denunciar', 'Guardar post'];
+    const ownOptions = [t('cancel'), t('post_delete')];
+    const otherOptions = [t('cancel'), t('post_report'), t('post_save')];
 
     if (Platform.OS === 'ios') {
       if (isOwn) {
@@ -232,41 +232,41 @@ export function SocialPostCard({ activity, onDeleted }: SocialPostCardProps) {
         );
       }
     } else {
-      Alert.alert('Opções', undefined, isOwn
-        ? [{ text: 'Apagar post', style: 'destructive', onPress: confirmDelete }, { text: 'Cancelar', style: 'cancel' }]
-        : [{ text: 'Denunciar', onPress: openReport }, { text: 'Guardar post', onPress: handleSave }, { text: 'Cancelar', style: 'cancel' }],
+      Alert.alert(t('post_options'), undefined, isOwn
+        ? [{ text: t('post_delete'), style: 'destructive', onPress: confirmDelete }, { text: t('cancel'), style: 'cancel' }]
+        : [{ text: t('post_report'), onPress: openReport }, { text: t('post_save'), onPress: handleSave }, { text: t('cancel'), style: 'cancel' }],
       );
     }
-  }, [isOwn]);
+  }, [isOwn, t]);
 
   const confirmDelete = () => {
-    Alert.alert('Apagar post', 'Esta ação não pode ser desfeita.', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Apagar', style: 'destructive', onPress: async () => {
+    Alert.alert(t('post_delete'), t('post_delete_confirm'), [
+      { text: t('cancel'), style: 'cancel' },
+      { text: t('delete'), style: 'destructive', onPress: async () => {
         try { await deleteActivity(activity.id); onDeleted?.(); }
-        catch { Alert.alert('Erro', 'Não foi possível apagar o post.'); }
+        catch { Alert.alert(t('post_delete_error')); }
       }},
     ]);
   };
 
-  const openReport = () => Alert.alert('Denunciar post', 'Motivo:', [
-    { text: 'Conteúdo inapropriado', onPress: () => submitReport('inappropriate') },
-    { text: 'Spam', onPress: () => submitReport('spam') },
-    { text: 'Outro', onPress: () => submitReport('other') },
-    { text: 'Cancelar', style: 'cancel' },
+  const openReport = () => Alert.alert(t('post_report_title'), t('post_report_reason'), [
+    { text: t('post_report_inappropriate'), onPress: () => submitReport('inappropriate') },
+    { text: t('post_report_spam'), onPress: () => submitReport('spam') },
+    { text: t('post_report_other'), onPress: () => submitReport('other') },
+    { text: t('cancel'), style: 'cancel' },
   ]);
 
   const submitReport = async (reason: string) => {
-    try { await reportActivity(activity.id, reason); Alert.alert('Denúncia enviada', 'Obrigado pelo feedback.'); }
-    catch { Alert.alert('Erro', 'Não foi possível enviar a denúncia.'); }
+    try { await reportActivity(activity.id, reason); Alert.alert(t('post_report_sent_title'), t('post_report_sent_body')); }
+    catch { Alert.alert(t('post_report_error')); }
   };
 
   const handleSave = async () => {
     try {
       await savePost(activity.id);
-      Alert.alert('Guardado', 'Post guardado nos teus favoritos.');
+      Alert.alert(t('post_saved_title'), t('post_saved_body'));
     } catch {
-      Alert.alert('Erro', 'Não foi possível guardar o post.');
+      Alert.alert(t('post_save_error'));
     }
   };
 
@@ -333,24 +333,24 @@ export function SocialPostCard({ activity, onDeleted }: SocialPostCardProps) {
         <View style={styles.statsRow}>
           {distStr && (
             <>
-              <StatBox value={distStr} label="Distância" />
+              <StatBox value={distStr} label={t('distance')} />
               {(paceStr || timeStr || elevStr) && <View style={styles.statDivider} />}
             </>
           )}
           {paceStr && (
             <>
-              <StatBox value={paceStr} label="Ritmo" />
+              <StatBox value={paceStr} label={t('pace')} />
               {(timeStr || elevStr) && <View style={styles.statDivider} />}
             </>
           )}
           {timeStr && (
             <>
-              <StatBox value={timeStr} label="Tempo" />
+              <StatBox value={timeStr} label={t('post_stat_time')} />
               {elevStr && <View style={styles.statDivider} />}
             </>
           )}
           {elevStr && (
-            <StatBox value={elevStr} label="Elev ↑" />
+            <StatBox value={elevStr} label={t('post_stat_elevation')} />
           )}
         </View>
       )}
@@ -426,7 +426,7 @@ export function SocialPostCard({ activity, onDeleted }: SocialPostCardProps) {
             {activity.description}
           </Text>
           {activity.description.length > 80 && (
-            <Text style={styles.descToggle}>{descExpanded ? 'ver menos' : 'ver mais'}</Text>
+            <Text style={styles.descToggle}>{descExpanded ? t('post_show_less') : t('post_show_more')}</Text>
           )}
         </TouchableOpacity>
       )}
@@ -476,7 +476,7 @@ export function SocialPostCard({ activity, onDeleted }: SocialPostCardProps) {
         {/* Spacer + open activity */}
         <View style={{ flex: 1 }} />
         <TouchableOpacity style={styles.openActivityBtn} onPress={openActivity} activeOpacity={0.7}>
-          <Text style={styles.openActivityText}>Ver atividade</Text>
+          <Text style={styles.openActivityText}>{t('post_view_activity')}</Text>
           <Ionicons name="chevron-forward" size={14} color={colors.primary} />
         </TouchableOpacity>
       </View>
@@ -485,7 +485,7 @@ export function SocialPostCard({ activity, onDeleted }: SocialPostCardProps) {
       {commentsCount > 0 && (
         <TouchableOpacity style={styles.commentsLink} onPress={() => setCommentsVisible(true)} activeOpacity={0.6}>
           <Text style={styles.commentsLinkText}>
-            Ver {commentsCount === 1 ? 'o comentário' : `todos os ${commentsCount} comentários`}
+            {commentsCount === 1 ? t('post_view_comments_one') : t('post_view_comments_other', { count: commentsCount })}
           </Text>
         </TouchableOpacity>
       )}

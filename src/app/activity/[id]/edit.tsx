@@ -178,7 +178,7 @@ export default function EditActivityScreen() {
 
       router.back();
     } catch (e: any) {
-      Alert.alert('Erro', e?.message ?? 'Não foi possível guardar as alterações.');
+      Alert.alert(e?.message ?? t('activity_edit_save_error'));
     } finally {
       setSaving(false);
     }
@@ -196,10 +196,10 @@ export default function EditActivityScreen() {
     return (
       <SafeAreaView style={styles.center} edges={['top']}>
         <Text style={styles.errorText}>
-          {activity ? 'Só podes editar as tuas atividades.' : t('activity_not_found')}
+          {activity ? t('activity_edit_not_yours') : t('activity_not_found')}
         </Text>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backBtnText}>Voltar</Text>
+          <Text style={styles.backBtnText}>{t('route_creator_back')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -213,11 +213,11 @@ export default function EditActivityScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Editar atividade</Text>
+        <Text style={styles.headerTitle}>{t('activity_edit_title')}</Text>
         <TouchableOpacity onPress={handleSave} disabled={saving} hitSlop={12}>
           {saving
             ? <ActivityIndicator size="small" color={colors.primary} />
-            : <Text style={styles.saveText}>Guardar</Text>}
+            : <Text style={styles.saveText}>{t('save')}</Text>}
         </TouchableOpacity>
       </View>
 
@@ -227,16 +227,16 @@ export default function EditActivityScreen() {
           <View style={styles.notice}>
             <Ionicons name="lock-closed-outline" size={14} color={colors.mutedForeground} />
             <Text style={styles.noticeText}>
-              Distância, tempo e percurso são o registo do treino e não se alteram.
+              {t('activity_edit_immutable_hint')}
             </Text>
           </View>
 
           {/* Modalidade */}
-          <Text style={styles.label}>Modalidade</Text>
+          <Text style={styles.label}>{t('activity_sport')}</Text>
           <TouchableOpacity style={styles.typeRow} onPress={() => setTypePickerOpen(true)}>
             <ActivityIcon activityKey={type ?? ''} size={22} tintColor={colors.primary} />
             <Text style={styles.typeText}>
-              {typeDef ? t(typeDef.i18n_key as any) : 'Escolher'}
+              {typeDef ? t(typeDef.i18n_key as any) : t('edit_profile_choose')}
             </Text>
             <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
           </TouchableOpacity>
@@ -368,7 +368,7 @@ export default function EditActivityScreen() {
                   {isPublic ? t('activity_visibility_public') : t('activity_visibility_private')}
                 </Text>
                 <Text style={styles.visibilitySub}>
-                  {isPublic ? 'Aparece no feed de quem te segue.' : 'Só tu vês esta atividade.'}
+                  {isPublic ? t('activity_visibility_public_hint') : t('activity_visibility_private_hint')}
                 </Text>
               </View>
             </View>
@@ -388,7 +388,7 @@ export default function EditActivityScreen() {
           >
             {saving
               ? <ActivityIndicator color={colors.primaryForeground} />
-              : <Text style={styles.saveButtonText}>Guardar alterações</Text>}
+              : <Text style={styles.saveButtonText}>{t('equipment_save_changes')}</Text>}
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -402,7 +402,7 @@ export default function EditActivityScreen() {
       >
         <View style={styles.modal}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Modalidade</Text>
+            <Text style={styles.modalTitle}>{t('activity_sport')}</Text>
             <TouchableOpacity onPress={() => setTypePickerOpen(false)}>
               <Ionicons name="close" size={24} color={colors.foreground} />
             </TouchableOpacity>

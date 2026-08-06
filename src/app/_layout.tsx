@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Stack } from 'expo-router';
+import { usePendingSync } from '../hooks/usePendingSync';
+import { useActivityStore } from '../store/activityStore';
+import { Stack, router, usePathname } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
-import { ActivityIndicator, View, StatusBar, Text, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, StatusBar, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { CustomHeader } from '../components/common/CustomHeader';
 import { useFonts } from 'expo-font';
 import { supabase } from '../services/supabase';
@@ -24,9 +26,10 @@ import { useAuthStore } from '../store/authStore';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import { useColors } from '../hooks/useColors';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import { MAPBOX_ACCESS_TOKEN, POSTHOG_API_KEY, POSTHOG_HOST } from '../lib/constants';
+import { MAPBOX_ACCESS_TOKEN } from '../lib/constants';
 import { colors } from '../lib/theme';
 import { PostHogProvider } from 'posthog-react-native';
+import { posthog, track } from '../lib/analytics';
 import { I18nextProvider, useTranslation } from 'react-i18next';
 import i18n from '../lib/i18n';
 
@@ -88,6 +91,14 @@ function AppStack() {
   const c = useColors();
   const { t } = useTranslation();
   const { isConnected } = useNetworkStatus();
+  const { pendingCount, syncing } = usePendingSync();
+
+  // Uma gravação interrompida fica em 'paused'/'finished' depois de rehidratar
+  const recordingState = useActivityStore((s) => s.state);
+  const pathname = usePathname();
+  const hasUnfinishedActivity =
+    (recordingState === 'paused' || recordingState === 'finished')
+    && !pathname.startsWith('/record');
 
   return (
     // GestureHandlerRootView é obrigatório para os gestos do react-native-
@@ -100,6 +111,34 @@ function AppStack() {
       {!isConnected && (
         <View style={offlineStyles.banner}>
           <Text style={offlineStyles.bannerText}>{t('offline_banner')}</Text>
+        </View>
+      )}
+      {/* Treino recuperado depois de a app fechar a meio. Sem este aviso,
+          ficaria esquecido no separador Registar. */}
+      {hasUnfinishedActivity && (
+        <TouchableOpacity
+          style={offlineStyles.resumeBanner}
+          onPress={() => router.push('/record')}
+          activeOpacity={0.85}
+        >
+          <Text style={offlineStyles.bannerText}>
+            {t('recording_in_progress')}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* O utilizador tem de saber que o treino está guardado mas ainda não
+          foi enviado — senão parece que se perdeu. */}
+      {pendingCount > 0 && (
+        <View style={offlineStyles.pendingBanner}>
+          {syncing && <ActivityIndicator size="small" color={colors.primaryForeground} />}
+          <Text style={offlineStyles.bannerText}>
+            {syncing
+              ? 'A enviar atividades guardadas...'
+              : pendingCount === 1
+              ? t('pending_activities_one', { count: pendingCount })
+              : t('pending_activities_other', { count: pendingCount })}
+          </Text>
         </View>
       )}
       <Stack
@@ -129,7 +168,7 @@ function AppStack() {
         />
         <Stack.Screen
           name="segment/[id]"
-          options={{ headerShown: true, title: 'Troço' }}
+          options={{ headerShown: true, title: t('segment_screen_title') }}
         />
         <Stack.Screen
           name="profile/[id]"
@@ -166,6 +205,10 @@ function AppStack() {
         <Stack.Screen
           name="profile/settings/picker"
           options={{ headerShown: true, title: '' }}
+        />
+        <Stack.Screen
+          name="profile/privacy-zones"
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="profile/questionnaire"
@@ -227,6 +270,21 @@ const offlineStyles = StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: 'center',
   },
+  pendingBanner: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  resumeBanner: {
+    alignItems: 'center',
+    backgroundColor: colors.foreground,
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+  },
   bannerText: {
     color: colors.primaryForeground,
     fontFamily: 'Barlow_500Medium',
@@ -270,8 +328,13 @@ export default function RootLayout() {
   // Set up push notifications
   usePushNotifications();
 
+  // Base do cálculo de retenção a 1, 7 e 30 dias.
+  useEffect(() => {
+    track('app_opened');
+  }, []);
+
   return (
-    <PostHogProvider apiKey={POSTHOG_API_KEY} options={{ host: POSTHOG_HOST }}>
+    <PostHogProvider client={posthog}>
       <QueryClientProvider client={queryClient}>
         <AuthGate>
           <I18nextProvider i18n={i18n}>

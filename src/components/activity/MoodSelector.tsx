@@ -1,12 +1,13 @@
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { colors, typography } from '../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 const MOOD_IMAGES = [
-  { value: 1, image: require('../../../assets/images/moods/mood_1.png'), label: 'Muito difícil' },
-  { value: 2, image: require('../../../assets/images/moods/mood_2.png'), label: 'Difícil' },
-  { value: 3, image: require('../../../assets/images/moods/mood_3.png'), label: 'Normal' },
-  { value: 4, image: require('../../../assets/images/moods/mood_4.png'), label: 'Boa' },
-  { value: 5, image: require('../../../assets/images/moods/mood_5.png'), label: 'Excelente' },
+  { value: 1, image: require('../../../assets/images/moods/mood_1.png'), i18n_key: 'activity_mood_1' },
+  { value: 2, image: require('../../../assets/images/moods/mood_2.png'), i18n_key: 'activity_mood_2' },
+  { value: 3, image: require('../../../assets/images/moods/mood_3.png'), i18n_key: 'activity_mood_3' },
+  { value: 4, image: require('../../../assets/images/moods/mood_4.png'), i18n_key: 'activity_mood_4' },
+  { value: 5, image: require('../../../assets/images/moods/mood_5.png'), i18n_key: 'activity_mood_5' },
 ];
 
 interface MoodSelectorProps {
@@ -15,9 +16,10 @@ interface MoodSelectorProps {
 }
 
 export function MoodSelector({ selected, onSelect }: MoodSelectorProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Como te sentiste?</Text>
+      <Text style={styles.title}>{t('activity_how_was_it')}</Text>
       <View style={styles.row}>
         {MOOD_IMAGES.map((m) => (
           <TouchableOpacity
@@ -26,7 +28,7 @@ export function MoodSelector({ selected, onSelect }: MoodSelectorProps) {
             onPress={() => onSelect(m.value)}
           >
             <Image source={m.image} style={styles.moodImage} />
-            <Text style={styles.label}>{m.label}</Text>
+            <Text style={styles.label}>{t(m.i18n_key as any)}</Text>
           </TouchableOpacity>
         ))}
       </View>

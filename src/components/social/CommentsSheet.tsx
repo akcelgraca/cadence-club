@@ -19,6 +19,7 @@ import { useAuthStore } from '../../store/authStore';
 import { Avatar } from '../common/Avatar';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { Comment } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 interface CommentsSheetProps {
   activityId: string;
@@ -28,6 +29,7 @@ interface CommentsSheetProps {
 }
 
 export function CommentsSheet({ activityId, visible, onClose, onCountChange }: CommentsSheetProps) {
+  const { t } = useTranslation();
   const { profile } = useAuthStore();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -64,16 +66,16 @@ export function CommentsSheet({ activityId, visible, onClose, onCountChange }: C
       onCountChange?.(updated.length);
       setText('');
     } catch {
-      Alert.alert('Erro', 'Não foi possível enviar o comentário.');
+      Alert.alert(t('comment_send_error'));
     }
     setSending(false);
   };
 
   const handleDeleteComment = (commentId: string) => {
-    Alert.alert('Apagar comentário', 'Tens a certeza?', [
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert(t('comment_delete'), t('comment_delete_confirm'), [
+      { text: t('cancel'), style: 'cancel' },
       {
-        text: 'Apagar',
+        text: t('delete'),
         style: 'destructive',
         onPress: async () => {
           try {
@@ -82,7 +84,7 @@ export function CommentsSheet({ activityId, visible, onClose, onCountChange }: C
             setComments(updated);
             onCountChange?.(updated.length);
           } catch {
-            Alert.alert('Erro', 'Não foi possível apagar o comentário.');
+            Alert.alert(t('comment_delete_error'));
           }
         },
       },
@@ -131,7 +133,7 @@ export function CommentsSheet({ activityId, visible, onClose, onCountChange }: C
 
           {/* Header */}
           <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Comentários</Text>
+            <Text style={styles.sheetTitle}>{t('comments')}</Text>
             <TouchableOpacity onPress={onClose} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
               <Ionicons name="close" size={22} color={colors.foreground} />
             </TouchableOpacity>
@@ -150,8 +152,8 @@ export function CommentsSheet({ activityId, visible, onClose, onCountChange }: C
               ListEmptyComponent={
                 <View style={styles.center}>
                   <Ionicons name="chatbubble-outline" size={40} color={colors.mutedForeground} />
-                  <Text style={styles.emptyText}>Nenhum comentário ainda.</Text>
-                  <Text style={styles.emptySubText}>Sê o primeiro a comentar!</Text>
+                  <Text style={styles.emptyText}>{t('comments_empty')}</Text>
+                  <Text style={styles.emptySubText}>{t('be_first_comment')}</Text>
                 </View>
               }
               contentContainerStyle={styles.listContent}
@@ -170,7 +172,7 @@ export function CommentsSheet({ activityId, visible, onClose, onCountChange }: C
             <TextInput
               ref={inputRef}
               style={styles.input}
-              placeholder="Adiciona um comentário..."
+              placeholder={t('comment_placeholder')}
               placeholderTextColor={colors.mutedForeground}
               value={text}
               onChangeText={setText}

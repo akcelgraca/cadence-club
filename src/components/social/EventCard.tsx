@@ -5,10 +5,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { ActivityIcon } from '../common/ActivityIcon';
 import { attendEvent, leaveEvent, deleteClubEvent } from '../../services/events';
 import { colors, typography, withAlpha } from '../../lib/theme';
+import { MONTH_SHORT_KEYS } from '../../lib/constants';
 import type { ClubEvent } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
-const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+/** Índice 0 = domingo, como o Date.getDay(). */
+const WEEKDAY_KEYS = [
+  'training_day_sun', 'training_day_mon', 'training_day_tue', 'training_day_wed',
+  'training_day_thu', 'training_day_fri', 'training_day_sat',
+];
 
 interface EventCardProps {
   event: ClubEvent;
@@ -23,6 +28,7 @@ interface EventCardProps {
 export function EventCard({
   event, showClub = false, canAttend = true, canDelete = false, onChanged,
 }: EventCardProps) {
+  const { t } = useTranslation();
   const [attending, setAttending] = useState(event.is_attending ?? false);
   const [count, setCount] = useState(event.attendee_count ?? 0);
   const [busy, setBusy] = useState(false);
@@ -43,23 +49,23 @@ export function EventCard({
     } catch {
       setAttending(!next);
       setCount((c) => c + (next ? -1 : 1));
-      Alert.alert('Erro', 'Não foi possível atualizar a tua inscrição.');
+      Alert.alert(t('event_attend_error'));
     } finally {
       setBusy(false);
     }
   };
 
   const confirmDelete = () => {
-    Alert.alert('Apagar evento', `Apagar "${event.title}"?`, [
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert(t('event_delete'), t('event_delete_confirm', { title: event.title }), [
+      { text: t('cancel'), style: 'cancel' },
       {
-        text: 'Apagar', style: 'destructive',
+        text: t('delete'), style: 'destructive',
         onPress: async () => {
           try {
             await deleteClubEvent(event.id);
             onChanged?.();
           } catch {
-            Alert.alert('Erro', 'Não foi possível apagar o evento.');
+            Alert.alert(t('event_delete_error'));
           }
         },
       },
@@ -70,9 +76,9 @@ export function EventCard({
     <View style={[styles.card, isPast && styles.cardPast]}>
       {/* Data */}
       <View style={[styles.dateBox, isPast && styles.dateBoxPast]}>
-        <Text style={[styles.dateWeekday, isPast && styles.mutedText]}>{WEEKDAYS[date.getDay()]}</Text>
+        <Text style={[styles.dateWeekday, isPast && styles.mutedText]}>{t(WEEKDAY_KEYS[date.getDay()])}</Text>
         <Text style={[styles.dateDay, isPast && styles.mutedText]}>{date.getDate()}</Text>
-        <Text style={[styles.dateMonth, isPast && styles.mutedText]}>{MONTHS[date.getMonth()]}</Text>
+        <Text style={[styles.dateMonth, isPast && styles.mutedText]}>{t(MONTH_SHORT_KEYS[date.getMonth()])}</Text>
       </View>
 
       {/* Conteúdo */}

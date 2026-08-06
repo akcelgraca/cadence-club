@@ -1,7 +1,10 @@
 import { View, Text, StyleSheet, ActivityIndicator, useWindowDimensions } from 'react-native';
-import { MONTH_LABELS_PT } from '../../lib/constants';
+import { useTranslation } from 'react-i18next';
+import { MONTH_SHORT_KEYS } from '../../lib/constants';
 import type { MonthlyStat } from '../../lib/types';
 import { colors, typography, withAlpha } from '../../lib/theme';
+import { useEffect } from 'react';
+import { track } from '../../lib/analytics';
 
 interface MonthlyChartProps {
   data: MonthlyStat[] | undefined;
@@ -29,9 +32,10 @@ function fillMissingMonths(stats: MonthlyStat[], months: number = 12): MonthlySt
   return result;
 }
 
-function getMonthLabel(monthYear: string): string {
+function getMonthLabel(monthYear: string, t: (k: string) => string): string {
   const month = parseInt(monthYear.split('-')[1], 10);
-  return MONTH_LABELS_PT[month - 1] ?? monthYear;
+  const key = MONTH_SHORT_KEYS[month - 1];
+  return key ? t(key) : monthYear;
 }
 
 /** Round up to a nice number for the chart max */
@@ -51,12 +55,18 @@ function formatKm(value: number): string {
 }
 
 export function MonthlyChart({ data, isLoading, isError }: MonthlyChartProps) {
+  const { t } = useTranslation();
+
+  // Só conta quando há dados — abrir o perfil e ver um esqueleto não é uso.
+  useEffect(() => {
+    if (data && data.length > 0) track('premium_feature_used', { feature: 'trends' });
+  }, [data]);
   const { width: screenWidth } = useWindowDimensions();
 
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Ultimos 12 meses</Text>
+        <Text style={styles.title}>{t('monthly_last_12')}</Text>
         <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 20, height: 180 }} />
       </View>
     );
@@ -65,8 +75,8 @@ export function MonthlyChart({ data, isLoading, isError }: MonthlyChartProps) {
   if (isError) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Ultimos 12 meses</Text>
-        <Text style={styles.emptyText}>Erro ao carregar dados.</Text>
+        <Text style={styles.title}>{t('monthly_last_12')}</Text>
+        <Text style={styles.emptyText}>{t('error_loading_data_period')}</Text>
       </View>
     );
   }
@@ -77,8 +87,8 @@ export function MonthlyChart({ data, isLoading, isError }: MonthlyChartProps) {
   if (allZero) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Ultimos 12 meses</Text>
-        <Text style={styles.emptyText}>Ainda sem dados mensais.</Text>
+        <Text style={styles.title}>{t('monthly_last_12')}</Text>
+        <Text style={styles.emptyText}>{t('monthly_empty')}</Text>
       </View>
     );
   }
@@ -103,8 +113,8 @@ export function MonthlyChart({ data, isLoading, isError }: MonthlyChartProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Ultimos 12 meses</Text>
-      <Text style={styles.subtitle}>Distancia (km)</Text>
+      <Text style={styles.title}>{t('monthly_last_12')}</Text>
+      <Text style={styles.subtitle}>{t('monthly_distance_km')}</Text>
 
       <View style={styles.chartRow}>
         {/* Y-axis labels */}
@@ -151,7 +161,7 @@ export function MonthlyChart({ data, isLoading, isError }: MonthlyChartProps) {
                     />
                   </View>
                   <Text style={styles.barLabel} numberOfLines={1}>
-                    {getMonthLabel(filled[i].month_year)}
+                    {getMonthLabel(filled[i].month_year, t)}
                   </Text>
                 </View>
               );

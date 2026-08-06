@@ -10,8 +10,10 @@ import { getSavedPosts, unsavePost } from '../services/social';
 import { SocialPostCard } from '../components/social/SocialPostCard';
 import { colors, typography, withAlpha } from '../lib/theme';
 import type { Activity } from '../lib/types';
+import { useTranslation } from 'react-i18next';
 
 export default function SavedPostsScreen() {
+  const { t } = useTranslation();
   const [posts, setPosts] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,8 +27,11 @@ export default function SavedPostsScreen() {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const handleUnsave = (activity: Activity) => {
-    Alert.alert('Remover dos guardados', `Remover "${activity.title ?? 'este post'}"?`, [
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert(
+      t('saved_remove_title'),
+      t('saved_remove_confirm', { title: activity.title ?? t('saved_this_post') }),
+      [
+      { text: t('cancel'), style: 'cancel' },
       {
         text: 'Remover', style: 'destructive',
         onPress: async () => {
@@ -48,7 +53,7 @@ export default function SavedPostsScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Guardados</Text>
+        <Text style={styles.headerTitle}>{t('saved_title')}</Text>
         <View style={{ width: 32 }} />
       </View>
 
@@ -62,10 +67,10 @@ export default function SavedPostsScreen() {
             <View>
               <View style={styles.savedBar}>
                 <Ionicons name="bookmark" size={13} color={colors.primary} />
-                <Text style={styles.savedBarText}>Guardado</Text>
+                <Text style={styles.savedBarText}>{t('activity_saved_title')}</Text>
                 <View style={{ flex: 1 }} />
                 <TouchableOpacity onPress={() => handleUnsave(item)} hitSlop={8}>
-                  <Text style={styles.removeText}>Remover</Text>
+                  <Text style={styles.removeText}>{t('saved_remove_action')}</Text>
                 </TouchableOpacity>
               </View>
               <SocialPostCard
@@ -80,9 +85,9 @@ export default function SavedPostsScreen() {
               <View style={styles.emptyIcon}>
                 <Ionicons name="bookmark-outline" size={40} color={colors.primary} />
               </View>
-              <Text style={styles.emptyTitle}>Ainda sem posts guardados</Text>
+              <Text style={styles.emptyTitle}>{t('saved_empty')}</Text>
               <Text style={styles.emptySub}>
-                Usa o menu "…" de um post no feed e escolhe "Guardar post".
+                {t('saved_empty_body')}
               </Text>
             </View>
           }

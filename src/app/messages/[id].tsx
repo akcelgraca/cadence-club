@@ -16,8 +16,10 @@ import { Avatar } from '../../components/common/Avatar';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import { formatRelativeTime } from '../../utils/dateHelpers';
 import type { DirectMessage } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 export default function ChatScreen() {
+  const { t } = useTranslation();
   const { id, userId, name, avatarUrl } = useLocalSearchParams<{
     id: string;
     userId: string;
@@ -96,7 +98,7 @@ export default function ChatScreen() {
         // Messages will be loaded by the useEffect above
       }
     } catch {
-      Alert.alert('Erro', 'Não foi possível enviar a mensagem.');
+      Alert.alert(t('messages_send_error'));
       setText(body);
     } finally {
       setSending(false);
@@ -140,7 +142,7 @@ export default function ChatScreen() {
           <Avatar uri={avatarUrl || null} name={name} size={36} />
           <View>
             <Text style={styles.headerName} numberOfLines={1}>{name}</Text>
-            <Text style={styles.headerSub}>Ver perfil</Text>
+            <Text style={styles.headerSub}>{t('messages_view_profile')}</Text>
           </View>
         </TouchableOpacity>
 
@@ -167,7 +169,7 @@ export default function ChatScreen() {
               <View style={styles.emptyChat}>
                 <Avatar uri={avatarUrl || null} name={name} size={64} />
                 <Text style={styles.emptyChatName}>{name}</Text>
-                <Text style={styles.emptyChatSub}>Envia a primeira mensagem!</Text>
+                <Text style={styles.emptyChatSub}>{t('messages_send_first')}</Text>
               </View>
             }
           />
@@ -182,7 +184,7 @@ export default function ChatScreen() {
         >
           <TextInput
             style={styles.input}
-            placeholder="Mensagem..."
+            placeholder={t('messages_placeholder')}
             placeholderTextColor={colors.mutedForeground}
             value={text}
             onChangeText={setText}

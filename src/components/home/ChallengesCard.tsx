@@ -5,12 +5,14 @@ import { useQuery } from '@tanstack/react-query';
 import { getActiveChallenges, formatChallengeValue } from '../../services/challenges';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { Challenge } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Resumo dos desafios no ecrã Hoje: mostra o desafio em que participo com mais
  * progresso; se ainda não participo em nenhum, convida a começar.
  */
 export function ChallengesCard() {
+  const { t } = useTranslation();
   const { data: challenges = [] } = useQuery({
     queryKey: ['activeChallenges'],
     queryFn: getActiveChallenges,
@@ -27,9 +29,9 @@ export function ChallengesCard() {
   return (
     <View style={styles.wrapper}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Desafios</Text>
+        <Text style={styles.sectionTitle}>{t('challenges_title')}</Text>
         <TouchableOpacity style={styles.viewAll} onPress={() => router.push('/challenges')}>
-          <Text style={styles.viewAllText}>Ver todos</Text>
+          <Text style={styles.viewAllText}>{t('view_all')}</Text>
           <Ionicons name="chevron-forward" size={12} color={colors.primary} />
         </TouchableOpacity>
       </View>
@@ -80,7 +82,7 @@ export function ChallengesCard() {
             <Text style={styles.inviteTitle}>
               {challenges.length} {challenges.length === 1 ? 'desafio ativo' : 'desafios ativos'}
             </Text>
-            <Text style={styles.inviteSub}>Junta-te e acompanha o teu progresso.</Text>
+            <Text style={styles.inviteSub}>{t('challenges_card_body')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
         </TouchableOpacity>

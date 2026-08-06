@@ -13,6 +13,7 @@ import { useSocialStore } from '../../store/socialStore';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import { formatRelativeTime } from '../../utils/dateHelpers';
 import type { Conversation, ClubChat } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 /** Linha unificada da lista: conversa direta ou chat de clube. */
 type ChatRow =
@@ -20,6 +21,7 @@ type ChatRow =
   | { kind: 'club'; id: string; sortAt: number; unread: number; club: ClubChat };
 
 export function MessagesTab() {
+  const { t } = useTranslation();
   const [rows, setRows] = useState<ChatRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -132,7 +134,7 @@ export function MessagesTab() {
           </View>
           <View style={styles.rowBottom}>
             <Text style={[styles.preview, isUnread && styles.previewBold]} numberOfLines={1}>
-              {lastBody ?? 'Sem mensagens'}
+              {lastBody ?? t('messages_empty_title')}
             </Text>
             {isUnread && (
               <View style={styles.unreadBadge}>
@@ -158,7 +160,7 @@ export function MessagesTab() {
         <Ionicons name="search" size={14} color={colors.mutedForeground} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Procurar conversas e clubes..."
+          placeholder={t('messages_search_placeholder')}
           placeholderTextColor={colors.mutedForeground}
           value={search}
           onChangeText={setSearch}
@@ -178,12 +180,12 @@ export function MessagesTab() {
           <View style={styles.empty}>
             <Ionicons name="chatbubble-ellipses-outline" size={48} color={colors.mutedForeground} />
             <Text style={styles.emptyTitle}>
-              {search.trim() ? 'Sem resultados' : 'Sem conversas'}
+              {search.trim() ? t('messages_no_results') : t('messages_no_chats')}
             </Text>
             <Text style={styles.emptyBody}>
               {search.trim()
                 ? `Nenhuma conversa com "${search}".`
-                : 'Os chats dos teus clubes aparecem aqui. Toca no ícone de compor para enviar a primeira mensagem.'}
+                : t('messages_empty_body')}
             </Text>
           </View>
         }

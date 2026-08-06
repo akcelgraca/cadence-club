@@ -98,8 +98,8 @@ export default function ProfileScreen() {
   });
 
   const handleLogout = () => {
-    Alert.alert('Sair', 'Tens a certeza que queres sair?', [
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert(t('profile_logout'), t('profile_logout_confirm'), [
+      { text: t('cancel'), style: 'cancel' },
       { text: 'Sair', style: 'destructive', onPress: signOut },
     ]);
   };
@@ -218,7 +218,7 @@ export default function ProfileScreen() {
             />
             <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
               <Ionicons name="log-out-outline" size={17} color={colors.destructive} />
-              <Text style={styles.logoutText}>Terminar sessão</Text>
+              <Text style={styles.logoutText}>{t('profile_sign_out')}</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -228,12 +228,12 @@ export default function ProfileScreen() {
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.pageContent}>
             <View style={styles.sectionCard}>
               <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionCardTitle}>Recentes</Text>
+                <Text style={styles.sectionCardTitle}>{t('profile_recent')}</Text>
                 <TouchableOpacity
                   style={styles.viewAll}
                   onPress={() => router.push('/(tabs)/history')}
                 >
-                  <Text style={styles.viewAllText}>Ver histórico</Text>
+                  <Text style={styles.viewAllText}>{t('home_view_history')}</Text>
                   <Ionicons name="chevron-forward" size={12} color={colors.primary} />
                 </TouchableOpacity>
               </View>
@@ -243,13 +243,13 @@ export default function ProfileScreen() {
               ) : (
                 <View style={styles.emptyBlock}>
                   <Ionicons name="pulse-outline" size={36} color={colors.mutedForeground} />
-                  <Text style={styles.emptyTitle}>Ainda sem atividades</Text>
-                  <Text style={styles.emptyText}>Grava a primeira e ela aparece aqui.</Text>
+                  <Text style={styles.emptyTitle}>{t('profile_no_activities')}</Text>
+                  <Text style={styles.emptyText}>{t('profile_record_first')}</Text>
                   <TouchableOpacity
                     style={styles.emptyBtn}
                     onPress={() => router.push('/(tabs)/recordTab')}
                   >
-                    <Text style={styles.emptyBtnText}>Registar atividade</Text>
+                    <Text style={styles.emptyBtnText}>{t('history_record_activity')}</Text>
                   </TouchableOpacity>
                 </View>
               )}

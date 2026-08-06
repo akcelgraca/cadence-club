@@ -6,6 +6,7 @@ import { EQUIPMENT_TYPES } from '../../lib/constants';
 import { useSettingsStore } from '../../store/settingsStore';
 import type { Equipment } from '../../lib/types';
 import { colors, typography } from '../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 interface EquipmentSectionProps {
   equipment: Equipment[] | undefined;
@@ -25,11 +26,12 @@ export function EquipmentSection({
   isError,
   isOwnProfile = false,
 }: EquipmentSectionProps) {
+  const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Equipamento</Text>
+        <Text style={styles.title}>{t('settings_equipment')}</Text>
         <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 16 }} />
       </View>
     );
@@ -38,8 +40,8 @@ export function EquipmentSection({
   if (isError) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Equipamento</Text>
-        <Text style={styles.emptyText}>Erro ao carregar equipamento.</Text>
+        <Text style={styles.title}>{t('settings_equipment')}</Text>
+        <Text style={styles.emptyText}>{t('equipment_load_error')}</Text>
       </View>
     );
   }
@@ -47,22 +49,22 @@ export function EquipmentSection({
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Equipamento</Text>
+        <Text style={styles.title}>{t('settings_equipment')}</Text>
         {isOwnProfile && (
           <TouchableOpacity
             onPress={() => router.push('/profile/equipment/add')}
           >
-            <Text style={styles.addButton}>+ Adicionar</Text>
+            <Text style={styles.addButton}>{t('add_plus')}</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {!equipment || equipment.length === 0 ? (
         <View style={styles.emptyInner}>
-          <Text style={styles.emptyText}>Nenhum equipamento registado.</Text>
+          <Text style={styles.emptyText}>{t('equipment_empty')}</Text>
           {isOwnProfile && (
             <Text style={styles.emptySubtext}>
-              Adiciona o teu equipamento para acompanhar os kms.
+              {t('equipment_empty_body')}
             </Text>
           )}
         </View>

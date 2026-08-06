@@ -6,12 +6,14 @@ import { Avatar } from '../common/Avatar';
 import { formatRelativeTime } from '../../utils/dateHelpers';
 import { colors, typography } from '../../lib/theme';
 import type { Comment } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 interface CommentThreadProps {
   activityId: string;
 }
 
 export function CommentThread({ activityId }: CommentThreadProps) {
+  const { t } = useTranslation();
   const [newComment, setNewComment] = useState('');
   const [isSending, setIsSending] = useState(false);
   const queryClient = useQueryClient();
@@ -67,12 +69,12 @@ export function CommentThread({ activityId }: CommentThreadProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Comentarios</Text>
+      <Text style={styles.title}>{t('comments_title')}</Text>
 
       {isLoading ? (
         <ActivityIndicator style={{ padding: 20 }} />
       ) : isError ? (
-        <Text style={styles.errorText}>Erro ao carregar comentarios.</Text>
+        <Text style={styles.errorText}>{t('comments_load_error')}</Text>
       ) : (
         <FlatList
           data={comments}
@@ -80,7 +82,7 @@ export function CommentThread({ activityId }: CommentThreadProps) {
           renderItem={renderComment}
           onEndReached={() => hasNextPage && fetchNextPage()}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>Se o primeiro a comentar!</Text>
+            <Text style={styles.emptyText}>{t('comments_be_first')}</Text>
           }
           scrollEnabled={false}
         />
@@ -89,7 +91,7 @@ export function CommentThread({ activityId }: CommentThreadProps) {
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
-          placeholder="Escreve um comentario..."
+          placeholder={t('comment_placeholder')}
           placeholderTextColor={colors.mutedForeground}
           value={newComment}
           onChangeText={setNewComment}
@@ -100,7 +102,7 @@ export function CommentThread({ activityId }: CommentThreadProps) {
           onPress={handleSend}
           disabled={!newComment.trim() || isSending}
         >
-          <Text style={styles.sendButtonText}>Enviar</Text>
+          <Text style={styles.sendButtonText}>{t('send')}</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -11,10 +11,12 @@ import { getMyUpcomingEvents, discoverEvents } from '../services/events';
 import { EventCard } from '../components/social/EventCard';
 import { useAuthStore } from '../store/authStore';
 import { colors, typography, withAlpha } from '../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 type EventsTab = 'mine' | 'discover';
 
 export default function EventsScreen() {
+  const { t } = useTranslation();
   const myCity = useAuthStore((s) => s.profile?.city);
   const [tab, setTab] = useState<EventsTab>('mine');
   const [city, setCity] = useState(myCity ?? '');
@@ -52,7 +54,7 @@ export default function EventsScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Eventos</Text>
+        <Text style={styles.headerTitle}>{t('club_tab_events')}</Text>
         <View style={{ width: 32 }} />
       </View>
 
@@ -116,16 +118,16 @@ export default function EventsScreen() {
                 <Ionicons name="calendar-outline" size={40} color={colors.primary} />
               </View>
               <Text style={styles.emptyTitle}>
-                {tab === 'mine' ? 'Sem eventos marcados' : 'Nenhum evento por aqui'}
+                {tab === 'mine' ? t('events_none_mine') : t('events_none_here')}
               </Text>
               <Text style={styles.emptySub}>
                 {tab === 'mine'
-                  ? 'Os encontros dos teus clubes aparecem aqui. Entra num clube para veres os próximos.'
-                  : 'Experimenta outra cidade ou entra num clube para receberes convites.'}
+                  ? t('events_none_mine_body')
+                  : t('events_none_here_body')}
               </Text>
               {tab === 'mine' && (
                 <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/(tabs)/social')}>
-                  <Text style={styles.emptyBtnText}>Descobrir clubes</Text>
+                  <Text style={styles.emptyBtnText}>{t('events_discover_clubs')}</Text>
                 </TouchableOpacity>
               )}
             </View>

@@ -17,8 +17,10 @@ import { Avatar } from '../../../components/common/Avatar';
 import { colors, typography, withAlpha } from '../../../lib/theme';
 import { formatRelativeTime } from '../../../utils/dateHelpers';
 import type { ClubMessage } from '../../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 export default function ClubChatScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const myId = useAuthStore((s) => s.profile?.id);
   const insets = useSafeAreaInsets();
@@ -85,7 +87,7 @@ export default function ClubChatScreen() {
       const msg = await sendClubMessage(id, body);
       setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [msg, ...prev]));
     } catch {
-      Alert.alert('Erro', 'Não foi possível enviar a mensagem.');
+      Alert.alert(t('club_chat_send_error'));
       setText(body);
     } finally {
       setSending(false);
@@ -146,7 +148,7 @@ export default function ClubChatScreen() {
               </View>
             )}
           <View style={{ flex: 1 }}>
-            <Text style={styles.headerName} numberOfLines={1}>{club?.name ?? 'Clube'}</Text>
+            <Text style={styles.headerName} numberOfLines={1}>{club?.name ?? t('club_fallback_name')}</Text>
             <Text style={styles.headerSub}>{club?.member_count ?? 0} membros · ver clube</Text>
           </View>
         </TouchableOpacity>
@@ -161,10 +163,10 @@ export default function ClubChatScreen() {
         ) : !isMember ? (
           <View style={styles.locked}>
             <Ionicons name="lock-closed-outline" size={40} color={colors.mutedForeground} />
-            <Text style={styles.lockedTitle}>Chat exclusivo para membros</Text>
-            <Text style={styles.lockedSub}>Entra no clube para participar na conversa.</Text>
+            <Text style={styles.lockedTitle}>{t('club_chat_members_only')}</Text>
+            <Text style={styles.lockedSub}>{t('club_chat_join_to_talk')}</Text>
             <TouchableOpacity style={styles.lockedBtn} onPress={() => router.push(`/club/${id}`)}>
-              <Text style={styles.lockedBtnText}>Ver clube</Text>
+              <Text style={styles.lockedBtnText}>{t('club_view')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -179,8 +181,8 @@ export default function ClubChatScreen() {
               ListEmptyComponent={
                 <View style={styles.emptyChat}>
                   <Ionicons name="chatbubbles-outline" size={40} color={colors.mutedForeground} />
-                  <Text style={styles.emptyTitle}>Ainda sem mensagens</Text>
-                  <Text style={styles.emptySub}>Manda a primeira mensagem ao clube!</Text>
+                  <Text style={styles.emptyTitle}>{t('club_chat_empty')}</Text>
+                  <Text style={styles.emptySub}>{t('club_chat_empty_body')}</Text>
                 </View>
               }
             />
@@ -192,7 +194,7 @@ export default function ClubChatScreen() {
             >
               <TextInput
                 style={styles.input}
-                placeholder="Mensagem ao clube..."
+                placeholder={t('club_chat_placeholder')}
                 placeholderTextColor={colors.mutedForeground}
                 value={text}
                 onChangeText={setText}

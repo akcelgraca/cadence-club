@@ -160,7 +160,7 @@ export function TrainingPlanCard({ plan, isLoading }: TrainingPlanCardProps) {
 
             {/* Plan label */}
             {selectedDay?.label && selectedDay.activity_type !== 'rest' && (
-              <Text style={styles.planLabel}>{selectedDay.label}</Text>
+              <Text style={styles.planLabel}>{t(selectedDay.label as any)}</Text>
             )}
 
             {/* Metrics grid */}

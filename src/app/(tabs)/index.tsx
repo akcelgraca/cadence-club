@@ -18,8 +18,10 @@ import { UpcomingEventsCard } from '../../components/home/UpcomingEventsCard';
 import { RunCard } from '../../components/common/RunCard';
 import type { Activity } from '../../lib/types';
 import { colors, typography, withAlpha } from '../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
   const { profile } = useAuthStore();
   const userId = profile?.id;
   const queryClient = useQueryClient();
@@ -78,12 +80,12 @@ export default function HomeScreen() {
         {latestRun ? (
           <View>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Última atividade</Text>
+              <Text style={styles.sectionTitle}>{t('home_last_activity')}</Text>
               <TouchableOpacity
                 style={styles.viewAll}
                 onPress={() => router.push('/(tabs)/history')}
               >
-                <Text style={styles.viewAllText}>Ver histórico</Text>
+                <Text style={styles.viewAllText}>{t('home_view_history')}</Text>
                 <Ionicons name="chevron-forward" size={12} color={colors.primary} />
               </TouchableOpacity>
             </View>
@@ -100,9 +102,9 @@ export default function HomeScreen() {
               <Ionicons name="pulse-outline" size={22} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.firstRunTitle}>A tua primeira atividade</Text>
+              <Text style={styles.firstRunTitle}>{t('home_first_activity')}</Text>
               <Text style={styles.firstRunSub}>
-                Grava um treino e começa a construir a tua sequência.
+                {t('home_first_activity_body')}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />

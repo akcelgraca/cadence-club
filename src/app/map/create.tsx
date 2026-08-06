@@ -66,7 +66,7 @@ export default function CreateRouteScreen() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Erro', 'Da um nome a rota.');
+      Alert.alert(t('route_create_name_required'));
       return;
     }
 
@@ -100,11 +100,11 @@ export default function CreateRouteScreen() {
         });
       }
 
-      Alert.alert('Guardado', 'Rota guardada com sucesso!', [
+      Alert.alert('Guardado', t('route_create_saved'), [
         { text: 'OK', onPress: () => router.back() },
       ]);
     } catch (err: any) {
-      Alert.alert('Erro', err?.message ?? 'Nao foi possivel guardar a rota.');
+      Alert.alert(err?.message ?? t('route_create_error'));
     } finally {
       setSaving(false);
     }
@@ -126,34 +126,34 @@ export default function CreateRouteScreen() {
       </View>
 
       {/* Form */}
-      <Text style={styles.sectionTitle}>{isEditing ? 'Editar Rota' : 'Nova Rota'}</Text>
+      <Text style={styles.sectionTitle}>{isEditing ? t('route_create_edit_title') : t('route_create_new_title')}</Text>
 
-      <Text style={styles.label}>Nome</Text>
+      <Text style={styles.label}>{t('onboarding_first_name')}</Text>
       <TextInput
         style={styles.input}
         value={name}
         onChangeText={setName}
-        placeholder="Ex: Volta ao parque"
+        placeholder={t('route_create_name_placeholder')}
         placeholderTextColor={colors.mutedForeground}
       />
 
-      <Text style={styles.label}>Descricao (opcional)</Text>
+      <Text style={styles.label}>{t('route_create_description_label')}</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
         value={description}
         onChangeText={setDescription}
-        placeholder="Descricao da rota..."
+        placeholder={t('route_create_description_placeholder')}
         placeholderTextColor={colors.mutedForeground}
         multiline
         numberOfLines={3}
       />
 
-      <Text style={styles.label}>Cidade</Text>
+      <Text style={styles.label}>{t('edit_profile_city')}</Text>
       <TextInput
         style={styles.input}
         value={city}
         onChangeText={setCity}
-        placeholder="Ex: Lisboa"
+        placeholder={t('route_create_city_placeholder')}
         placeholderTextColor={colors.mutedForeground}
       />
 
@@ -209,7 +209,7 @@ export default function CreateRouteScreen() {
 
       <TouchableOpacity style={styles.publicToggle} onPress={() => setIsPublic(!isPublic)}>
         <Ionicons name={isPublic ? 'globe' : 'lock-closed'} size={18} color={colors.foreground} />
-        <Text style={styles.publicText}>{isPublic ? 'Rota publica' : 'Rota privada'}</Text>
+        <Text style={styles.publicText}>{isPublic ? t('route_create_public') : t('route_create_private')}</Text>
       </TouchableOpacity>
 
       {/* Stats */}
@@ -232,7 +232,7 @@ export default function CreateRouteScreen() {
           <ActivityIndicator size="small" color={colors.primaryForeground} />
         ) : (
           <Text style={styles.saveButtonText}>
-            {isEditing ? 'Atualizar Rota' : 'Guardar Rota'}
+            {isEditing ? t('route_create_update') : t('route_create_save')}
           </Text>
         )}
       </TouchableOpacity>

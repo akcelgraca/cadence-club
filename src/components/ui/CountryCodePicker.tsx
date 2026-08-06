@@ -10,35 +10,36 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography } from '../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 export interface CountryCode {
-  code: string;   // e.g. "+351"
-  name: string;   // e.g. "Portugal"
-  flag: string;   // e.g. "🇵🇹"
+  code: string;      // e.g. "+351"
+  i18n_key: string;  // e.g. "country_portugal"
+  flag: string;      // e.g. "🇵🇹"
 }
 
 // Most common country codes for PT/BR/EU audience
 const COUNTRY_CODES: CountryCode[] = [
-  { code: '+351', name: 'Portugal', flag: '🇵🇹' },
-  { code: '+55', name: 'Brasil', flag: '🇧🇷' },
-  { code: '+34', name: 'Espanha', flag: '🇪🇸' },
-  { code: '+33', name: 'França', flag: '🇫🇷' },
-  { code: '+44', name: 'Reino Unido', flag: '🇬🇧' },
-  { code: '+49', name: 'Alemanha', flag: '🇩🇪' },
-  { code: '+39', name: 'Itália', flag: '🇮🇹' },
-  { code: '+1', name: 'EUA / Canadá', flag: '🇺🇸' },
-  { code: '+81', name: 'Japão', flag: '🇯🇵' },
-  { code: '+86', name: 'China', flag: '🇨🇳' },
-  { code: '+91', name: 'Índia', flag: '🇮🇳' },
-  { code: '+61', name: 'Austrália', flag: '🇦🇺' },
-  { code: '+32', name: 'Bélgica', flag: '🇧🇪' },
-  { code: '+41', name: 'Suíça', flag: '🇨🇭' },
-  { code: '+31', name: 'Holanda', flag: '🇳🇱' },
-  { code: '+48', name: 'Polónia', flag: '🇵🇱' },
-  { code: '+353', name: 'Irlanda', flag: '🇮🇪' },
-  { code: '+47', name: 'Noruega', flag: '🇳🇴' },
-  { code: '+46', name: 'Suécia', flag: '🇸🇪' },
-  { code: '+45', name: 'Dinamarca', flag: '🇩🇰' },
+  { code: '+351', i18n_key: 'country_portugal', flag: '🇵🇹' },
+  { code: '+55', i18n_key: 'country_brazil', flag: '🇧🇷' },
+  { code: '+34', i18n_key: 'country_spain', flag: '🇪🇸' },
+  { code: '+33', i18n_key: 'country_france', flag: '🇫🇷' },
+  { code: '+44', i18n_key: 'country_united_kingdom', flag: '🇬🇧' },
+  { code: '+49', i18n_key: 'country_germany', flag: '🇩🇪' },
+  { code: '+39', i18n_key: 'country_italy', flag: '🇮🇹' },
+  { code: '+1', i18n_key: 'country_usa_canada', flag: '🇺🇸' },
+  { code: '+81', i18n_key: 'country_japan', flag: '🇯🇵' },
+  { code: '+86', i18n_key: 'country_china', flag: '🇨🇳' },
+  { code: '+91', i18n_key: 'country_india', flag: '🇮🇳' },
+  { code: '+61', i18n_key: 'country_australia', flag: '🇦🇺' },
+  { code: '+32', i18n_key: 'country_belgium', flag: '🇧🇪' },
+  { code: '+41', i18n_key: 'country_switzerland', flag: '🇨🇭' },
+  { code: '+31', i18n_key: 'country_netherlands', flag: '🇳🇱' },
+  { code: '+48', i18n_key: 'country_poland', flag: '🇵🇱' },
+  { code: '+353', i18n_key: 'country_ireland', flag: '🇮🇪' },
+  { code: '+47', i18n_key: 'country_norway', flag: '🇳🇴' },
+  { code: '+46', i18n_key: 'country_sweden', flag: '🇸🇪' },
+  { code: '+45', i18n_key: 'country_denmark', flag: '🇩🇰' },
 ];
 
 interface CountryCodePickerProps {
@@ -54,8 +55,9 @@ export function CountryCodePicker({
   onSelect,
   phoneNumber,
   onPhoneChange,
-  placeholder = 'Número de telemóvel',
+  placeholder,
 }: CountryCodePickerProps) {
+  const { t } = useTranslation();
   const [modalVisible, setModalVisible] = useState(false);
 
   const selectedCountry = COUNTRY_CODES.find((c) => c.code === value) ?? COUNTRY_CODES[0];
@@ -74,7 +76,7 @@ export function CountryCodePicker({
 
         <TextInput
           style={styles.phoneInput}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t('phone_number_placeholder')}
           placeholderTextColor={colors.mutedForeground}
           value={phoneNumber}
           onChangeText={onPhoneChange}
@@ -91,7 +93,7 @@ export function CountryCodePicker({
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Código do país</Text>
+              <Text style={styles.modalTitle}>{t('country_code')}</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Ionicons name="close" size={24} color={colors.foreground} />
               </TouchableOpacity>
@@ -112,7 +114,7 @@ export function CountryCodePicker({
                   }}
                 >
                   <Text style={styles.countryFlag}>{item.flag}</Text>
-                  <Text style={styles.countryName}>{item.name}</Text>
+                  <Text style={styles.countryName}>{t(item.i18n_key as any)}</Text>
                   <Text style={styles.countryCode}>{item.code}</Text>
                   {value === item.code && (
                     <Ionicons name="checkmark" size={18} color={colors.primary} />

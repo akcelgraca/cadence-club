@@ -50,6 +50,12 @@ interface MapViewWrapperProps {
   children?: ReactNode;
   onPress?: (coord: [number, number]) => void;
   onRegionChange?: (center: [number, number], zoom: number) => void;
+  /**
+   * Onde fica a bússola. Por omissão o Mapbox põe-na no canto superior
+   * direito, que é onde os ecrãs costumam ter os seus próprios controlos —
+   * quem tiver botões lá deve empurrá-la para baixo deles.
+   */
+  compassPosition?: { top: number; right: number };
   style?: any;
 }
 
@@ -105,6 +111,7 @@ export function MapViewWrapper({
   terrainExaggeration = 1.5,
   children,
   onPress,
+  compassPosition,
   style,
 }: MapViewWrapperProps) {
   const cameraRef = useRef<Camera>(null);
@@ -152,6 +159,7 @@ export function MapViewWrapper({
         scaleBarEnabled={false}
         attributionEnabled={false}
         compassEnabled={true}
+        compassPosition={compassPosition}
         onPress={handlePress}
         {...(terrainActive ? { terrain: { exaggeration: terrainExaggeration, source: 'dem' } } : {})}
       >

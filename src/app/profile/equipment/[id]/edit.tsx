@@ -7,10 +7,12 @@ import { getEquipment } from '../../../../services/equipment';
 import { useAuthStore } from '../../../../store/authStore';
 import { useUpdateEquipment, useDeleteEquipment } from '../../../../hooks/useEquipment';
 import { EQUIPMENT_TYPES } from '../../../../lib/constants';
+import { useTranslation } from 'react-i18next';
 import { colors, typography } from '../../../../lib/theme';
 import type { EquipmentType, Equipment } from '../../../../lib/types';
 
 export default function EditEquipmentScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuthStore();
   const updateMutation = useUpdateEquipment();
@@ -46,7 +48,7 @@ export default function EditEquipmentScreen() {
 
   const handleSave = async () => {
     if (!name.trim() || !type) {
-      Alert.alert('Erro', 'Nome e tipo são obrigatórios.');
+      Alert.alert(t('equipment_required'));
       return;
     }
 
@@ -65,25 +67,25 @@ export default function EditEquipmentScreen() {
       });
       router.back();
     } catch (err: any) {
-      Alert.alert('Erro', err.message || 'Algo correu mal.');
+      Alert.alert(err.message || t('error_generic'));
     }
   };
 
   const handleDelete = () => {
     Alert.alert(
-      'Eliminar equipamento',
-      'Tens a certeza que queres eliminar este equipamento?',
+      t('equipment_delete'),
+      t('equipment_delete_confirm'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Eliminar',
+          text: t('delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteMutation.mutateAsync(id!);
               router.back();
             } catch (err: any) {
-              Alert.alert('Erro', err.message || 'Algo correu mal.');
+              Alert.alert(err.message || t('error_generic'));
             }
           },
         },
@@ -101,16 +103,16 @@ export default function EditEquipmentScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.label}>Nome *</Text>
+      <Text style={styles.label}>{t('register_first_name')}</Text>
       <TextInput
         style={styles.input}
         value={name}
         onChangeText={setName}
-        placeholder="Ex: Nike Pegasus 40"
+        placeholder={t('equipment_name_placeholder')}
         placeholderTextColor={colors.mutedForeground}
       />
 
-      <Text style={styles.label}>Tipo *</Text>
+      <Text style={styles.label}>{t('equipment_type_label')}</Text>
       <View style={styles.chipGrid}>
         {EQUIPMENT_TYPES.map((et) => (
           <TouchableOpacity
@@ -120,59 +122,59 @@ export default function EditEquipmentScreen() {
           >
             <Ionicons name={(et.icon as any) ?? 'cube'} size={24} color={type === et.key ? colors.primary : colors.foreground} />
             <Text style={[styles.chipLabel, type === et.key && styles.chipLabelSelected]}>
-              {et.label}
+              {t(et.i18n_key as any)}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text style={styles.label}>Marca</Text>
+      <Text style={styles.label}>{t('equipment_brand')}</Text>
       <TextInput
         style={styles.input}
         value={brand}
         onChangeText={setBrand}
-        placeholder="Ex: Nike"
+        placeholder={t('equipment_brand_placeholder')}
         placeholderTextColor={colors.mutedForeground}
       />
 
-      <Text style={styles.label}>Modelo</Text>
+      <Text style={styles.label}>{t('equipment_model')}</Text>
       <TextInput
         style={styles.input}
         value={model}
         onChangeText={setModel}
-        placeholder="Ex: Pegasus 40"
+        placeholder={t('equipment_model_placeholder')}
         placeholderTextColor={colors.mutedForeground}
       />
 
-      <Text style={styles.label}>Distância inicial (metros)</Text>
+      <Text style={styles.label}>{t('equipment_initial_distance')}</Text>
       <TextInput
         style={styles.input}
         value={initialDistance}
         onChangeText={setInitialDistance}
         keyboardType="numeric"
-        placeholder="Ex: 0"
+        placeholder={t('equipment_distance_placeholder')}
         placeholderTextColor={colors.mutedForeground}
       />
 
-      <Text style={styles.label}>Notas</Text>
+      <Text style={styles.label}>{t('equipment_notes')}</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
         value={notes}
         onChangeText={setNotes}
         multiline
         numberOfLines={3}
-        placeholder="Notas opcionais..."
+        placeholder={t('equipment_notes_placeholder')}
         placeholderTextColor={colors.mutedForeground}
       />
 
       <View style={styles.switchRow}>
-        <Text style={styles.switchLabel}>Equipamento retirado</Text>
+        <Text style={styles.switchLabel}>{t('equipment_retired_label')}</Text>
         <TouchableOpacity
           style={[styles.toggleButton, isRetired && styles.toggleButtonActive]}
           onPress={() => setIsRetired(!isRetired)}
         >
           <Text style={[styles.toggleText, isRetired && styles.toggleTextActive]}>
-            {isRetired ? 'Sim' : 'Não'}
+            {isRetired ? 'Sim' : t('equipment_no')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -183,7 +185,7 @@ export default function EditEquipmentScreen() {
         disabled={updateMutation.isPending}
       >
         <Text style={styles.saveButtonText}>
-          {updateMutation.isPending ? 'A guardar...' : 'Guardar alterações'}
+          {updateMutation.isPending ? t('equipment_saving') : t('equipment_save_changes')}
         </Text>
       </TouchableOpacity>
 
@@ -193,7 +195,7 @@ export default function EditEquipmentScreen() {
         disabled={deleteMutation.isPending}
       >
         <Text style={styles.deleteButtonText}>
-          {deleteMutation.isPending ? 'A eliminar...' : 'Eliminar equipamento'}
+          {deleteMutation.isPending ? t('equipment_deleting') : t('equipment_delete')}
         </Text>
       </TouchableOpacity>
     </ScrollView>

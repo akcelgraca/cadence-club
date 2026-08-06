@@ -1,5 +1,6 @@
 import { RefObject, useCallback, useState } from "react";
 import { Alert, Linking, Platform, View } from "react-native";
+import { useTranslation } from 'react-i18next';
 
 // All native packages are imported dynamically so they don't crash at module
 // load time when running in Expo Go (they require a dev build rebuild).
@@ -15,6 +16,7 @@ import { Alert, Linking, Platform, View } from "react-native";
 const FB_APP_ID = "TODO_META_APP_ID"; // substituir pelo teu Meta App ID
 
 export function useShareActivity(cardRef: RefObject<View | null>) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
   const capture = useCallback(async () => {
@@ -38,7 +40,7 @@ export function useShareActivity(cardRef: RefObject<View | null>) {
         const url = `instagram-stories://share?source_application=${FB_APP_ID}`;
         const can = await Linking.canOpenURL(url);
         if (!can) {
-          Alert.alert("Instagram não instalado");
+          Alert.alert(t("share_instagram_missing"));
           return;
         }
         const { setStringAsync } = await import("expo-clipboard");
@@ -58,7 +60,7 @@ export function useShareActivity(cardRef: RefObject<View | null>) {
         });
       }
     } catch {
-      Alert.alert("Não foi possível abrir o Instagram");
+      Alert.alert(t("share_instagram_error"));
     } finally {
       setBusy(false);
     }
@@ -74,10 +76,10 @@ export function useShareActivity(cardRef: RefObject<View | null>) {
       const shareAsync: ((uri: string, opts: object) => Promise<void>) | undefined =
         _mod.shareAsync ?? _mod.default?.shareAsync;
       if (isAvailableAsync && shareAsync && await isAvailableAsync()) {
-        await shareAsync(uri, { mimeType: "image/png", dialogTitle: "Partilhar atividade" });
+        await shareAsync(uri, { mimeType: "image/png", dialogTitle: t("share_activity") });
       }
     } catch (e: any) {
-      Alert.alert("Erro", e?.message ?? "Não foi possível partilhar a imagem.");
+      Alert.alert(e?.message ?? t("share_image_error"));
     } finally {
       setBusy(false);
     }
@@ -94,8 +96,8 @@ export function useShareActivity(cardRef: RefObject<View | null>) {
         _mod = await import("expo-media-library");
       } catch {
         Alert.alert(
-          "Build necessária",
-          "Para guardar na galeria executa: npx expo run:ios",
+          t("share_build_needed_title"),
+          t("share_build_needed_body"),
         );
         return false;
       }
@@ -107,22 +109,22 @@ export function useShareActivity(cardRef: RefObject<View | null>) {
 
       if (!requestPermissionsAsync || !saveToLibraryAsync) {
         Alert.alert(
-          "Build necessária",
-          "Para guardar na galeria executa: npx expo run:ios",
+          t("share_build_needed_title"),
+          t("share_build_needed_body"),
         );
         return false;
       }
 
       const { status } = await requestPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Sem permissão", "Permite o acesso à galeria nas definições do dispositivo.");
+        Alert.alert(t("share_no_permission_title"), t("share_no_permission_body"));
         return false;
       }
       const uri = await capture();
       await saveToLibraryAsync(uri);
       return true;
     } catch (e: any) {
-      Alert.alert("Erro", e?.message ?? "Não foi possível guardar a imagem.");
+      Alert.alert(e?.message ?? t("share_save_error"));
       return false;
     } finally {
       setBusy(false);

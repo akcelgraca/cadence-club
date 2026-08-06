@@ -99,26 +99,26 @@ export default function ActivityDetailScreen() {
 
   const handleOwnerMenu = () => {
     Alert.alert(activity.title || t('activity_detail_screen'), undefined, [
-      { text: 'Editar', onPress: () => router.push(`/activity/${id}/edit`) },
+      { text: t('edit'), onPress: () => router.push(`/activity/${id}/edit`) },
       ...(activityPoints.length >= 2
-        ? [{ text: 'Criar troço', onPress: () => router.push(`/activity/${id}/segment-new`) }]
+        ? [{ text: t('activity_create_segment'), onPress: () => router.push(`/activity/${id}/segment-new`) }]
         : []),
       {
-        text: 'Apagar',
+        text: t('delete'),
         style: 'destructive',
-        onPress: () => Alert.alert('Apagar atividade', 'Esta ação não pode ser desfeita.', [
-          { text: 'Cancelar', style: 'cancel' },
+        onPress: () => Alert.alert(t('activity_delete'), t('activity_delete_confirm'), [
+          { text: t('cancel'), style: 'cancel' },
           {
-            text: 'Apagar',
+            text: t('delete'),
             style: 'destructive',
             onPress: async () => {
               try { await deleteActivity(id); router.back(); }
-              catch { Alert.alert('Erro', 'Não foi possível apagar a atividade.'); }
+              catch { Alert.alert(t('activity_delete_error')); }
             },
           },
         ]),
       },
-      { text: 'Cancelar', style: 'cancel' },
+      { text: t('cancel'), style: 'cancel' },
     ]);
   };
 
@@ -128,7 +128,7 @@ export default function ActivityDetailScreen() {
         <Stack.Screen
           options={{
             headerRight: () => (
-              <TouchableOpacity onPress={handleOwnerMenu} hitSlop={12} accessibilityLabel="Gerir atividade">
+              <TouchableOpacity onPress={handleOwnerMenu} hitSlop={12} accessibilityLabel={t('activity_manage')}>
                 <Ionicons name="ellipsis-horizontal" size={20} color={colors.foreground} />
               </TouchableOpacity>
             ),
@@ -184,7 +184,7 @@ export default function ActivityDetailScreen() {
           />
           <Text style={styles.comparisonText}>
             <Text style={paceComparison.percentDiff > 0 ? styles.comparisonStrong : undefined}>
-              {Math.abs(paceComparison.percentDiff).toFixed(0)}% {paceComparison.percentDiff > 0 ? 'mais rápido' : 'mais lento'}
+              {Math.abs(paceComparison.percentDiff).toFixed(0)}% {paceComparison.percentDiff > 0 ? t('activity_faster') : t('activity_slower')}
             </Text>
             {' '}que a tua média ({formatPace(paceComparison.averagePace, unitSystem)})
           </Text>
@@ -259,7 +259,7 @@ export default function ActivityDetailScreen() {
       {/* Parciais por quilómetro */}
       {activityPoints.length >= 2 && (
         <View style={styles.splitsSection}>
-          <Text style={styles.splitsTitle}>Parciais</Text>
+          <Text style={styles.splitsTitle}>{t('activity_splits')}</Text>
           <SplitsTable
             points={activityPoints.map((p) => ({
               lat: p.lat,

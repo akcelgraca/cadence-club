@@ -122,7 +122,7 @@ function FilterBar() {
             color={filter.following ? colors.primaryForeground : colors.mutedForeground}
           />
           <Text style={[filterStyles.chipText, filter.following && filterStyles.chipTextActive]}>
-            Seguidos
+            {t('feed_followed')}
           </Text>
         </TouchableOpacity>
       )}
@@ -225,6 +225,7 @@ const searchStyles = StyleSheet.create({
 
 /** Sugestões de pessoas para seguir — evita o feed em branco para contas novas. */
 function SuggestedPeople() {
+  const { t } = useTranslation();
   const { data: people = [], isLoading } = useQuery({
     queryKey: ['suggestedProfiles'],
     queryFn: () => getSuggestedProfiles(10),
@@ -234,7 +235,7 @@ function SuggestedPeople() {
 
   return (
     <View style={emptyStyles.suggestSection}>
-      <Text style={emptyStyles.sectionTitle}>Pessoas para seguir</Text>
+      <Text style={emptyStyles.sectionTitle}>{t('feed_people_to_follow')}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={emptyStyles.peopleRow}>
         {people.map((p: any) => (
           <View key={p.id} style={emptyStyles.personCard}>
@@ -252,6 +253,7 @@ function SuggestedPeople() {
 }
 
 function EmptyFeed({ following }: { following: boolean }) {
+  const { t } = useTranslation();
   const { data: discover = [] } = useQuery({
     queryKey: ['discoverActivities'],
     queryFn: () => getDiscoverActivities(8),
@@ -264,12 +266,12 @@ function EmptyFeed({ following }: { following: boolean }) {
           <Ionicons name={following ? 'people-outline' : 'compass-outline'} size={40} color={colors.primary} />
         </View>
         <Text style={emptyStyles.title}>
-          {following ? 'Nada por aqui ainda' : 'Vamos começar'}
+          {following ? t('feed_empty_following_title') : t('feed_empty_new_title')}
         </Text>
         <Text style={emptyStyles.sub}>
           {following
-            ? 'As atividades das pessoas que segues vão aparecer aqui.'
-            : 'Segue pessoas para encheres o teu feed — ou vê o que a comunidade anda a fazer.'}
+            ? t('feed_empty_following_body')
+            : t('feed_empty_new_body')}
         </Text>
       </View>
 
@@ -277,7 +279,7 @@ function EmptyFeed({ following }: { following: boolean }) {
 
       {discover.length > 0 && (
         <View>
-          <Text style={emptyStyles.sectionTitle}>Da comunidade</Text>
+          <Text style={emptyStyles.sectionTitle}>{t('feed_from_community')}</Text>
           {(discover as Activity[]).map((item) => (
             <SocialPostCard key={item.id} activity={item} />
           ))}
@@ -327,10 +329,11 @@ const emptyStyles = StyleSheet.create({
 // ─── new-activity banner ─────────────────────────────────────────────────────
 
 function NewActivitiesBanner({ onPress }: { onPress: () => void }) {
+  const { t } = useTranslation();
   return (
     <TouchableOpacity style={bannerStyles.banner} onPress={onPress} activeOpacity={0.85}>
       <Ionicons name="arrow-up-circle" size={16} color={colors.primaryForeground} />
-      <Text style={bannerStyles.text}>Novas atividades disponíveis</Text>
+      <Text style={bannerStyles.text}>{t('feed_new_activities')}</Text>
     </TouchableOpacity>
   );
 }
@@ -358,6 +361,7 @@ const bannerStyles = StyleSheet.create({
 // ─── main component ──────────────────────────────────────────────────────────
 
 export function FeedTab() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const filter = useFeedStore((s) => s.filter);
   const hasNewActivities = useFeedStore((s) => s.hasNewActivities);
@@ -424,7 +428,7 @@ export function FeedTab() {
     hasNextPage
       ? <View style={styles.footerLoader}><ActivityIndicator size="small" color={colors.primary} /></View>
       : allItems.length > 0
-        ? <View style={styles.endOfFeed}><Text style={styles.endOfFeedText}>• Estás a par de tudo •</Text></View>
+        ? <View style={styles.endOfFeed}><Text style={styles.endOfFeedText}>{t('feed_all_caught_up')}</Text></View>
         : null,
   [hasNextPage, allItems.length]);
 
@@ -446,10 +450,10 @@ export function FeedTab() {
         <View style={emptyStyles.iconWrap}>
           <Ionicons name="alert-circle-outline" size={40} color={colors.destructive} />
         </View>
-        <Text style={[emptyStyles.title, { color: colors.destructive }]}>Erro ao carregar</Text>
-        <Text style={emptyStyles.sub}>Verifica a tua ligação e tenta novamente.</Text>
+        <Text style={[emptyStyles.title, { color: colors.destructive }]}>{t('error_loading')}</Text>
+        <Text style={emptyStyles.sub}>{t('error_check_connection')}</Text>
         <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
-          <Text style={styles.retryBtnText}>Tentar novamente</Text>
+          <Text style={styles.retryBtnText}>{t('retry')}</Text>
         </TouchableOpacity>
       </View>
     );

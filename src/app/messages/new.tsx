@@ -11,8 +11,10 @@ import { useAuthStore } from '../../store/authStore';
 import { Avatar } from '../../components/common/Avatar';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { Profile } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 export default function NewMessageScreen() {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Partial<Profile>[]>([]);
   const [loading, setLoading] = useState(false);
@@ -55,7 +57,7 @@ export default function NewMessageScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={styles.title}>Nova mensagem</Text>
+        <Text style={styles.title}>{t('messages_new_title')}</Text>
         <View style={{ width: 32 }} />
       </View>
 
@@ -64,7 +66,7 @@ export default function NewMessageScreen() {
         <Ionicons name="search" size={16} color={colors.mutedForeground} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Procurar utilizador..."
+          placeholder={t('messages_search_user')}
           placeholderTextColor={colors.mutedForeground}
           value={query}
           onChangeText={setQuery}
@@ -114,7 +116,7 @@ export default function NewMessageScreen() {
               : (
                 <>
                   <Ionicons name="people-outline" size={44} color={colors.mutedForeground} />
-                  <Text style={styles.emptyText}>Procura pelo nome ou @username</Text>
+                  <Text style={styles.emptyText}>{t('messages_search_hint')}</Text>
                 </>
               )
             }

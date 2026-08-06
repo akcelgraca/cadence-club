@@ -3,17 +3,19 @@ import { Ionicons } from '@expo/vector-icons';
 import type { UserBadge } from '../../lib/types';
 import { colors, typography } from '../../lib/theme';
 import { getBadgeImage } from '../../lib/badgeImages';
+import { useTranslation } from 'react-i18next';
 
 interface BadgeCollectionProps {
   badges: UserBadge[];
 }
 
 export function BadgeCollection({ badges }: BadgeCollectionProps) {
+  const { t } = useTranslation();
   if (badges.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Ainda sem medalhas</Text>
-        <Text style={styles.emptySubtext}>Completa atividades para ganhares medalhas.</Text>
+        <Text style={styles.emptyText}>{t('profile_no_badges')}</Text>
+        <Text style={styles.emptySubtext}>{t('profile_no_badges_subtitle')}</Text>
       </View>
     );
   }

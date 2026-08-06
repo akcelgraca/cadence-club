@@ -7,12 +7,14 @@ import { useSettingsStore } from '../../store/settingsStore';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { NearbyRoute } from '../../lib/types';
 
-const DIFFICULTY_LABEL: Record<string, string> = {
-  easy: 'Fácil', moderate: 'Moderada', hard: 'Difícil', expert: 'Exigente',
+const DIFFICULTY_KEY: Record<string, string> = {
+  easy: 'route_difficulty_easy', moderate: 'route_difficulty_moderate',
+  hard: 'route_difficulty_hard', expert: 'route_difficulty_expert',
 };
 
-const SURFACE_LABEL: Record<string, string> = {
-  road: 'Estrada', trail: 'Trilho', mixed: 'Misto', track: 'Pista',
+const SURFACE_KEY: Record<string, string> = {
+  road: 'route_surface_road', trail: 'route_surface_trail',
+  mixed: 'route_surface_mixed', track: 'route_surface_track',
 };
 
 interface RouteCarouselCardProps {
@@ -56,19 +58,19 @@ export function RouteCarouselCard({
       <View style={styles.metrics}>
         <View style={styles.metric}>
           <Text style={styles.metricValue}>{formatDistance(route.distance, unitSystem)}</Text>
-          <Text style={styles.metricLabel}>distância</Text>
+          <Text style={styles.metricLabel}>{t('stat_distance_lower2')}</Text>
         </View>
         <View style={styles.metricDivider} />
         <View style={styles.metric}>
           <Text style={styles.metricValue}>{Math.round(route.elevation_gain)} m</Text>
-          <Text style={styles.metricLabel}>subida</Text>
+          <Text style={styles.metricLabel}>{t('stat_climb_lower')}</Text>
         </View>
         <View style={styles.metricDivider} />
         <View style={styles.metric}>
           <Text style={styles.metricValue}>
             {(route.distance_meters / 1000).toFixed(1).replace('.', ',')} km
           </Text>
-          <Text style={styles.metricLabel}>de ti</Text>
+          <Text style={styles.metricLabel}>{t('routes_away_from_you')}</Text>
         </View>
       </View>
 
@@ -76,15 +78,15 @@ export function RouteCarouselCard({
       <View style={styles.footer}>
         <View style={styles.tags}>
           <View style={styles.tag}>
-            <Text style={styles.tagText}>{DIFFICULTY_LABEL[route.difficulty] ?? route.difficulty}</Text>
+            <Text style={styles.tagText}>{DIFFICULTY_KEY[route.difficulty] ? t(DIFFICULTY_KEY[route.difficulty] as any) : route.difficulty}</Text>
           </View>
           <View style={styles.tag}>
-            <Text style={styles.tagText}>{SURFACE_LABEL[route.surface_type] ?? route.surface_type}</Text>
+            <Text style={styles.tagText}>{SURFACE_KEY[route.surface_type] ? t(SURFACE_KEY[route.surface_type] as any) : route.surface_type}</Text>
           </View>
         </View>
         <TouchableOpacity style={styles.followBtn} onPress={onFollow}>
           <Ionicons name="play" size={12} color={colors.primaryForeground} />
-          <Text style={styles.followText}>Seguir</Text>
+          <Text style={styles.followText}>{t('follow')}</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

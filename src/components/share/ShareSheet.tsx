@@ -11,6 +11,8 @@ import {
 import { Feather } from "@expo/vector-icons";
 import ShareActivityCard, { ShareCardData } from "./ShareActivityCard";
 import { useShareActivity } from "./useShareActivity";
+import { useTranslation } from 'react-i18next';
+import { track } from '../../lib/analytics';
 
 // Bottom sheet aberta pelo botão "partilhar" de um post.
 // Mostra a pré-visualização do sticker sobre cinza escuro (para se perceber a transparência).
@@ -24,6 +26,7 @@ interface Props {
 }
 
 export default function ShareSheet({ visible, onClose, data }: Props) {
+  const { t } = useTranslation();
   const cardRef = useRef<View>(null);
   const { busy, shareToInstagramStories, shareGeneric, saveToGallery } =
     useShareActivity(cardRef);
@@ -39,7 +42,7 @@ export default function ShareSheet({ visible, onClose, data }: Props) {
         <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityLabel="Fechar" />
         <View style={styles.sheet}>
           <View style={styles.handle} />
-          <Text style={styles.title}>Partilhar atividade</Text>
+          <Text style={styles.title}>{t('share_activity')}</Text>
 
           {/* Preview — escala 62% para caber no ecrã */}
           <View style={styles.preview}>
@@ -50,22 +53,23 @@ export default function ShareSheet({ visible, onClose, data }: Props) {
             <Action
               icon="instagram"
               label="Stories"
-              onPress={shareToInstagramStories}
+              onPress={() => { track('activity_shared', { destination: 'instagram_stories' }); shareToInstagramStories(); }}
               disabled={busy}
               accent
             />
             <Action
               icon="share-2"
               label="Partilhar"
-              onPress={shareGeneric}
+              onPress={() => { track('activity_shared', { destination: 'system' }); shareGeneric(); }}
               disabled={busy}
             />
             <Action
               icon="download"
-              label="Guardar"
+              label={t('save')}
               onPress={async () => {
+                track('activity_shared', { destination: 'gallery' });
                 const ok = await saveToGallery();
-                if (ok) Alert.alert("Imagem guardada na galeria");
+                if (ok) Alert.alert(t("share_saved_to_gallery"));
               }}
               disabled={busy}
             />

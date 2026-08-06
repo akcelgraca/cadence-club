@@ -4,6 +4,7 @@ import { formatDuration } from '../../utils/dateHelpers';
 import { useSettingsStore } from '../../store/settingsStore';
 import type { ProfileStats } from '../../lib/types';
 import { colors, typography } from '../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 interface StatsGridProps {
   data: ProfileStats | null | undefined;
@@ -12,11 +13,12 @@ interface StatsGridProps {
 }
 
 export function StatsGrid({ data, isLoading, isError }: StatsGridProps) {
+  const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Total</Text>
+        <Text style={styles.title}>{t('total')}</Text>
         <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 20 }} />
       </View>
     );
@@ -25,8 +27,8 @@ export function StatsGrid({ data, isLoading, isError }: StatsGridProps) {
   if (isError || !data) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Total</Text>
-        <Text style={styles.emptyText}>Erro ao carregar estatísticas.</Text>
+        <Text style={styles.title}>{t('total')}</Text>
+        <Text style={styles.emptyText}>{t('stats_load_error')}</Text>
       </View>
     );
   }
@@ -34,31 +36,31 @@ export function StatsGrid({ data, isLoading, isError }: StatsGridProps) {
   if (data.activity_count === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Total</Text>
-        <Text style={styles.emptyText}>Ainda sem atividades.</Text>
+        <Text style={styles.title}>{t('total')}</Text>
+        <Text style={styles.emptyText}>{t('stats_empty')}</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Total</Text>
+      <Text style={styles.title}>{t('total')}</Text>
       <View style={styles.grid}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{formatDistance(data.total_distance, unitSystem)}</Text>
-          <Text style={styles.statLabel}>Distância</Text>
+          <Text style={styles.statLabel}>{t('distance')}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{formatDuration(data.total_duration)}</Text>
-          <Text style={styles.statLabel}>Tempo</Text>
+          <Text style={styles.statLabel}>{t('post_stat_time')}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{Math.round(data.total_elevation)} m</Text>
-          <Text style={styles.statLabel}>Elevação</Text>
+          <Text style={styles.statLabel}>{t('elevation')}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{data.activity_count}</Text>
-          <Text style={styles.statLabel}>Atividades</Text>
+          <Text style={styles.statLabel}>{t('profile_activities')}</Text>
         </View>
       </View>
     </View>

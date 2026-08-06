@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, withAlpha } from '../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Grelha de fotos com reordenação por arrasto.
@@ -66,6 +67,7 @@ function Cell({
   item, index, displayIndex, cellWidth, cellHeight,
   isDragging, onDragStart, onDragMove, onDragEnd, onRemove,
 }: CellProps) {
+  const { t } = useTranslation();
   const dragX = useSharedValue(0);
   const dragY = useSharedValue(0);
   const lifted = useSharedValue(0);
@@ -123,11 +125,11 @@ function Cell({
 
         {item.generated ? (
           <View style={styles.autoBadge}>
-            <Text style={styles.autoBadgeText}>Auto</Text>
+            <Text style={styles.autoBadgeText}>{t('photos_auto')}</Text>
           </View>
         ) : displayIndex === 0 ? (
           <View style={styles.coverBadge}>
-            <Text style={styles.coverBadgeText}>Capa</Text>
+            <Text style={styles.coverBadgeText}>{t('photos_cover')}</Text>
           </View>
         ) : null}
 
@@ -142,6 +144,7 @@ function Cell({
 export function PhotoGrid({
   photos, onReorder, onRemove, onAdd, maxPhotos, loading,
 }: PhotoGridProps) {
+  const { t } = useTranslation();
   const [containerWidth, setContainerWidth] = useState(0);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
@@ -244,7 +247,7 @@ export function PhotoGrid({
               <>
                 <Ionicons name="camera-outline" size={24} color={colors.mutedForeground} />
                 <Text style={styles.addText}>
-                  {photos.length === 0 ? 'Adicionar' : 'Mais'}
+                  {photos.length === 0 ? t('photos_add') : t('photos_more')}
                 </Text>
               </>
             )}
@@ -254,7 +257,7 @@ export function PhotoGrid({
 
       {photos.length > 1 && (
         <Text style={styles.hint}>
-          Mantém premida uma foto para a arrastar. A primeira é a capa.
+          {t('photos_reorder_hint')}
         </Text>
       )}
     </View>

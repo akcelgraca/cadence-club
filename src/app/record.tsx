@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { useActivityStore } from '../store/activityStore';
@@ -15,7 +15,7 @@ import { NonDistanceRecordingView } from '../components/record/NonDistanceRecord
 import { PausedView } from '../components/record/PausedView';
 import { NonDistancePausedView } from '../components/record/NonDistancePausedView';
 import { FinishedView } from '../components/record/FinishedView';
-import { MapControls } from '../components/record/MapControls';
+import { MapControls, mapControlsHeight } from '../components/record/MapControls';
 import { colors } from '../lib/theme';
 
 /**
@@ -24,6 +24,7 @@ import { colors } from '../lib/theme';
  * Cada vista vive no seu ficheiro em components/record/.
  */
 export default function RecordScreen() {
+  const insets = useSafeAreaInsets();
   const state = useActivityStore((s) => s.state);
   const type = useActivityStore((s) => s.type);
   const selectRoute = useActivityStore((s) => s.selectRoute);
@@ -74,6 +75,7 @@ export default function RecordScreen() {
           showContours={showTerrain}
           followUser={followUser}
           followPitch={show3D ? 60 : 0}
+          compassPosition={{ top: insets.top + 8 + mapControlsHeight() + 8, right: 12 }}
         />
         <MapControls
           showTerrain={showTerrain}

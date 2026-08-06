@@ -112,7 +112,7 @@ export default function OnboardingScreen() {
                   onPress={() => setGoal(g.key)}
                 >
                   <Ionicons name={(g.icon as any) ?? 'flag'} size={32} color={goal === g.key ? colors.primary : colors.foreground} />
-                  <Text style={styles.goalLabel}>{g.label}</Text>
+                  <Text style={styles.goalLabel}>{t(g.i18n_key as any)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -120,7 +120,7 @@ export default function OnboardingScreen() {
             {(goal === 'run_weekly_km' || goal === 'cycle_weekly_km') && (
               <TextInput
                 style={styles.input}
-                placeholder="Meta semanal (km)"
+                placeholder={t('register_weekly_target')}
                 placeholderTextColor={colors.mutedForeground}
                 value={weeklyKmTarget}
                 onChangeText={setWeeklyKmTarget}
@@ -247,7 +247,7 @@ export default function OnboardingScreen() {
             onPress={() => setGender(g.key)}
           >
             <Text style={[styles.chipText, gender === g.key && styles.chipTextActive]}>
-              {g.label}
+              {t(g.i18n_key as any)}
             </Text>
           </TouchableOpacity>
         ))}

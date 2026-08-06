@@ -10,6 +10,7 @@ import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
+import { mapControlsHeight } from '../../components/record/MapControls';
 import { MapViewWrapper, MAPBOX_STYLES, type MapboxStyleKey } from '../../components/map/MapViewWrapper';
 import { RoutePolyline } from '../../components/map/RoutePolyline';
 import { RouteMarker } from '../../components/map/RouteMarker';
@@ -24,12 +25,15 @@ import { fetchNearbyRoutes, getSavedRouteIds, saveRoute, unsaveRoute } from '../
 import { reverseGeocode } from '../../services/geocoding';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { NearbyRoute } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
+import { track } from '../../lib/analytics';
 
 const CARD_GAP = 12;
 const CARD_RATIO = 0.82;
 const CAROUSEL_HEIGHT = 156;
 
 export default function RoutesScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width: screenW } = useWindowDimensions();
   const profile = useAuthStore((s) => s.profile);
@@ -184,6 +188,7 @@ export default function RoutesScreen() {
           animationDuration={is3DTransitioning ? 600 : 0}
           onPress={handleMapPress}
           onRegionChange={(c, z) => setViewport({ center: c, zoom: z })}
+          compassPosition={{ top: insets.top + 8 + mapControlsHeight() + 8, right: 12 }}
         >
           {visibleRoutes.flatMap((route) => {
             const isSelected = route.id === selectedRouteId;
@@ -229,7 +234,7 @@ export default function RoutesScreen() {
                 id={`start-${selectedRoute.id}`}
                 coordinate={selectedRoute.path[0]}
                 type="start"
-                label="Início"
+                label={t('routes_start')}
               />
               <RouteMarker
                 id={`finish-${selectedRoute.id}`}
@@ -280,28 +285,28 @@ export default function RoutesScreen() {
               <TouchableOpacity
                 style={styles.controlBtn}
                 onPress={() => setStyleMenuOpen((v) => !v)}
-                accessibilityLabel="Estilo do mapa"
+                accessibilityLabel={t('settings_map_style')}
               >
                 <Ionicons name="layers-outline" size={18} color={colors.foreground} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.controlBtn}
                 onPress={() => setShowTerrain((v) => !v)}
-                accessibilityLabel="Relevo"
+                accessibilityLabel={t('routes_terrain')}
               >
                 <Ionicons name="triangle" size={17} color={showTerrain ? colors.primary : colors.mutedForeground} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.controlBtn}
-                onPress={handleToggle3D}
-                accessibilityLabel="Vista 3D"
+                onPress={() => { track('premium_feature_used', { feature: 'map_3d' }); handleToggle3D(); }}
+                accessibilityLabel={t('routes_3d')}
               >
                 <Ionicons name="cube-outline" size={18} color={show3D ? colors.primary : colors.mutedForeground} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.controlBtn, savedOnly && styles.controlBtnActive]}
                 onPress={() => { setSavedOnly((v) => !v); clearSelection(); }}
-                accessibilityLabel="Só rotas guardadas"
+                accessibilityLabel={t('routes_saved_only')}
               >
                 <Ionicons
                   name={savedOnly ? 'bookmark' : 'bookmark-outline'}
@@ -317,14 +322,14 @@ export default function RoutesScreen() {
                   <TouchableOpacity
                     key={key}
                     style={[styles.styleMenuItem, mapStyle === key && styles.styleMenuItemActive]}
-                    onPress={() => { setMapStyle(key); setStyleMenuOpen(false); }}
+                    onPress={() => { track('premium_feature_used', { feature: 'map_styles' }); setMapStyle(key); setStyleMenuOpen(false); }}
                   >
                     <Text style={[styles.styleMenuText, mapStyle === key && styles.styleMenuTextActive]}>
-                      {key === 'dark' ? 'Escuro'
-                        : key === 'light' ? 'Claro'
-                        : key === 'streets' ? 'Ruas'
-                        : key === 'satellite' ? 'Satélite'
-                        : 'Ar livre'}
+                      {key === 'dark' ? t('settings_map_dark')
+                        : key === 'light' ? t('settings_map_light')
+                        : key === 'streets' ? t('settings_map_streets')
+                        : key === 'satellite' ? t('settings_map_satellite')
+                        : t('settings_map_outdoors')}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -338,7 +343,7 @@ export default function RoutesScreen() {
           <TouchableOpacity
             style={[styles.fab, { bottom: fabBottom }]}
             onPress={startCreating}
-            accessibilityLabel="Criar rota"
+            accessibilityLabel={t('routes_create')}
           >
             <Ionicons name="add" size={28} color={colors.primaryForeground} />
           </TouchableOpacity>
@@ -391,12 +396,12 @@ export default function RoutesScreen() {
                 />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.emptyTitle}>
-                    {savedOnly ? 'Sem rotas guardadas' : 'Nenhuma rota por aqui'}
+                    {savedOnly ? t('routes_none_saved') : t('routes_none_here')}
                   </Text>
                   <Text style={styles.emptySub}>
                     {savedOnly
-                      ? 'Guarda rotas com o marcador para as teres à mão.'
-                      : 'Cria a primeira rota desta zona no botão +.'}
+                      ? t('routes_none_saved_body')
+                      : t('routes_none_here_body')}
                   </Text>
                 </View>
               </View>

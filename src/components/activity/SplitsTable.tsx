@@ -5,6 +5,7 @@ import { computeSplits, type SplitPoint } from '../../utils/splits';
 import { formatPace } from '../../utils/formatPace';
 import { useSettingsStore } from '../../store/settingsStore';
 import { colors, typography, withAlpha } from '../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Parciais por quilómetro (ou milha), com barra proporcional ao ritmo.
@@ -20,6 +21,7 @@ interface SplitsTableProps {
 }
 
 export function SplitsTable({ points, maxRows }: SplitsTableProps) {
+  const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   const unitLabel = unitSystem === 'imperial' ? 'mi' : 'km';
 
@@ -54,9 +56,9 @@ export function SplitsTable({ points, maxRows }: SplitsTableProps) {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={[styles.headerCell, styles.colIndex]}>{unitLabel}</Text>
-        <Text style={[styles.headerCell, styles.colPace]}>Ritmo</Text>
+        <Text style={[styles.headerCell, styles.colPace]}>{t('pace')}</Text>
         <View style={styles.colBar} />
-        <Text style={[styles.headerCell, styles.colElev]}>Subida</Text>
+        <Text style={[styles.headerCell, styles.colElev]}>{t('splits_elevation')}</Text>
       </View>
 
       {visible.map((split) => {

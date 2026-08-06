@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/authStore';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import { formatDuration } from '../../utils/dateHelpers';
 import type { WeeklyDaySummary } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 const DAY_LABELS = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
 
@@ -50,6 +51,7 @@ interface WeeklyChartCardProps {
 }
 
 export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
+  const { t } = useTranslation();
   const { data, isLoading, isError } = useWeeklyDailyBreakdown(userId);
   const { data: weekly } = useWeeklySummary(userId);
   const weightKg = useAuthStore((s) => s.profile?.weight_kg) ?? 70;
@@ -68,13 +70,13 @@ export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
       icon: 'flash-outline' as const,
       value: formatWeeklyPace(weekly?.total_distance ?? 0, weekly?.total_duration ?? 0),
       unit: '/km',
-      label: 'Ritmo médio',
+      label: t('avg_pace'),
     },
     {
       icon: 'flame-outline' as const,
       value: estCalories > 0 ? estCalories.toLocaleString('pt-PT') : '--',
       unit: 'kcal',
-      label: 'Calorias (est.)',
+      label: t('calories_estimated'),
     },
   ];
   const chartData = buildChartData(data ?? []);
@@ -87,7 +89,7 @@ export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.title}>Esta semana</Text>
+        <Text style={styles.title}>{t('this_week')}</Text>
         <Text style={styles.total}>{totalKm.toFixed(1).replace('.', ',')} km</Text>
       </View>
 
@@ -97,7 +99,7 @@ export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
         </View>
       ) : isError ? (
         <View style={styles.loadingContainer}>
-          <Text style={styles.emptyText}>Erro ao carregar dados</Text>
+          <Text style={styles.emptyText}>{t('error_loading_data')}</Text>
         </View>
       ) : (
         <View style={styles.chartWrapper}>
@@ -163,7 +165,7 @@ export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
                         )}
                       </View>
                     ) : (
-                      <Text style={styles.tooltipEmpty}>Sem atividades</Text>
+                      <Text style={styles.tooltipEmpty}>{t('club_no_activities')}</Text>
                     )}
                   </View>
                 );

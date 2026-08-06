@@ -2,6 +2,7 @@ import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useState } from 'react';
 import { followUser, unfollowUser } from '../../services/social';
 import { colors, typography } from '../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 interface FollowButtonProps {
   userId: string;
@@ -11,6 +12,7 @@ interface FollowButtonProps {
 }
 
 export function FollowButton({ userId, initialFollowing, fullWidth }: FollowButtonProps) {
+  const { t } = useTranslation();
   const [following, setFollowing] = useState(initialFollowing);
   const [loading, setLoading] = useState(false);
 
@@ -42,7 +44,7 @@ export function FollowButton({ userId, initialFollowing, fullWidth }: FollowButt
       disabled={loading}
     >
       <Text style={[styles.text, following ? styles.textFollowing : styles.textFollow]}>
-        {loading ? '...' : following ? 'A seguir' : 'Seguir'}
+        {loading ? '...' : following ? t('follow_following') : t('follow')}
       </Text>
     </TouchableOpacity>
   );

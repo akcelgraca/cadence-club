@@ -5,6 +5,7 @@ import { Avatar } from '../common/Avatar';
 import { FollowButton } from '../social/FollowButton';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { Profile } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Cabeçalho do perfil desenhado como um dorsal de prova: identidade em cima,
@@ -64,10 +65,11 @@ export function ProfileHero({
   profile, streakDays, activityCount, followerCount, followingCount,
   isOwnProfile = false, isFollowing = false,
 }: ProfileHeroProps) {
+  const { t } = useTranslation();
   const displayName = (() => {
     const parts = profile.full_name?.split(' ') || [];
     if (parts.length >= 2) return `${parts[0]} ${parts[parts.length - 1]}`;
-    return parts[0] || 'Atleta';
+    return parts[0] || t('profile_athlete');
   })();
 
   return (
@@ -90,21 +92,21 @@ export function ProfileHero({
             <TouchableOpacity
               style={styles.actionBtn}
               onPress={() => router.push('/saved')}
-              accessibilityLabel="Posts guardados"
+              accessibilityLabel={t('profile_saved_posts')}
             >
               <Ionicons name="bookmark-outline" size={17} color={colors.foreground} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionBtn}
               onPress={() => router.push('/profile/edit')}
-              accessibilityLabel="Editar perfil"
+              accessibilityLabel={t('profile_edit_action')}
             >
               <Ionicons name="pencil-outline" size={17} color={colors.foreground} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionBtn}
               onPress={() => router.push('/profile/settings')}
-              accessibilityLabel="Definições"
+              accessibilityLabel={t('profile_settings_action')}
             >
               <Ionicons name="settings-outline" size={17} color={colors.foreground} />
             </TouchableOpacity>
@@ -122,14 +124,14 @@ export function ProfileHero({
           <FollowButton userId={profile.id} initialFollowing={isFollowing} fullWidth />
           <TouchableOpacity
             style={styles.messageBtn}
-            accessibilityLabel="Enviar mensagem"
+            accessibilityLabel={t('profile_send_message')}
             onPress={() =>
               router.push({
                 pathname: '/messages/[id]',
                 params: {
                   id: 'draft',
                   userId: profile.id,
-                  name: profile.full_name || profile.username || 'Atleta',
+                  name: profile.full_name || profile.username || t('profile_athlete'),
                   avatarUrl: profile.avatar_url ?? '',
                 },
               } as any)
@@ -144,19 +146,19 @@ export function ProfileHero({
       <View style={styles.bib}>
         <Perforation />
         <View style={styles.bibRow}>
-          <BibStat value={streakDays} label="dias seguidos" highlight />
+          <BibStat value={streakDays} label={t('profile_streak_days')} highlight />
           <View style={styles.bibDivider} />
-          <BibStat value={activityCount} label="atividades" />
+          <BibStat value={activityCount} label={t('profile_activities')} />
           <View style={styles.bibDivider} />
           <BibStat
             value={followerCount}
-            label="seguidores"
+            label={t('followers')}
             onPress={() => router.push(`/profile/${profile.id}/follow-list?type=followers`)}
           />
           <View style={styles.bibDivider} />
           <BibStat
             value={followingCount}
-            label="a seguir"
+            label={t('profile_following_label')}
             onPress={() => router.push(`/profile/${profile.id}/follow-list?type=following`)}
           />
         </View>

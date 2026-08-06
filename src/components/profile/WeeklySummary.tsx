@@ -4,6 +4,7 @@ import { formatDuration } from '../../utils/dateHelpers';
 import { useSettingsStore } from '../../store/settingsStore';
 import type { WeeklySummary as WeeklySummaryType } from '../../lib/types';
 import { colors, typography } from '../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 interface WeeklySummaryProps {
   data: WeeklySummaryType | null | undefined;
@@ -12,11 +13,12 @@ interface WeeklySummaryProps {
 }
 
 export function WeeklySummary({ data, isLoading, isError }: WeeklySummaryProps) {
+  const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Esta semana</Text>
+        <Text style={styles.title}>{t('this_week')}</Text>
         <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 20 }} />
       </View>
     );
@@ -25,8 +27,8 @@ export function WeeklySummary({ data, isLoading, isError }: WeeklySummaryProps) 
   if (isError) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Esta semana</Text>
-        <Text style={styles.emptyText}>Erro ao carregar dados.</Text>
+        <Text style={styles.title}>{t('this_week')}</Text>
+        <Text style={styles.emptyText}>{t('error_loading_data_period')}</Text>
       </View>
     );
   }
@@ -34,31 +36,31 @@ export function WeeklySummary({ data, isLoading, isError }: WeeklySummaryProps) 
   if (!data || data.activity_count === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Esta semana</Text>
-        <Text style={styles.emptyText}>Ainda não fizeste atividades esta semana.</Text>
+        <Text style={styles.title}>{t('this_week')}</Text>
+        <Text style={styles.emptyText}>{t('week_empty')}</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Esta semana</Text>
+      <Text style={styles.title}>{t('this_week')}</Text>
       <View style={styles.grid}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{formatDistance(data.total_distance, unitSystem)}</Text>
-          <Text style={styles.statLabel}>Distância</Text>
+          <Text style={styles.statLabel}>{t('distance')}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{formatDuration(data.total_duration)}</Text>
-          <Text style={styles.statLabel}>Tempo</Text>
+          <Text style={styles.statLabel}>{t('post_stat_time')}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{Math.round(data.total_elevation)} m</Text>
-          <Text style={styles.statLabel}>Elevação</Text>
+          <Text style={styles.statLabel}>{t('elevation')}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{data.activity_count}</Text>
-          <Text style={styles.statLabel}>Atividades</Text>
+          <Text style={styles.statLabel}>{t('profile_activities')}</Text>
         </View>
       </View>
     </View>

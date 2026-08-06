@@ -24,9 +24,12 @@ import { PhotoGrid } from '../activity/PhotoGrid';
 import ShareActivityCard, { type ShareCardData } from '../share/ShareActivityCard';
 import { captureTransparentPng } from '../share/captureCard';
 import { detectSegmentEfforts } from '../../services/segments';
+import { getMyPrivacyZones, trimRouteForZones } from '../../services/privacyZones';
+import { queuePendingActivity } from '../../services/pendingSync';
 import { colors } from '../../lib/theme';
 import { MOOD_IMAGES, SURFACE_TYPES } from './shared';
 import { styles } from './recordStyles';
+import { track } from '../../lib/analytics';
 
 export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boolean }) {
   const { t } = useTranslation();
@@ -135,49 +138,104 @@ export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boo
     // duas atividades iguais
     if (saving) return;
     setSaving(true);
-    try {
-      const endTime = startTime
-        ? new Date(new Date(startTime).getTime() + elapsedTime * 1000).toISOString()
-        : new Date().toISOString();
 
-      const saved = await saveActivity({
-        type: type!,
-        runType: runType ?? undefined,
-        distance,
-        duration: Math.round(elapsedTime),
-        elevation_gain: Math.round(elevationGain),
-        avg_pace: avgPace || currentPace || 0,
-        start_time: startTime || new Date().toISOString(),
-        end_time: endTime,
-        route_summary: points.map((p) => [p.lat, p.lng]),
-        points,
-        mood,
-        title: (title || suggestedTitle) || null,
-        description: description || null,
-        is_public: isPublic,
-        surface_type: surfaceType,
-        equipment_id: equipmentId,
+    const endTime = startTime
+      ? new Date(new Date(startTime).getTime() + elapsedTime * 1000).toISOString()
+      : new Date().toISOString();
+
+    // O cartão é capturado antes de qualquer chamada à rede: se não houver
+    // ligação, vai para a fila junto com o resto.
+    let cardUri: string | null = null;
+    try {
+      cardUri = await captureTransparentPng(statsCardRef);
+    } catch {
+      cardUri = null;
+    }
+
+    // route_summary é lido por qualquer pessoa: corta-se aqui, antes de sair
+    // do telemóvel. Os pontos completos ficam em activity_points, que só o
+    // dono lê diretamente (migração 040).
+    // Sem rede não há zonas — nesse caso não se envia resumo público nenhum,
+    // porque publicar o traçado por cortar era pior do que não o publicar.
+    let publicRoute = points;
+    let zonesKnown = true;
+    try {
+      const zones = await getMyPrivacyZones();
+      publicRoute = trimRouteForZones(points, zones);
+    } catch {
+      zonesKnown = false;
+      publicRoute = [];
+    }
+
+    const payload = {
+      type: type!,
+      runType: runType ?? undefined,
+      distance,
+      duration: Math.round(elapsedTime),
+      elevation_gain: Math.round(elevationGain),
+      avg_pace: avgPace || currentPace || 0,
+      start_time: startTime || new Date().toISOString(),
+      end_time: endTime,
+      route_summary: publicRoute.map((p) => [p.lat, p.lng]),
+      points,
+      mood,
+      title: (title || suggestedTitle) || null,
+      description: description || null,
+      is_public: isPublic,
+      surface_type: surfaceType,
+      equipment_id: equipmentId,
+    };
+
+    /** O momento em que a app entrega valor. Sem coordenadas nem título. */
+    const trackRecorded = (queuedOffline: boolean) =>
+      track('activity_recorded', {
+        type: payload.type,
+        distance_km: Math.round(payload.distance / 1000),
+        duration_min: Math.round(payload.duration / 60),
+        queued_offline: queuedOffline,
+        has_photos: photos.length > 0,
       });
 
-      // As fotos do utilizador vão primeiro; o trigger define a capa
-      if (photos.length > 0) {
-        await addActivityPhotos(saved.id, photos);
-      }
-
-      // Cartão de estatísticas gerado automaticamente, no fim da galeria.
-      // Se a captura falhar, a atividade fica guardada na mesma.
+    /** Guarda no telemóvel e sai — nunca se perde o treino por falta de rede. */
+    const queueAndLeave = async (reason: string) => {
       try {
-        const cardUri = await captureTransparentPng(statsCardRef);
+        await queuePendingActivity({ payload, photos, generatedCardUri: cardUri });
+        trackRecorded(true);
+        Alert.alert(
+          t('finish_queued_title'),
+          t('finish_queued_body', { reason }),
+          [{ text: 'OK', onPress: () => { reset(); router.replace('/(tabs)'); } }],
+        );
+      } catch {
+        Alert.alert(
+          t('activity_save_error_title'),
+          t('finish_queue_error'),
+        );
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    if (!zonesKnown) {
+      await queueAndLeave(t('finish_no_server'));
+      return;
+    }
+
+    try {
+      const saved = await saveActivity(payload);
+      trackRecorded(false);
+
+      // As fotos do utilizador vão primeiro; o trigger define a capa.
+      // Uma falha aqui não deve perder a atividade, que já está guardada.
+      try {
+        if (photos.length > 0) await addActivityPhotos(saved.id, photos);
         if (cardUri) {
           await addActivityPhotos(
-            saved.id,
-            [{ uri: cardUri, mimeType: 'image/png' }],
-            photos.length,
-            true,
+            saved.id, [{ uri: cardUri, mimeType: 'image/png' }], photos.length, true,
           );
         }
-      } catch (cardErr) {
-        console.warn('[FinishedView] cartão de estatísticas falhou:', cardErr);
+      } catch (photoErr) {
+        console.warn('[FinishedView] fotos por enviar:', photoErr);
       }
 
       // Deteta troços percorridos. Falhar aqui não invalida a atividade.
@@ -195,11 +253,10 @@ export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boo
       Alert.alert(t('activity_saved_title'), t('activity_saved_message'), [
         { text: 'OK', onPress: () => { reset(); router.replace('/(tabs)'); } },
       ]);
+      setSaving(false);
     } catch (err: any) {
       console.error('[SaveActivity] Failed:', err?.message ?? err, err);
-      Alert.alert(t('activity_save_error_title'), `${t('activity_save_error')}: ${err?.message ?? 'Erro desconhecido'}`);
-    } finally {
-      setSaving(false);
+      await queueAndLeave(t('finish_unreachable'));
     }
   };
 
@@ -216,8 +273,8 @@ export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boo
   /** Título sugerido pela hora do dia — evita listas de "Atividade sem nome". */
   const suggestedTitle = (() => {
     const hour = startTime ? new Date(startTime).getHours() : new Date().getHours();
-    const period = hour < 12 ? 'manhã' : hour < 20 ? 'tarde' : 'noite';
-    return `${activityLabel} da ${period}`;
+    const key = hour < 12 ? 'finish_title_morning' : hour < 20 ? 'finish_title_afternoon' : 'finish_title_evening';
+    return t(key, { activity: activityLabel });
   })();
 
   // Build elevation points from GPS data
@@ -423,7 +480,7 @@ export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boo
       {/* Parciais por quilómetro */}
       {isDistanceBased && points.length >= 2 && (
         <View style={styles.chartSection}>
-          <Text style={styles.chartSectionTitle}>Parciais</Text>
+          <Text style={styles.chartSectionTitle}>{t('activity_splits')}</Text>
           <SplitsTable
             points={points.map((p) => ({
               lat: p.lat,
@@ -468,7 +525,7 @@ export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boo
         {saving ? (
           <View style={styles.saveButtonRow}>
             <ActivityIndicator size="small" color={colors.primaryForeground} />
-            <Text style={styles.saveButtonText}>A guardar...</Text>
+            <Text style={styles.saveButtonText}>{t('activity_saving')}</Text>
           </View>
         ) : (
           <Text style={styles.saveButtonText}>{t('activity_save_button')}</Text>

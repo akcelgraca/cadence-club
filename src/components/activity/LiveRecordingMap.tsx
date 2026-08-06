@@ -3,8 +3,11 @@ import { MapViewWrapper, MAPBOX_STYLES } from '../map/MapViewWrapper';
 import { RoutePolyline } from '../map/RoutePolyline';
 import { RouteMarker } from '../map/RouteMarker';
 import { useActivityStore } from '../../store/activityStore';
+import { useTranslation } from 'react-i18next';
 
 interface LiveRecordingMapProps {
+  /** Empurra a bússola para baixo dos controlos do ecrã. */
+  compassPosition?: { top: number; right: number };
   style?: any;
   mapStyle?: string;
   terrain?: boolean;
@@ -22,7 +25,9 @@ export function LiveRecordingMap({
   showContours = true,
   followUser = true,
   followPitch,
+  compassPosition,
 }: LiveRecordingMapProps) {
+  const { t } = useTranslation();
   const points = useActivityStore((s) => s.points);
   const currentLocation = useActivityStore((s) => s.currentLocation);
   const routePath = useActivityStore((s) => s.selectedRoutePath);
@@ -33,6 +38,7 @@ export function LiveRecordingMap({
 
   return (
     <MapViewWrapper
+      compassPosition={compassPosition}
       center={currentLocation ? [currentLocation.lng, currentLocation.lat] : undefined}
       zoom={15}
       mapStyle={mapStyle}
@@ -60,7 +66,7 @@ export function LiveRecordingMap({
               id="route-start"
               coordinate={routePath![0]}
               type="start"
-              label="Início"
+              label={t('routes_start')}
             />
           )}
           {routePath![routePath!.length - 1] && (

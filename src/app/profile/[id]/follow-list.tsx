@@ -9,6 +9,7 @@ import { Avatar } from '../../../components/common/Avatar';
 import { FollowButton } from '../../../components/social/FollowButton';
 import { useAuthStore } from '../../../store/authStore';
 import { colors, typography } from '../../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 interface FollowItem {
   follower_id?: string;
@@ -22,6 +23,7 @@ interface FollowItem {
 }
 
 export default function FollowListScreen() {
+  const { t } = useTranslation();
   const { id, type } = useLocalSearchParams<{ id: string; type: 'followers' | 'following' }>();
   const isFollowers = type === 'followers';
   const currentUserId = useAuthStore((s) => s.session?.user.id);
@@ -50,7 +52,7 @@ export default function FollowListScreen() {
   });
 
   const items = (data ?? []) as unknown as FollowItem[];
-  const title = isFollowers ? 'Seguidores' : 'A seguir';
+  const title = isFollowers ? 'Seguidores' : t('following');
 
   const renderItem = ({ item }: { item: FollowItem }) => {
     const profile = item.profile;
@@ -87,7 +89,7 @@ export default function FollowListScreen() {
       ) : isError ? (
         <View style={styles.center}>
           <Ionicons name="alert-circle-outline" size={48} color={colors.destructive} />
-          <Text style={styles.errorText}>Erro ao carregar</Text>
+          <Text style={styles.errorText}>{t('error_loading')}</Text>
         </View>
       ) : (
         <FlatList
@@ -98,7 +100,7 @@ export default function FollowListScreen() {
           ListEmptyComponent={
             <View style={styles.center}>
               <Text style={styles.emptyText}>
-                {isFollowers ? 'Ainda sem seguidores.' : 'Ainda nao segues ninguem.'}
+                {isFollowers ? t('profile_no_followers') : t('profile_not_following')}
               </Text>
             </View>
           }

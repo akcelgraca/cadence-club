@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
 import { colors, typography } from '../../lib/theme';
 import { haversineDistance } from '../../utils/geo';
+import { useTranslation } from 'react-i18next';
 
 export interface ElevationPoint {
   lat: number;
@@ -17,6 +18,7 @@ interface ElevationProfileProps {
 }
 
 export function ElevationProfile({ points, height = 160, style }: ElevationProfileProps) {
+  const { t } = useTranslation();
   const { width: screenWidth } = useWindowDimensions();
   const [containerWidth, setContainerWidth] = useState(0);
   // Full-width chart — uses the measured container width so the line
@@ -27,9 +29,9 @@ export function ElevationProfile({ points, height = 160, style }: ElevationProfi
     return (
       <View style={[styles.card, style]}>
         <View style={styles.paddedContent}>
-          <Text style={styles.title}>Perfil de Elevacao</Text>
+          <Text style={styles.title}>{t('elevation_profile_title')}</Text>
           <View style={[styles.loadingContainer, { height }]}>
-            <Text style={styles.emptyText}>Sem dados de elevacao</Text>
+            <Text style={styles.emptyText}>{t('elevation_profile_empty')}</Text>
           </View>
         </View>
       </View>
@@ -42,9 +44,9 @@ export function ElevationProfile({ points, height = 160, style }: ElevationProfi
     return (
       <View style={[styles.card, style]}>
         <View style={styles.paddedContent}>
-          <Text style={styles.title}>Perfil de Elevacao</Text>
+          <Text style={styles.title}>{t('elevation_profile_title')}</Text>
           <View style={[styles.loadingContainer, { height }]}>
-            <Text style={styles.emptyText}>Sem dados de elevacao</Text>
+            <Text style={styles.emptyText}>{t('elevation_profile_empty')}</Text>
           </View>
         </View>
       </View>
@@ -95,7 +97,7 @@ export function ElevationProfile({ points, height = 160, style }: ElevationProfi
   return (
     <View style={[styles.card, style]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Perfil de Elevacao</Text>
+        <Text style={styles.title}>{t('elevation_profile_title')}</Text>
         <Text style={styles.total}>
           {totalKm.toFixed(1).replace('.', ',')} km · {Math.round(totalElevationGain)}m D+
         </Text>

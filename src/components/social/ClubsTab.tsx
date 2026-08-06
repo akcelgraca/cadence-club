@@ -15,6 +15,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useSocialStore } from '../../store/socialStore';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { Club, ClubJoinRequest } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 type Row =
   | { type: 'header'; id: string; title: string; subtitle?: string }
@@ -22,6 +23,7 @@ type Row =
   | (Club & { type: 'club' });
 
 export function ClubsTab() {
+  const { t } = useTranslation();
   const myCity = useAuthStore((s) => s.profile?.city);
   const setUnreadClubs = useSocialStore((s) => s.setUnreadClubs);
   const [myClubs, setMyClubs] = useState<Club[]>([]);
@@ -83,7 +85,7 @@ export function ClubsTab() {
     );
   }, []);
 
-  const suggestionTitle = myCity ? `Sugestões perto de ti · ${myCity}` : 'Sugestões para ti';
+  const suggestionTitle = myCity ? `Sugestões perto de ti · ${myCity}` : t('clubs_suggestions');
 
   const rows: Row[] = [
     // Pedidos por aprovar primeiro — é o que o badge desta aba anuncia
@@ -93,14 +95,14 @@ export function ClubsTab() {
             type: 'header' as const,
             id: 'h-requests',
             title: `Pedidos de adesão (${requests.length})`,
-            subtitle: 'Atletas à espera de entrar nos clubes que administras.',
+            subtitle: t('clubs_pending_requests'),
           },
           ...requests.map((r) => ({ type: 'request' as const, id: `req-${r.id}`, request: r })),
         ]
       : []),
     ...(myClubs.length > 0
       ? [
-          { type: 'header' as const, id: 'h-mine', title: 'Meus Clubes' },
+          { type: 'header' as const, id: 'h-mine', title: t('clubs_mine') },
           ...myClubs.map((c) => ({ ...c, type: 'club' as const })),
         ]
       : []),
@@ -111,7 +113,7 @@ export function ClubsTab() {
             id: 'h-suggest',
             title: suggestionTitle,
             subtitle: myClubs.length === 0
-              ? 'Junta-te a um clube para treinares acompanhado.'
+              ? t('clubs_empty')
               : undefined,
           },
           ...suggestions.map((c) => ({ ...c, type: 'club' as const })),
@@ -149,14 +151,14 @@ export function ClubsTab() {
                     {req.profile?.full_name ?? 'Atleta'}
                   </Text>
                   <Text style={styles.requestClub} numberOfLines={1}>
-                    quer entrar em {req.club?.name ?? 'um clube'}
+                    quer entrar em {req.club?.name ?? t('clubs_a_club')}
                   </Text>
                 </View>
                 <TouchableOpacity
                   style={styles.acceptBtn}
                   onPress={() => handleRespond(req, true)}
                   hitSlop={6}
-                  accessibilityLabel="Aceitar pedido"
+                  accessibilityLabel={t('clubs_accept_request')}
                 >
                   <Ionicons name="checkmark" size={18} color={colors.primaryForeground} />
                 </TouchableOpacity>
@@ -164,7 +166,7 @@ export function ClubsTab() {
                   style={styles.rejectBtn}
                   onPress={() => handleRespond(req, false)}
                   hitSlop={6}
-                  accessibilityLabel="Recusar pedido"
+                  accessibilityLabel={t('clubs_decline_request')}
                 >
                   <Ionicons name="close" size={18} color={colors.destructive} />
                 </TouchableOpacity>
@@ -178,13 +180,13 @@ export function ClubsTab() {
             <View style={styles.emptyIcon}>
               <Ionicons name="people-circle-outline" size={44} color={colors.primary} />
             </View>
-            <Text style={styles.emptyTitle}>Ainda sem clubes</Text>
+            <Text style={styles.emptyTitle}>{t('clubs_none')}</Text>
             <Text style={styles.emptyBody}>
-              Ainda não há clubes públicos por aqui. Cria o primeiro da tua zona!
+              {t('clubs_none_body')}
             </Text>
             <TouchableOpacity style={styles.emptyPrimary} onPress={() => router.push('/club/create')}>
               <Ionicons name="add" size={15} color={colors.primaryForeground} />
-              <Text style={styles.emptyPrimaryText}>Criar clube</Text>
+              <Text style={styles.emptyPrimaryText}>{t('clubs_create')}</Text>
             </TouchableOpacity>
           </View>
         }
@@ -203,7 +205,7 @@ export function ClubsTab() {
       <TouchableOpacity
         style={styles.fab}
         onPress={() => router.push('/club/create')}
-        accessibilityLabel="Criar clube"
+        accessibilityLabel={t('clubs_create')}
       >
         <Ionicons name="add" size={26} color={colors.primaryForeground} />
       </TouchableOpacity>

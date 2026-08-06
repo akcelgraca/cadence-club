@@ -10,8 +10,13 @@ import { createClubEvent } from '../../../services/events';
 import { ActivityIcon } from '../../../components/common/ActivityIcon';
 import { ACTIVITY_CATEGORIES } from '../../../lib/constants';
 import { colors, typography, withAlpha } from '../../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
-const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+/** Índice 0 = domingo, como o Date.getDay(). */
+const WEEKDAY_KEYS = [
+  'training_day_sun', 'training_day_mon', 'training_day_tue', 'training_day_wed',
+  'training_day_thu', 'training_day_fri', 'training_day_sat',
+];
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 /** Próximos 60 dias, para escolha rápida sem picker nativo. */
@@ -39,6 +44,7 @@ function buildTimes(): string[] {
 const SUGGESTED_ACTIVITIES = ['run', 'trail_run', 'walk', 'cycle', 'mtb', 'swimming', 'yoga'];
 
 export default function NewClubEventScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const days = useMemo(buildDays, []);
   const times = useMemo(buildTimes, []);
@@ -68,11 +74,11 @@ export default function NewClubEventScreen() {
 
   const handleCreate = async () => {
     if (!title.trim()) {
-      Alert.alert('Título obrigatório', 'Dá um nome ao encontro.');
+      Alert.alert(t('event_new_title_required_title'), t('event_new_title_required_body'));
       return;
     }
     if (startsAt.getTime() < Date.now()) {
-      Alert.alert('Data inválida', 'Escolhe uma data e hora no futuro.');
+      Alert.alert(t('event_new_date_invalid_title'), t('event_new_date_invalid_body'));
       return;
     }
     setSaving(true);
@@ -89,7 +95,7 @@ export default function NewClubEventScreen() {
       });
       router.back();
     } catch (e: any) {
-      Alert.alert('Erro', e?.message ?? 'Não foi possível criar o evento.');
+      Alert.alert(e?.message ?? t('event_new_error'));
     } finally {
       setSaving(false);
     }
@@ -101,21 +107,21 @@ export default function NewClubEventScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Novo evento</Text>
+        <Text style={styles.headerTitle}>{t('event_new_title')}</Text>
         <TouchableOpacity onPress={handleCreate} disabled={!title.trim() || saving} hitSlop={12}>
           {saving
             ? <ActivityIndicator size="small" color={colors.primary} />
-            : <Text style={[styles.saveText, !title.trim() && styles.saveTextDisabled]}>Criar</Text>}
+            : <Text style={[styles.saveText, !title.trim() && styles.saveTextDisabled]}>{t('create')}</Text>}
         </TouchableOpacity>
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
           {/* Título */}
-          <Text style={styles.label}>Nome do encontro *</Text>
+          <Text style={styles.label}>{t('event_new_name_label')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Ex: Corrida de sábado no parque"
+            placeholder={t('event_new_title_placeholder')}
             placeholderTextColor={colors.mutedForeground}
             value={title}
             onChangeText={setTitle}
@@ -124,7 +130,7 @@ export default function NewClubEventScreen() {
           />
 
           {/* Data */}
-          <Text style={styles.label}>Dia</Text>
+          <Text style={styles.label}>{t('event_new_day')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
             {days.map((d, i) => {
               const active = i === dayIndex;
@@ -135,7 +141,7 @@ export default function NewClubEventScreen() {
                   onPress={() => setDayIndex(i)}
                 >
                   <Text style={[styles.dayWeek, active && styles.dayTextActive]}>
-                    {i === 0 ? 'Hoje' : i === 1 ? 'Amanhã' : WEEKDAYS[d.getDay()]}
+                    {i === 0 ? t('streak_today') : i === 1 ? t('event_new_tomorrow') : t(WEEKDAY_KEYS[d.getDay()] as any)}
                   </Text>
                   <Text style={[styles.dayNum, active && styles.dayTextActive]}>{d.getDate()}</Text>
                   <Text style={[styles.dayMonth, active && styles.dayTextActive]}>{MONTHS[d.getMonth()]}</Text>
@@ -145,7 +151,7 @@ export default function NewClubEventScreen() {
           </ScrollView>
 
           {/* Hora */}
-          <Text style={styles.label}>Hora</Text>
+          <Text style={styles.label}>{t('event_new_time')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
             {times.map((tm) => {
               const active = tm === time;
@@ -162,7 +168,7 @@ export default function NewClubEventScreen() {
           </ScrollView>
 
           {/* Modalidade */}
-          <Text style={styles.label}>Modalidade</Text>
+          <Text style={styles.label}>{t('activity_sport')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
             {activityOptions.map((a) => {
               const active = activityType === a.key;
@@ -184,10 +190,10 @@ export default function NewClubEventScreen() {
           </ScrollView>
 
           {/* Local */}
-          <Text style={styles.label}>Ponto de encontro</Text>
+          <Text style={styles.label}>{t('event_new_location')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Ex: Entrada do Parque da Cidade"
+            placeholder={t('event_new_location_placeholder')}
             placeholderTextColor={colors.mutedForeground}
             value={location}
             onChangeText={setLocation}
@@ -195,10 +201,10 @@ export default function NewClubEventScreen() {
           />
 
           {/* Distância */}
-          <Text style={styles.label}>Distância prevista (km)</Text>
+          <Text style={styles.label}>{t('event_new_distance')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Ex: 10"
+            placeholder={t('event_new_limit_placeholder')}
             placeholderTextColor={colors.mutedForeground}
             value={distanceKm}
             onChangeText={setDistanceKm}
@@ -207,10 +213,10 @@ export default function NewClubEventScreen() {
           />
 
           {/* Descrição */}
-          <Text style={styles.label}>Detalhes</Text>
+          <Text style={styles.label}>{t('event_new_details')}</Text>
           <TextInput
             style={[styles.input, styles.inputMulti]}
-            placeholder="Ritmo, nível, o que levar..."
+            placeholder={t('event_new_notes_placeholder')}
             placeholderTextColor={colors.mutedForeground}
             value={description}
             onChangeText={setDescription}
@@ -234,7 +240,7 @@ export default function NewClubEventScreen() {
           >
             {saving
               ? <ActivityIndicator color={colors.primaryForeground} />
-              : <Text style={styles.createBtnText}>Criar evento</Text>}
+              : <Text style={styles.createBtnText}>{t('event_new_create')}</Text>}
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

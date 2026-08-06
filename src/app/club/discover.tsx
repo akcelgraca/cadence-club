@@ -10,12 +10,14 @@ import { discoverClubs, getMyClubs } from '../../services/clubs';
 import { ClubCard } from '../../components/social/ClubCard';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { Club } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Pesquisa de clubes por nome (inclui privados, para ser possível pedir para
  * entrar). As sugestões por localização vivem na aba Clubes — aqui é só busca.
  */
 export default function DiscoverClubsScreen() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [clubs, setClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(false);
@@ -61,7 +63,7 @@ export default function DiscoverClubsScreen() {
           <Ionicons name="search" size={15} color={colors.mutedForeground} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Procurar clubes..."
+            placeholder={t('club_discover_placeholder')}
             placeholderTextColor={colors.mutedForeground}
             value={search}
             onChangeText={setSearch}
@@ -89,17 +91,17 @@ export default function DiscoverClubsScreen() {
                 <Ionicons name="search-outline" size={40} color={colors.primary} />
               </View>
               <Text style={styles.emptyTitle}>
-                {search.trim() ? 'Sem resultados' : 'Procurar clubes'}
+                {search.trim() ? t('club_discover_no_results') : t('club_discover_title')}
               </Text>
               <Text style={styles.emptyBody}>
                 {search.trim()
                   ? `Nenhum clube encontrado para "${search}".`
-                  : 'Escreve o nome do clube que procuras. Os clubes privados também aparecem — podes pedir para entrar.'}
+                  : t('club_discover_body')}
               </Text>
               {!!search.trim() && (
                 <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/club/create')}>
                   <Ionicons name="add" size={16} color={colors.primaryForeground} />
-                  <Text style={styles.emptyBtnText}>Criar clube</Text>
+                  <Text style={styles.emptyBtnText}>{t('clubs_create')}</Text>
                 </TouchableOpacity>
               )}
             </View>

@@ -12,6 +12,7 @@ import {
 } from '../services/challenges';
 import { colors, typography, withAlpha } from '../lib/theme';
 import type { Challenge } from '../lib/types';
+import { useTranslation } from 'react-i18next';
 
 function daysLeft(endDate: string): number {
   const end = new Date(`${endDate}T23:59:59`);
@@ -19,6 +20,7 @@ function daysLeft(endDate: string): number {
 }
 
 export function ChallengeRow({ challenge, onChanged }: { challenge: Challenge; onChanged: () => void }) {
+  const { t } = useTranslation();
   const isOver = daysLeft(challenge.end_date) === 0;
   // Meta da comunidade: progresso coletivo; restantes: progresso individual
   const isCollective = challenge.name.toLowerCase().includes('comunidade');
@@ -31,7 +33,7 @@ export function ChallengeRow({ challenge, onChanged }: { challenge: Challenge; o
       else await joinChallenge(challenge.id);
       onChanged();
     } catch {
-      Alert.alert('Erro', 'Não foi possível atualizar a tua participação.');
+      Alert.alert(t('challenges_update_error'));
     }
   };
 
@@ -45,7 +47,7 @@ export function ChallengeRow({ challenge, onChanged }: { challenge: Challenge; o
         {isCollective && (
           <View style={styles.collectivePill}>
             <Ionicons name="people" size={11} color={colors.primary} />
-            <Text style={styles.collectiveText}>Coletivo</Text>
+            <Text style={styles.collectiveText}>{t('challenge_collective')}</Text>
           </View>
         )}
       </View>
@@ -98,6 +100,7 @@ export function ChallengeRow({ challenge, onChanged }: { challenge: Challenge; o
 }
 
 export default function ChallengesScreen() {
+  const { t } = useTranslation();
   const { data: challenges = [], isLoading, refetch } = useQuery({
     queryKey: ['challenges'],
     queryFn: getChallenges,
@@ -111,7 +114,7 @@ export default function ChallengesScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Desafios</Text>
+        <Text style={styles.headerTitle}>{t('challenges_title')}</Text>
         <View style={{ width: 32 }} />
       </View>
 
@@ -126,14 +129,14 @@ export default function ChallengesScreen() {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             <Text style={styles.intro}>
-              Metas de consistência, não de competição. Participa nos que fizerem sentido para ti.
+              {t('challenges_subtitle')}
             </Text>
           }
           ListEmptyComponent={
             <View style={styles.empty}>
               <Ionicons name="trophy-outline" size={44} color={colors.mutedForeground} />
-              <Text style={styles.emptyTitle}>Sem desafios ativos</Text>
-              <Text style={styles.emptySub}>Novos desafios aparecem no início de cada mês.</Text>
+              <Text style={styles.emptyTitle}>{t('challenges_empty')}</Text>
+              <Text style={styles.emptySub}>{t('challenges_empty_body')}</Text>
             </View>
           }
         />

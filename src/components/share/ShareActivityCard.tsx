@@ -2,6 +2,7 @@ import React, { forwardRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import RouteSketch, { LatLng } from "./RouteSketch";
+import { useTranslation } from 'react-i18next';
 
 /**
  * Cartão de estatísticas com FUNDO TRANSPARENTE (sticker à Strava).
@@ -82,8 +83,11 @@ function BrandLogo() {
 
 const ShareActivityCard = forwardRef<View, { data: ShareCardData; width?: number }>(
   ({ data, width = 360 }, ref) => {
+    const { t, i18n } = useTranslation();
     const height = width * (16 / 9); // formato de story
-    const km = data.distanceKm.toLocaleString("pt-PT", {
+    // O separador decimal acompanha o idioma da app: 5,2 km em português,
+    // 5.2 km em inglês.
+    const km = data.distanceKm.toLocaleString(i18n.language, {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
     });
@@ -92,9 +96,9 @@ const ShareActivityCard = forwardRef<View, { data: ShareCardData; width?: number
     return (
       <View ref={ref} collapsable={false} style={[styles.card, { width, height }]}>
         <View style={styles.stats}>
-          <Stat label="DISTÂNCIA" value={km} unit="km" />
+          <Stat label={t("share_card_distance")} value={km} unit="km" />
           <View style={styles.divider} />
-          <Stat label="RITMO" value={formatPace(data.paceSecPerKm)} unit="/ km" />
+          <Stat label={t('share_card_pace')} value={formatPace(data.paceSecPerKm)} unit="/ km" />
           <View style={styles.divider} />
           <Stat label="TEMPO" value={formatDuration(data.durationSec)} />
         </View>

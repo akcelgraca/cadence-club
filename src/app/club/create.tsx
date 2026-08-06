@@ -12,8 +12,10 @@ import { ACTIVITY_CATEGORIES } from '../../lib/constants';
 import { ActivityIcon } from '../../components/common/ActivityIcon';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { ActivityCategory } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 export default function CreateClubScreen() {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [city, setCity] = useState('');
@@ -23,7 +25,7 @@ export default function CreateClubScreen() {
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      Alert.alert('Nome obrigatório', 'Dá um nome ao teu clube.');
+      Alert.alert(t('club_create_name_required_title'), t('club_create_name_required_body'));
       return;
     }
     setLoading(true);
@@ -37,7 +39,7 @@ export default function CreateClubScreen() {
       });
       router.replace(`/club/${club.id}`);
     } catch (e: any) {
-      Alert.alert('Erro', e?.message ?? 'Não foi possível criar o clube.');
+      Alert.alert(e?.message ?? t('club_create_error'));
     } finally {
       setLoading(false);
     }
@@ -50,7 +52,7 @@ export default function CreateClubScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={styles.title}>Criar Clube</Text>
+        <Text style={styles.title}>{t('club_create_title')}</Text>
         <TouchableOpacity
           onPress={handleCreate}
           disabled={!name.trim() || loading}
@@ -58,7 +60,7 @@ export default function CreateClubScreen() {
         >
           {loading
             ? <ActivityIndicator size="small" color={colors.primary} />
-            : <Text style={[styles.saveText, (!name.trim()) && styles.saveTextDisabled]}>Criar</Text>
+            : <Text style={[styles.saveText, (!name.trim()) && styles.saveTextDisabled]}>{t('create')}</Text>
           }
         </TouchableOpacity>
       </View>
@@ -79,15 +81,15 @@ export default function CreateClubScreen() {
                 {name.trim() ? name.trim()[0].toUpperCase() : '?'}
               </Text>
             </View>
-            <Text style={styles.avatarHint}>A inicial do nome será usada como ícone</Text>
+            <Text style={styles.avatarHint}>{t('club_create_icon_hint')}</Text>
           </View>
 
           {/* Name */}
           <View style={styles.field}>
-            <Text style={styles.label}>Nome *</Text>
+            <Text style={styles.label}>{t('register_first_name')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Ex: Corredores do Porto"
+              placeholder={t('club_create_name_placeholder')}
               placeholderTextColor={colors.mutedForeground}
               value={name}
               onChangeText={setName}
@@ -99,10 +101,10 @@ export default function CreateClubScreen() {
 
           {/* Description */}
           <View style={styles.field}>
-            <Text style={styles.label}>Descrição</Text>
+            <Text style={styles.label}>{t('activity_description_label')}</Text>
             <TextInput
               style={[styles.input, styles.inputMulti]}
-              placeholder="Descreve o teu clube, as atividades, regras..."
+              placeholder={t('club_create_description_placeholder')}
               placeholderTextColor={colors.mutedForeground}
               value={description}
               onChangeText={setDescription}
@@ -115,10 +117,10 @@ export default function CreateClubScreen() {
 
           {/* City */}
           <View style={styles.field}>
-            <Text style={styles.label}>Cidade</Text>
+            <Text style={styles.label}>{t('edit_profile_city')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Lisboa, Porto, Braga..."
+              placeholder={t('club_create_city_placeholder')}
               placeholderTextColor={colors.mutedForeground}
               value={city}
               onChangeText={setCity}
@@ -128,7 +130,7 @@ export default function CreateClubScreen() {
 
           {/* Category */}
           <View style={styles.field}>
-            <Text style={styles.label}>Categoria de desporto</Text>
+            <Text style={styles.label}>{t('club_create_category')}</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -160,8 +162,8 @@ export default function CreateClubScreen() {
           {/* Private toggle */}
           <View style={styles.toggleRow}>
             <View style={styles.toggleInfo}>
-              <Text style={styles.toggleLabel}>Clube privado</Text>
-              <Text style={styles.toggleSub}>Não aparece na pesquisa — só os membros o veem</Text>
+              <Text style={styles.toggleLabel}>{t('club_create_private')}</Text>
+              <Text style={styles.toggleSub}>{t('club_create_private_hint')}</Text>
             </View>
             <Switch
               value={isPrivate}
@@ -180,7 +182,7 @@ export default function CreateClubScreen() {
           >
             {loading
               ? <ActivityIndicator color={colors.primaryForeground} />
-              : <Text style={styles.createBtnText}>Criar clube</Text>
+              : <Text style={styles.createBtnText}>{t('clubs_create')}</Text>
             }
           </TouchableOpacity>
         </ScrollView>

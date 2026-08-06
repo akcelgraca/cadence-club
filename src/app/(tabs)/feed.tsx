@@ -87,7 +87,7 @@ export default function SocialScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Social</Text>
+        <Text style={styles.title}>{t('tab_social')}</Text>
         <Pressable
           hitSlop={12}
           onPress={handleHeaderAction}

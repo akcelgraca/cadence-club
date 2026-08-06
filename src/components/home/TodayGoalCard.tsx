@@ -48,12 +48,12 @@ export function TodayGoalCard({ todayPlan, isLoading }: TodayGoalCardProps) {
       <View style={styles.card}>
         <Text style={styles.label}>{isRest ? t('training_rest_day') : t('today_goal')}</Text>
         <Text style={styles.restTitle}>
-          {isRest ? 'Descanso' : 'Sem treino planeado'}
+          {isRest ? t('today_rest') : t('today_no_plan')}
         </Text>
         <Text style={styles.restSub}>
           {isRest
-            ? 'Recuperar também é treinar. Se te apetecer mexer, força.'
-            : 'Não tens nada marcado para hoje — sai à rua na mesma.'}
+            ? t('today_rest_body')
+            : t('today_no_plan_body')}
         </Text>
         <View style={styles.actionRow}>
           <StartButton label={isRest ? t('today_train_anyway') : t('activity_start')} />
@@ -73,8 +73,8 @@ export function TodayGoalCard({ todayPlan, isLoading }: TodayGoalCardProps) {
     return (
       <View style={styles.card}>
         <Text style={styles.label}>{t('today_goal')}</Text>
-        <Text style={styles.restTitle}>{todayPlan.label}</Text>
-        <Text style={styles.restSub}>Sem meta definida — faz o que o corpo pedir.</Text>
+        <Text style={styles.restTitle}>{t(todayPlan.label as any)}</Text>
+        <Text style={styles.restSub}>{t('today_no_target')}</Text>
         <View style={styles.actionRow}>
           <StartButton label={t('activity_start')} />
         </View>
@@ -104,14 +104,14 @@ export function TodayGoalCard({ todayPlan, isLoading }: TodayGoalCardProps) {
         {isDone && (
           <View style={styles.donePill}>
             <Ionicons name="checkmark" size={11} color={colors.primary} />
-            <Text style={styles.doneText}>Cumprido</Text>
+            <Text style={styles.doneText}>{t('today_done')}</Text>
           </View>
         )}
       </View>
 
       <View style={styles.goalRow}>
         <Text style={styles.number}>{goalValue}</Text>
-        <Text style={styles.unit}>{goalUnit} · {todayPlan.label.toLowerCase()}</Text>
+        <Text style={styles.unit}>{goalUnit} · {t(todayPlan.label as any).toLowerCase()}</Text>
       </View>
 
       <View style={styles.progressRow}>

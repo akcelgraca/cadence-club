@@ -6,6 +6,8 @@ import { useSettingsStore } from '../../store/settingsStore';
 import { ActivityMap } from '../activity/ActivityMap';
 import type { Activity } from '../../lib/types';
 import { ActivityIcon } from '../common/ActivityIcon';
+import { getActivityByKey } from '../../lib/constants';
+import { useTranslation } from 'react-i18next';
 import { colors, typography } from '../../lib/theme';
 
 interface RoutesSectionProps {
@@ -14,11 +16,12 @@ interface RoutesSectionProps {
 }
 
 export function RoutesSection({ activities, isLoading }: RoutesSectionProps) {
+  const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Rotas</Text>
+        <Text style={styles.title}>{t('tab_routes')}</Text>
         <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 16 }} />
       </View>
     );
@@ -29,15 +32,15 @@ export function RoutesSection({ activities, isLoading }: RoutesSectionProps) {
   if (routesWithMap.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Rotas</Text>
-        <Text style={styles.emptyText}>Ainda sem rotas registadas.</Text>
+        <Text style={styles.title}>{t('tab_routes')}</Text>
+        <Text style={styles.emptyText}>{t('routes_section_empty')}</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Rotas</Text>
+      <Text style={styles.title}>{t('tab_routes')}</Text>
       {routesWithMap.map((activity) => (
         <TouchableOpacity
           key={activity.id}
@@ -54,8 +57,7 @@ export function RoutesSection({ activities, isLoading }: RoutesSectionProps) {
             <View style={styles.routeTypeRow}>
               <ActivityIcon activityKey={activity.type} size={14} tintColor={colors.foreground} />
               <Text style={styles.routeType}>
-                {activity.type === 'run' ? 'Corrida' :
-                 activity.type === 'cycle' ? 'Ciclismo' : 'Caminhada'}
+                {t(getActivityByKey(activity.type)?.i18n_key as any ?? 'activity_walk')}
               </Text>
             </View>
             <Text style={styles.routeStats}>

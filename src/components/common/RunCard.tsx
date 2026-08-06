@@ -49,15 +49,15 @@ export function RunCard({ run }: RunCardProps) {
       <View style={styles.statsRow}>
         <View style={styles.stat}>
           <Text style={styles.statValue}>{formatDistance(run.distance, unitSystem)}</Text>
-          <Text style={styles.statLabel}>distancia</Text>
+          <Text style={styles.statLabel}>{t('stat_distance_lower')}</Text>
         </View>
         <View style={styles.stat}>
           <Text style={styles.statValue}>{formatDuration(run.duration)}</Text>
-          <Text style={styles.statLabel}>tempo</Text>
+          <Text style={styles.statLabel}>{t('stat_time_lower')}</Text>
         </View>
         <View style={styles.stat}>
           <Text style={[styles.statValue, styles.pace]}>{formatPace(run.avg_pace, unitSystem)}</Text>
-          <Text style={styles.statLabel}>ritmo</Text>
+          <Text style={styles.statLabel}>{t('stat_pace_lower')}</Text>
         </View>
       </View>
     </TouchableOpacity>
