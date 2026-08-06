@@ -29,7 +29,9 @@
         ],
         "NSPhotoLibraryUsageDescription": "O Cadence Club precisa de acesso à tua galeria para guardar o cartão de atividade.",
         "NSPhotoLibraryAddUsageDescription": "O Cadence Club guarda o cartão da tua atividade na galeria.",
-        "LSApplicationQueriesSchemes": ["instagram-stories"]
+        "LSApplicationQueriesSchemes": [
+          "instagram-stories"
+        ]
       }
     },
     "android": {
@@ -39,7 +41,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.cadence.app",
+      "package": "com.akcelgraca.cadence",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -47,7 +49,9 @@
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_LOCATION",
         "ACTIVITY_RECOGNITION",
-        "health_connect_permissions"
+        "android.permission.health.READ_EXERCISE",
+        "android.permission.health.READ_DISTANCE",
+        "android.permission.health.READ_HEART_RATE"
       ]
     },
     "web": {
@@ -97,7 +101,15 @@
           "savePhotosPermission": "O Cadence Club guarda o cartão da tua atividade na galeria.",
           "isAccessMediaLocationEnabled": false
         }
-      ]
+      ],
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "O Cadence Club lê os treinos que gravaste no relógio para os teres também aqui.",
+          "NSHealthUpdateUsageDescription": "O Cadence Club guarda os treinos que gravas na app Saúde."
+        }
+      ],
+      "react-native-health-connect"
     ],
     "extra": {
       "router": {},

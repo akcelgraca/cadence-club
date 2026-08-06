@@ -1,7 +1,12 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    // Sem isto, describe/it/expect ficam por declarar: este TypeScript já não
+    // puxa os @types automaticamente (hoje só entram os que são importados).
+    // "node" é para os testes que leem ficheiros (ver lib/i18n/keys.test.ts) —
+    // o código da app corre em React Native e não tem estas APIs.
+    "types": ["jest", "node"]
   },
   "exclude": ["node_modules", "assets/layout_social"]
 }
