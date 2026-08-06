@@ -6,6 +6,7 @@ import { formatDuration } from '../../utils/dateHelpers';
 import { useSettingsStore } from '../../store/settingsStore';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { ProfileStats } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Médias calculadas a partir das atividades reais do utilizador.
@@ -19,6 +20,7 @@ interface HealthMetricsProps {
 }
 
 export function HealthMetrics({ stats }: HealthMetricsProps) {
+  const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
 
   if (!stats || stats.activity_count === 0) return null;
@@ -30,29 +32,29 @@ export function HealthMetrics({ stats }: HealthMetricsProps) {
   const rows = [
     {
       icon: 'speedometer-outline' as const,
-      label: 'Ritmo médio',
+      label: t('health_avg_pace'),
       value: avgPaceSecPerKm > 0 ? formatPace(avgPaceSecPerKm, unitSystem) : '—',
     },
     {
       icon: 'resize-outline' as const,
-      label: 'Distância média',
+      label: t('health_avg_distance'),
       value: formatDistance(stats.total_distance / stats.activity_count, unitSystem),
     },
     {
       icon: 'time-outline' as const,
-      label: 'Duração média',
+      label: t('health_avg_duration'),
       value: formatDuration(stats.total_duration / stats.activity_count),
     },
     {
       icon: 'trending-up-outline' as const,
-      label: 'Elevação acumulada',
+      label: t('health_total_elevation'),
       value: `${Math.round(stats.total_elevation)} m`,
     },
   ];
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Médias</Text>
+      <Text style={styles.sectionTitle}>{t('health_averages')}</Text>
       <View style={styles.list}>
         {rows.map((item) => (
           <View key={item.label} style={styles.row}>
@@ -65,7 +67,7 @@ export function HealthMetrics({ stats }: HealthMetricsProps) {
         ))}
       </View>
       <Text style={styles.note}>
-        Frequência cardíaca e VO₂ máx. ficam disponíveis quando ligares um relógio.
+        {t('health_watch_hint')}
       </Text>
     </View>
   );
