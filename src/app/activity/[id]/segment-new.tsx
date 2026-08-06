@@ -14,6 +14,7 @@ import { useSettingsStore } from '../../../store/settingsStore';
 import { computeSplits } from '../../../utils/splits';
 import { formatDistance } from '../../../utils/formatDistance';
 import { colors, typography, withAlpha } from '../../../lib/theme';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Cria um troço a partir de um pedaço desta atividade.
@@ -22,6 +23,7 @@ import { colors, typography, withAlpha } from '../../../lib/theme';
  * é a unidade que as pessoas usam para falar de percursos ("do km 2 ao 5").
  */
 export default function NewSegmentScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const queryClient = useQueryClient();
   const myId = useAuthStore((s) => s.profile?.id);
@@ -67,11 +69,11 @@ export default function NewSegmentScreen() {
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      Alert.alert('Nome obrigatório', 'Dá um nome ao troço.');
+      Alert.alert(t('segment_new_name_required_title'), t('segment_new_name_required_body'));
       return;
     }
     if (segmentMeters < 200) {
-      Alert.alert('Troço demasiado curto', 'Escolhe um intervalo com pelo menos 200 metros.');
+      Alert.alert(t('segment_new_too_short_title'), t('segment_new_too_short_body'));
       return;
     }
     setSaving(true);
@@ -86,7 +88,7 @@ export default function NewSegmentScreen() {
       queryClient.invalidateQueries({ queryKey: ['activitySegments', id] });
       router.replace(`/segment/${segmentId}`);
     } catch (e: any) {
-      Alert.alert('Erro', e?.message ?? 'Não foi possível criar o troço.');
+      Alert.alert(e?.message ?? t('segment_new_error'));
     } finally {
       setSaving(false);
     }
@@ -105,11 +107,11 @@ export default function NewSegmentScreen() {
       <SafeAreaView style={styles.center} edges={['top']}>
         <Text style={styles.errorText}>
           {isOwner
-            ? 'Esta atividade não tem GPS suficiente para criar um troço.'
-            : 'Só podes criar troços a partir das tuas atividades.'}
+            ? t('segment_new_no_gps')
+            : t('segment_new_not_yours')}
         </Text>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backBtnText}>Voltar</Text>
+          <Text style={styles.backBtnText}>{t('route_creator_back')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -121,11 +123,11 @@ export default function NewSegmentScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Criar troço</Text>
+        <Text style={styles.headerTitle}>{t('activity_create_segment')}</Text>
         <TouchableOpacity onPress={handleCreate} disabled={saving || !name.trim()} hitSlop={12}>
           {saving
             ? <ActivityIndicator size="small" color={colors.primary} />
-            : <Text style={[styles.saveText, !name.trim() && styles.saveTextOff]}>Criar</Text>}
+            : <Text style={[styles.saveText, !name.trim() && styles.saveTextOff]}>{t('create')}</Text>}
         </TouchableOpacity>
       </View>
 
@@ -139,10 +141,10 @@ export default function NewSegmentScreen() {
             </Text>
           </View>
 
-          <Text style={styles.label}>Nome do troço *</Text>
+          <Text style={styles.label}>{t('segment_new_name_label')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Ex: Subida do Parque"
+            placeholder={t('segment_new_name_placeholder')}
             placeholderTextColor={colors.mutedForeground}
             value={name}
             onChangeText={setName}
@@ -150,7 +152,7 @@ export default function NewSegmentScreen() {
             autoFocus
           />
 
-          <Text style={styles.label}>Início</Text>
+          <Text style={styles.label}>{t('segment_new_start')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
             {splits.map((_, i) => (
               <TouchableOpacity
@@ -162,13 +164,13 @@ export default function NewSegmentScreen() {
                 }}
               >
                 <Text style={[styles.chipText, startUnit === i && styles.chipTextActive]}>
-                  {i === 0 ? 'Início' : `${i} ${unitLabel}`}
+                  {i === 0 ? t('segment_new_start') : `${i} ${unitLabel}`}
                 </Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          <Text style={styles.label}>Fim</Text>
+          <Text style={styles.label}>{t('segment_new_end')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
             {splits.map((_, i) => (
               <TouchableOpacity
@@ -191,15 +193,25 @@ export default function NewSegmentScreen() {
           <View style={styles.summary}>
             <Ionicons name="git-commit-outline" size={16} color={colors.primary} />
             <Text style={styles.summaryText}>
-              {formatDistance(segmentMeters, unitSystem)} — do{' '}
-              {startUnit === 0 ? 'início' : `${unitLabel} ${startUnit}`} ao {unitLabel} {endUnit + 1}
+              {startUnit === 0
+                ? t('segment_new_range_from_start', {
+                    distance: formatDistance(segmentMeters, unitSystem),
+                    unit: unitLabel,
+                    to: endUnit + 1,
+                  })
+                : t('segment_new_range', {
+                    distance: formatDistance(segmentMeters, unitSystem),
+                    unit: unitLabel,
+                    from: startUnit,
+                    to: endUnit + 1,
+                  })}
             </Text>
           </View>
 
-          <Text style={styles.label}>Descrição</Text>
+          <Text style={styles.label}>{t('activity_description_label')}</Text>
           <TextInput
             style={[styles.input, styles.inputMulti]}
-            placeholder="Piso, inclinação, o que esperar..."
+            placeholder={t('segment_new_notes_placeholder')}
             placeholderTextColor={colors.mutedForeground}
             value={description}
             onChangeText={setDescription}
@@ -215,7 +227,7 @@ export default function NewSegmentScreen() {
           >
             {saving
               ? <ActivityIndicator color={colors.primaryForeground} />
-              : <Text style={styles.createBtnText}>Criar troço</Text>}
+              : <Text style={styles.createBtnText}>{t('activity_create_segment')}</Text>}
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

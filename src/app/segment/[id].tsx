@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -8,6 +9,8 @@ import { formatDuration, formatDate } from '../../utils/dateHelpers';
 import { formatPace } from '../../utils/formatPace';
 import { useSettingsStore } from '../../store/settingsStore';
 import { colors, typography, withAlpha } from '../../lib/theme';
+import { useTranslation } from 'react-i18next';
+import { track } from '../../lib/analytics';
 
 /**
  * Detalhe de um troço.
@@ -16,6 +19,7 @@ import { colors, typography, withAlpha } from '../../lib/theme';
  * média da comunidade como referência, não como competição.
  */
 export default function SegmentScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
 
@@ -42,7 +46,7 @@ export default function SegmentScreen() {
   if (!segment) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Troço não encontrado.</Text>
+        <Text style={styles.errorText}>{t('segment_not_found')}</Text>
       </View>
     );
   }
@@ -50,6 +54,12 @@ export default function SegmentScreen() {
   const vsCommunity = percentFaster(segment.my_best ?? 0, segment.community_avg);
   // Barras do histórico proporcionais ao pior tempo
   const slowest = efforts.length > 0 ? Math.max(...efforts.map((e) => e.duration)) : 0;
+
+  // O histórico de passagens é o que fica atrás do paywall — só conta quando
+  // há mais do que uma, que é quando passa a ter valor.
+  useEffect(() => {
+    if (efforts.length > 1) track('premium_feature_used', { feature: 'segment_history' });
+  }, [efforts.length]);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -76,14 +86,14 @@ export default function SegmentScreen() {
 
       {/* Os meus números */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>O teu histórico</Text>
+        <Text style={styles.cardTitle}>{t('segment_your_history')}</Text>
 
         {segment.my_attempts === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="footsteps-outline" size={32} color={colors.mutedForeground} />
-            <Text style={styles.emptyTitle}>Ainda não passaste por aqui</Text>
+            <Text style={styles.emptyTitle}>{t('segment_never_run')}</Text>
             <Text style={styles.emptySub}>
-              Da próxima vez que percorreres este troço, o tempo aparece aqui.
+              {t('segment_never_run_body')}
             </Text>
           </View>
         ) : (
@@ -91,12 +101,12 @@ export default function SegmentScreen() {
             <View style={styles.statsRow}>
               <View style={styles.stat}>
                 <Text style={styles.statValue}>{formatDuration(segment.my_best ?? 0)}</Text>
-                <Text style={styles.statLabel}>melhor</Text>
+                <Text style={styles.statLabel}>{t('segment_best')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.stat}>
                 <Text style={styles.statValue}>{formatDuration(segment.my_average ?? 0)}</Text>
-                <Text style={styles.statLabel}>média</Text>
+                <Text style={styles.statLabel}>{t('segment_average')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.stat}>
@@ -145,7 +155,7 @@ export default function SegmentScreen() {
       {/* Referência da comunidade — média, nunca classificação */}
       {segment.community_avg != null && segment.community_people > 0 && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Na comunidade</Text>
+          <Text style={styles.cardTitle}>{t('segment_community')}</Text>
           <View style={styles.communityRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.communityValue}>{formatDuration(segment.community_avg)}</Text>
@@ -162,13 +172,13 @@ export default function SegmentScreen() {
                   color={vsCommunity > 0 ? colors.primary : colors.mutedForeground}
                 />
                 <Text style={[styles.communityDiffText, vsCommunity > 0 && styles.communityDiffFaster]}>
-                  {Math.abs(vsCommunity).toFixed(0)}% {vsCommunity > 0 ? 'mais rápido' : 'mais lento'}
+                  {Math.abs(vsCommunity).toFixed(0)}% {vsCommunity > 0 ? t('activity_faster') : t('activity_slower')}
                 </Text>
               </View>
             )}
           </View>
           <Text style={styles.communityNote}>
-            Uma referência, não uma corrida. Sem classificações — cada um tem o seu ritmo.
+            {t('segment_community_body')}
           </Text>
         </View>
       )}

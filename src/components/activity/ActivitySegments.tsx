@@ -6,6 +6,7 @@ import { getActivitySegments, percentFaster } from '../../services/segments';
 import { formatDuration } from '../../utils/dateHelpers';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { ActivitySegment } from '../../lib/types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Troços percorridos nesta atividade.
@@ -15,6 +16,7 @@ import type { ActivitySegment } from '../../lib/types';
  */
 
 function Comparison({ label, value, diff }: { label: string; value: string; diff: number | null }) {
+  const { t } = useTranslation();
   const faster = diff != null && diff > 0;
   return (
     <View style={styles.compareItem}>
@@ -30,6 +32,7 @@ function Comparison({ label, value, diff }: { label: string; value: string; diff
 }
 
 function SegmentRow({ segment }: { segment: ActivitySegment }) {
+  const { t } = useTranslation();
   const vsBest = percentFaster(segment.duration, segment.my_best);
   const vsCommunity = percentFaster(segment.duration, segment.community_avg);
   const isPersonalBest = segment.my_best != null && segment.duration <= segment.my_best;
@@ -53,7 +56,7 @@ function SegmentRow({ segment }: { segment: ActivitySegment }) {
           {isPersonalBest && segment.my_attempts > 1 && (
             <View style={styles.pbPill}>
               <Ionicons name="trophy" size={9} color={colors.primary} />
-              <Text style={styles.pbText}>Recorde</Text>
+              <Text style={styles.pbText}>{t('segment_record')}</Text>
             </View>
           )}
         </View>
