@@ -83,6 +83,39 @@ npm run ios
 npm run android
 ```
 
+## Testes
+
+```bash
+npm test              # corre tudo uma vez
+npm run test:watch    # em modo contínuo
+npm run test:coverage # com relatório de cobertura
+npm run typecheck     # tsc --noEmit
+```
+
+Correm em [jest-expo](https://docs.expo.dev/develop/unit-testing/) e cobrem
+lógica pura e serviços — cálculos (parciais, calorias, ritmo, conversão de
+unidades), a fila de sincronização offline, as zonas de privacidade e os
+geradores de plano de treino. Nenhum teste toca na rede, no disco ou no
+Supabase real: o cliente Supabase, o `expo-file-system` e o `AsyncStorage` são
+substituídos por duplos em `src/test-utils/`.
+
+Convenções:
+
+- Os testes vivem ao lado do código, com o sufixo `.test.ts`.
+- `src/test-utils/` tem os auxiliares partilhados (não é apanhado pelo runner).
+  - `supabaseMock.ts` — construtor de queries encadeável, permite fixar a
+    resposta e afirmar que o filtro certo foi aplicado.
+  - `fileSystemMock.ts` — sistema de ficheiros em memória.
+  - `geoFixtures.ts` / `activityFixtures.ts` — traçados de GPS e atividades.
+- Os traçados sintéticos andam ao longo de um meridiano, onde a fórmula de
+  haversine se reduz a `R × Δlatitude` — dá distâncias exatas, o que permite
+  afirmar "este parcial tem 1000 m" sem depender de arredondamentos.
+
+Nota sobre dependências: `jest-expo@57.0.3` pede
+`@react-native/jest-preset@^0.86.2` enquanto o `react-native@0.86.0` fixa
+`0.86.0`. O conflito está resolvido com um `overrides` no `package.json`, para
+não ser preciso instalar com `--legacy-peer-deps`.
+
 ## Build para distribuição
 
 ```bash
@@ -111,6 +144,7 @@ src/
 ├── services/             # Supabase, auth, atividades, mapas
 ├── store/                # Zustand stores
 ├── lib/                  # Constantes, temas, tipos, i18n
+├── test-utils/           # Duplos e fixtures usados pelos testes
 └── utils/                # Utilitários (formatação, cálculos)
 ```
 
