@@ -162,20 +162,19 @@ export const ACTIVITY_TYPES = ALL_ACTIVITY_TYPES.map((key) => {
   };
 });
 
-// Activity goals with PT labels
 export const ACTIVITY_GOALS = [
-  { key: 'stay_active', label: 'Manter-me ativo', icon: 'fitness' },
-  { key: 'run_weekly_km', label: 'Correr X km/semana', icon: 'fitness' },
-  { key: 'cycle_weekly_km', label: 'Pedalar X km/semana', icon: 'bicycle' },
-  { key: 'lose_weight', label: 'Perder peso', icon: 'scale' },
-  { key: 'gain_muscle', label: 'Ganhar musculo', icon: 'barbell' },
-  { key: 'improve_endurance', label: 'Melhorar resistencia', icon: 'trending-up' },
-  { key: 'train_for_race', label: 'Treinar para prova', icon: 'flag' },
-  { key: 'train_with_friends', label: 'Treinar com amigos', icon: 'people' },
-  { key: 'improve_flexibility', label: 'Melhorar flexibilidade', icon: 'body' },
-  { key: 'improve_technique', label: 'Melhorar tecnica', icon: 'tennisball' },
-  { key: 'explore_outdoors', label: 'Explorar ao ar livre', icon: 'compass' },
-  { key: 'have_fun', label: 'Divertir-me', icon: 'happy' },
+  { key: 'stay_active', i18n_key: 'goal_stay_active', icon: 'fitness' },
+  { key: 'run_weekly_km', i18n_key: 'goal_run_weekly_km', icon: 'fitness' },
+  { key: 'cycle_weekly_km', i18n_key: 'goal_cycle_weekly_km', icon: 'bicycle' },
+  { key: 'lose_weight', i18n_key: 'goal_lose_weight', icon: 'scale' },
+  { key: 'gain_muscle', i18n_key: 'goal_gain_muscle', icon: 'barbell' },
+  { key: 'improve_endurance', i18n_key: 'goal_improve_endurance', icon: 'trending-up' },
+  { key: 'train_for_race', i18n_key: 'goal_train_for_race', icon: 'flag' },
+  { key: 'train_with_friends', i18n_key: 'goal_train_with_friends', icon: 'people' },
+  { key: 'improve_flexibility', i18n_key: 'goal_improve_flexibility', icon: 'body' },
+  { key: 'improve_technique', i18n_key: 'goal_improve_technique', icon: 'tennisball' },
+  { key: 'explore_outdoors', i18n_key: 'goal_explore_outdoors', icon: 'compass' },
+  { key: 'have_fun', i18n_key: 'goal_have_fun', icon: 'happy' },
 ] as const;
 
 // Main sports — all activities derived from ACTIVITY_CATEGORIES + multi option
@@ -190,36 +189,94 @@ export const MAIN_SPORTS: { key: MainSport; icon: string; i18n_key: string }[] =
   { key: 'multi', icon: 'ribbon', i18n_key: 'activity_multi' },
 ];
 
-// Gender options with PT labels
 export const GENDERS = [
-  { key: 'male', label: 'Masculino' },
-  { key: 'female', label: 'Feminino' },
-  { key: 'other', label: 'Outro' },
-  { key: 'prefer_not_to_say', label: 'Prefiro não dizer' },
+  { key: 'male', i18n_key: 'gender_male' },
+  { key: 'female', i18n_key: 'gender_female' },
+  { key: 'other', i18n_key: 'gender_other' },
+  { key: 'prefer_not_to_say', i18n_key: 'gender_prefer_not_to_say' },
 ] as const;
 
-export const COUNTRIES = [
-  'África do Sul', 'Alemanha', 'Angola', 'Argentina', 'Austrália', 'Áustria', 'Bélgica', 'Brasil', 'Bulgária',
-  'Cabo Verde', 'Canadá', 'Chile', 'China', 'Colômbia', 'Coreia do Sul', 'Dinamarca', 'Egito', 'Emirados Árabes Unidos',
-  'Eslováquia', 'Espanha', 'Estados Unidos', 'Finlândia', 'França', 'Grécia', 'Guiné-Bissau', 'Índia', 'Irlanda',
-  'Islândia', 'Itália', 'Japão', 'Luxemburgo', 'Marrocos', 'México', 'Moçambique', 'Noruega', 'Nova Zelândia',
-  'Países Baixos', 'Peru', 'Polónia', 'Portugal', 'Reino Unido', 'Roménia', 'Rússia', 'São Tomé e Príncipe',
-  'Singapura', 'Suécia', 'Suíça', 'Tailândia', 'Timor-Leste', 'Turquia', 'Ucrânia', 'Venezuela',
-] as const;
+/**
+ * Países.
+ *
+ * `value` é o que fica guardado em `profiles.country` — mantém-se o nome
+ * português para não obrigar a migrar os perfis existentes. `i18n_key` é só
+ * para mostrar. A ordenação alfabética é feita no ecrã, sobre o texto já
+ * traduzido, senão a lista aparecia por ordem portuguesa a quem lê inglês.
+ */
+export const COUNTRIES: { value: string; i18n_key: string }[] = [
+  { value: 'África do Sul', i18n_key: 'country_south_africa' },
+  { value: 'Alemanha', i18n_key: 'country_germany' },
+  { value: 'Angola', i18n_key: 'country_angola' },
+  { value: 'Argentina', i18n_key: 'country_argentina' },
+  { value: 'Austrália', i18n_key: 'country_australia' },
+  { value: 'Áustria', i18n_key: 'country_austria' },
+  { value: 'Bélgica', i18n_key: 'country_belgium' },
+  { value: 'Brasil', i18n_key: 'country_brazil' },
+  { value: 'Bulgária', i18n_key: 'country_bulgaria' },
+  { value: 'Cabo Verde', i18n_key: 'country_cape_verde' },
+  { value: 'Canadá', i18n_key: 'country_canada' },
+  { value: 'Chile', i18n_key: 'country_chile' },
+  { value: 'China', i18n_key: 'country_china' },
+  { value: 'Colômbia', i18n_key: 'country_colombia' },
+  { value: 'Coreia do Sul', i18n_key: 'country_south_korea' },
+  { value: 'Dinamarca', i18n_key: 'country_denmark' },
+  { value: 'Egito', i18n_key: 'country_egypt' },
+  { value: 'Emirados Árabes Unidos', i18n_key: 'country_uae' },
+  { value: 'Eslováquia', i18n_key: 'country_slovakia' },
+  { value: 'Espanha', i18n_key: 'country_spain' },
+  { value: 'Estados Unidos', i18n_key: 'country_united_states' },
+  { value: 'Finlândia', i18n_key: 'country_finland' },
+  { value: 'França', i18n_key: 'country_france' },
+  { value: 'Grécia', i18n_key: 'country_greece' },
+  { value: 'Guiné-Bissau', i18n_key: 'country_guinea_bissau' },
+  { value: 'Índia', i18n_key: 'country_india' },
+  { value: 'Irlanda', i18n_key: 'country_ireland' },
+  { value: 'Islândia', i18n_key: 'country_iceland' },
+  { value: 'Itália', i18n_key: 'country_italy' },
+  { value: 'Japão', i18n_key: 'country_japan' },
+  { value: 'Luxemburgo', i18n_key: 'country_luxembourg' },
+  { value: 'Marrocos', i18n_key: 'country_morocco' },
+  { value: 'México', i18n_key: 'country_mexico' },
+  { value: 'Moçambique', i18n_key: 'country_mozambique' },
+  { value: 'Noruega', i18n_key: 'country_norway' },
+  { value: 'Nova Zelândia', i18n_key: 'country_new_zealand' },
+  { value: 'Países Baixos', i18n_key: 'country_netherlands' },
+  { value: 'Peru', i18n_key: 'country_peru' },
+  { value: 'Polónia', i18n_key: 'country_poland' },
+  { value: 'Portugal', i18n_key: 'country_portugal' },
+  { value: 'Reino Unido', i18n_key: 'country_united_kingdom' },
+  { value: 'Roménia', i18n_key: 'country_romania' },
+  { value: 'Rússia', i18n_key: 'country_russia' },
+  { value: 'São Tomé e Príncipe', i18n_key: 'country_sao_tome_principe' },
+  { value: 'Singapura', i18n_key: 'country_singapore' },
+  { value: 'Suécia', i18n_key: 'country_sweden' },
+  { value: 'Suíça', i18n_key: 'country_switzerland' },
+  { value: 'Tailândia', i18n_key: 'country_thailand' },
+  { value: 'Timor-Leste', i18n_key: 'country_timor_leste' },
+  { value: 'Turquia', i18n_key: 'country_turkey' },
+  { value: 'Ucrânia', i18n_key: 'country_ukraine' },
+  { value: 'Venezuela', i18n_key: 'country_venezuela' },
+];
 
-// Equipment types with PT labels
+/** Chave de tradução de um país já guardado. */
+export function getCountryKey(value: string): string | undefined {
+  return COUNTRIES.find((c) => c.value === value)?.i18n_key;
+}
+
 export const EQUIPMENT_TYPES = [
-  { key: 'bike', label: 'Bicicleta', icon: 'bicycle' },
-  { key: 'shoes', label: 'Calçado', icon: 'footsteps' },
-  { key: 'other', label: 'Outro', icon: 'cube' },
+  { key: 'bike', i18n_key: 'equipment_type_bike', icon: 'bicycle' },
+  { key: 'shoes', i18n_key: 'equipment_type_shoes', icon: 'footsteps' },
+  { key: 'other', i18n_key: 'equipment_type_other', icon: 'cube' },
 ] as const;
 
 import type { SessionDuration, FitnessLevel, PreferredTime, TrainingFocus, MainSport } from './types';
 
-// Month labels in Portuguese
-export const MONTH_LABELS_PT = [
-  'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-  'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+/** Meses abreviados, por índice (0 = janeiro). */
+export const MONTH_SHORT_KEYS = [
+  'month_short_jan', 'month_short_feb', 'month_short_mar', 'month_short_apr',
+  'month_short_may', 'month_short_jun', 'month_short_jul', 'month_short_aug',
+  'month_short_sep', 'month_short_oct', 'month_short_nov', 'month_short_dec',
 ] as const;
 
 // Questionnaire
