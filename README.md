@@ -1,52 +1,52 @@
 # Cadence Club
 
-Aplicação móvel de fitness social para iOS e Android, construída com Expo e React Native.
+A social fitness mobile app for iOS and Android, built with Expo and React Native.
 
-## Funcionalidades
+## Features
 
-- **Registo de atividades** — GPS em tempo real com mapa, ritmo, distância, elevação e calorias
-- **Plano de treino semanal** — gerado automaticamente com base no objetivo e preferências do utilizador
-- **Feed social** — partilha atividades, dá boost e comenta nas corridas da comunidade
-- **Percursos** — descobre e cria percursos no mapa, filtra por tipo de atividade
-- **Perfil completo** — recordes pessoais, badges, streaks, gráficos mensais e equipamento
-- **Saúde** — sincronização com Apple Health (iOS) e Health Connect (Android)
-- **Notificações push** — motivação e lembretes de treino
-- **Internacionalização** — Português e Inglês
-- **Autenticação** — email/password, Google e Apple Sign-In
+- **Activity tracking** — real-time GPS with map, pace, distance, elevation and calories
+- **Weekly training plan** — generated automatically from the user's goal and preferences
+- **Social feed** — share activities, give boosts and comment on the community's runs
+- **Routes** — discover and create routes on the map, filtered by activity type
+- **Full profile** — personal records, badges, streaks, monthly charts and gear
+- **Health** — synchronisation with Apple Health (iOS) and Health Connect (Android)
+- **Push notifications** — motivation and training reminders
+- **Internationalisation** — Portuguese and English
+- **Authentication** — email/password, Google and Apple Sign-In
 
 ## Stack
 
-| Camada | Tecnologia |
-|--------|-----------|
+| Layer | Technology |
+|-------|-----------|
 | Framework | [Expo](https://expo.dev) SDK 57 / React Native 0.86 |
-| Navegação | [Expo Router](https://expo.github.io/router) (file-based) |
+| Navigation | [Expo Router](https://expo.github.io/router) (file-based) |
 | Backend | [Supabase](https://supabase.com) (auth, database, storage) |
-| Estado | [Zustand](https://zustand-demo.pmnd.rs) |
+| State | [Zustand](https://zustand-demo.pmnd.rs) |
 | Queries | [TanStack Query](https://tanstack.com/query) |
-| Mapas | [Mapbox](https://www.mapbox.com) via `@rnmapbox/maps` |
-| Tipografia | Barlow + Barlow Condensed + DM Mono |
+| Maps | [Mapbox](https://www.mapbox.com) via `@rnmapbox/maps` |
+| Typography | Barlow + Barlow Condensed + DM Mono |
 | Analytics | [PostHog](https://posthog.com) |
 
-## Requisitos
+## Requirements
 
 - Node.js 20+
 - Expo CLI (`npm install -g expo-cli`)
 - EAS CLI (`npm install -g eas-cli`)
-- Conta [Supabase](https://supabase.com)
-- Conta [Mapbox](https://www.mapbox.com)
-- Xcode (para iOS) ou Android Studio (para Android)
+- A [Supabase](https://supabase.com) account
+- A [Mapbox](https://www.mapbox.com) account
+- Xcode (for iOS) or Android Studio (for Android)
 
-## Configuração
+## Setup
 
-### 1. Instalar dependências
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Variáveis de ambiente
+### 2. Environment variables
 
-Cria um ficheiro `.env` na raiz do projeto:
+Create a `.env` file in the project root:
 
 ```env
 EXPO_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
@@ -58,106 +58,106 @@ EXPO_PUBLIC_POSTHOG_KEY=<posthog-key>
 EXPO_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 ```
 
-### 3. Base de dados Supabase
+### 3. Supabase database
 
-Garante que as seguintes tabelas existem no teu projeto Supabase:
+Make sure the following tables exist in your Supabase project:
 
-- `profiles` — dados do utilizador
-- `activities` — atividades registadas
-- `training_plans` — planos de treino semanais
-- `routes` — percursos criados
-- `equipment` — equipamento do utilizador
+- `profiles` — user data
+- `activities` — recorded activities
+- `training_plans` — weekly training plans
+- `routes` — created routes
+- `equipment` — the user's gear
 
-As políticas de RLS devem permitir que cada utilizador leia e escreva os seus próprios dados.
+The RLS policies must allow each user to read and write their own data.
 
-## Desenvolvimento
+## Development
 
 ```bash
-# Iniciar servidor Metro
+# Start the Metro server
 npm start
 
-# iOS (simulador)
+# iOS (simulator)
 npm run ios
 
-# Android (emulador)
+# Android (emulator)
 npm run android
 ```
 
-## Testes
+## Tests
 
 ```bash
-npm test              # corre tudo uma vez
-npm run test:watch    # em modo contínuo
-npm run test:coverage # com relatório de cobertura
+npm test              # run everything once
+npm run test:watch    # watch mode
+npm run test:coverage # with a coverage report
 npm run typecheck     # tsc --noEmit
 ```
 
-Correm em [jest-expo](https://docs.expo.dev/develop/unit-testing/) e cobrem
-lógica pura e serviços — cálculos (parciais, calorias, ritmo, conversão de
-unidades), a fila de sincronização offline, as zonas de privacidade e os
-geradores de plano de treino. Nenhum teste toca na rede, no disco ou no
-Supabase real: o cliente Supabase, o `expo-file-system` e o `AsyncStorage` são
-substituídos por duplos em `src/test-utils/`.
+They run on [jest-expo](https://docs.expo.dev/develop/unit-testing/) and cover
+pure logic and services — calculations (splits, calories, pace, unit
+conversion), the offline sync queue, the privacy zones and the training plan
+generators. No test touches the network, the disk or the real Supabase: the
+Supabase client, `expo-file-system` and `AsyncStorage` are all replaced by
+doubles in `src/test-utils/`.
 
-Convenções:
+Conventions:
 
-- Os testes vivem ao lado do código, com o sufixo `.test.ts`.
-- `src/test-utils/` tem os auxiliares partilhados (não é apanhado pelo runner).
-  - `supabaseMock.ts` — construtor de queries encadeável, permite fixar a
-    resposta e afirmar que o filtro certo foi aplicado.
-  - `fileSystemMock.ts` — sistema de ficheiros em memória.
-  - `geoFixtures.ts` / `activityFixtures.ts` — traçados de GPS e atividades.
-- Os traçados sintéticos andam ao longo de um meridiano, onde a fórmula de
-  haversine se reduz a `R × Δlatitude` — dá distâncias exatas, o que permite
-  afirmar "este parcial tem 1000 m" sem depender de arredondamentos.
+- Tests live next to the code, with the `.test.ts` suffix.
+- `src/test-utils/` holds the shared helpers (it is not picked up by the runner).
+  - `supabaseMock.ts` — a chainable query builder; lets you pin the response and
+    assert that the right filter was applied.
+  - `fileSystemMock.ts` — an in-memory file system.
+  - `geoFixtures.ts` / `activityFixtures.ts` — GPS traces and activities.
+- The synthetic traces run along a meridian, where the haversine formula reduces
+  to `R × Δlatitude` — that gives exact distances, which lets us assert "this
+  split is 1000 m" without depending on rounding.
 
-Nota sobre dependências: `jest-expo@57.0.3` pede
-`@react-native/jest-preset@^0.86.2` enquanto o `react-native@0.86.0` fixa
-`0.86.0`. O conflito está resolvido com um `overrides` no `package.json`, para
-não ser preciso instalar com `--legacy-peer-deps`.
+A note on dependencies: `jest-expo@57.0.3` asks for
+`@react-native/jest-preset@^0.86.2` while `react-native@0.86.0` pins `0.86.0`.
+The conflict is resolved with an `overrides` entry in `package.json`, so there
+is no need to install with `--legacy-peer-deps`.
 
-## Build para distribuição
+## Building for distribution
 
 ```bash
-# Android APK para testers (sem Play Store)
+# Android APK for testers (no Play Store)
 eas build --platform android --profile preview
 
-# iOS para testers (TestFlight)
+# iOS for testers (TestFlight)
 eas build --platform ios --profile preview
 
-# Produção
+# Production
 eas build --platform all --profile production
 ```
 
-## Estrutura do projeto
+## Project structure
 
 ```
 src/
-├── app/                  # Rotas (Expo Router)
-│   ├── (auth)/           # Login, registo, onboarding
-│   ├── (tabs)/           # Tabs principais: Hoje, Feed, Gravar, Percursos, Perfil
-│   ├── activity/         # Detalhe de atividade
-│   ├── profile/          # Perfil, edição, equipamento, definições
-│   └── map/              # Criação de percursos
-├── components/           # Componentes reutilizáveis
+├── app/                  # Routes (Expo Router)
+│   ├── (auth)/           # Sign-in, sign-up, onboarding
+│   ├── (tabs)/           # Main tabs: Today, Feed, Record, Routes, Profile
+│   ├── activity/         # Activity detail
+│   ├── profile/          # Profile, editing, gear, settings
+│   └── map/              # Route creation
+├── components/           # Reusable components
 ├── hooks/                # Custom hooks
-├── services/             # Supabase, auth, atividades, mapas
+├── services/             # Supabase, auth, activities, maps
 ├── store/                # Zustand stores
-├── lib/                  # Constantes, temas, tipos, i18n
-├── test-utils/           # Duplos e fixtures usados pelos testes
-└── utils/                # Utilitários (formatação, cálculos)
+├── lib/                  # Constants, themes, types, i18n
+├── test-utils/           # Doubles and fixtures used by the tests
+└── utils/                # Utilities (formatting, calculations)
 ```
 
-## Autenticação Google
+## Google authentication
 
-Para o Google Sign-In funcionar:
+For Google Sign-In to work:
 
-1. Cria um projeto na [Google Cloud Console](https://console.cloud.google.com)
-2. Adiciona um cliente OAuth Web com o callback: `https://<project>.supabase.co/auth/v1/callback`
-3. Adiciona um cliente OAuth iOS com o bundle ID: `com.akcelgraca.cadence`
-4. No Supabase, ativa o provider Google em **Authentication → Providers**
-5. Em **Authentication → URL Configuration**, adiciona `cadence://` às Redirect URLs
+1. Create a project in the [Google Cloud Console](https://console.cloud.google.com)
+2. Add a Web OAuth client with the callback: `https://<project>.supabase.co/auth/v1/callback`
+3. Add an iOS OAuth client with the bundle ID: `com.akcelgraca.cadence`
+4. In Supabase, enable the Google provider under **Authentication → Providers**
+5. Under **Authentication → URL Configuration**, add `cadence://` to the Redirect URLs
 
-## Licença
+## Licence
 
-Privado — todos os direitos reservados.
+Private — all rights reserved.
