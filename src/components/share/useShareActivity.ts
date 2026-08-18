@@ -13,7 +13,10 @@ import { useTranslation } from 'react-i18next';
 // Para os Stories: cria uma app em developers.facebook.com e substitui FB_APP_ID.
 // Em app.json (iOS): "LSApplicationQueriesSchemes": ["instagram-stories"]
 
-const FB_APP_ID = "TODO_META_APP_ID"; // substituir pelo teu Meta App ID
+// Meta App ID (criado em developers.facebook.com, 18 ago 2026). Não é segredo —
+// serve só para o Instagram saber de onde veio a imagem. O App Secret, esse,
+// nunca pode entrar na app.
+const FB_APP_ID = "1895867934721207";
 
 export function useShareActivity(cardRef: RefObject<View | null>) {
   const { t } = useTranslation();
