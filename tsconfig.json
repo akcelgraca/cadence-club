@@ -8,5 +8,8 @@
     // o código da app corre em React Native e não tem estas APIs.
     "types": ["jest", "node"]
   },
-  "exclude": ["node_modules", "assets/layout_social"]
+  // supabase/ tem as migrações e a edge function send-push, que corre em Deno
+  // (imports por URL, global Deno). É outro runtime — typecheck com a config da
+  // app React Native só produz erros falsos.
+  "exclude": ["node_modules", "assets/layout_social", "supabase"]
 }
