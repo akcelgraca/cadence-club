@@ -47,8 +47,10 @@ export function useShareActivity(cardRef: RefObject<View | null>) {
           return;
         }
         const { setStringAsync } = await import("expo-clipboard");
-        const { readAsStringAsync, EncodingType } = await import("expo-file-system");
-        const b64 = await readAsStringAsync(uri, { encoding: EncodingType.Base64 });
+        // readAsStringAsync foi removido no SDK 57 e lança em tempo de
+        // execução; a API nova é a classe File.
+        const { File } = await import("expo-file-system");
+        const b64 = await new File(uri).base64();
         await setStringAsync(
           JSON.stringify([{ "com.instagram.sharedSticker.stickerImage": b64 }]),
         );

@@ -35,9 +35,9 @@ const TIPOS = [
 
 export async function pickAndImportTrackFile(): Promise<ImportOutcome | null> {
   const DocumentPicker = carregar(() => require('expo-document-picker'));
-  const FileSystem = carregar(() => require('expo-file-system'));
+  const FS = carregar(() => require('expo-file-system'));
 
-  if (!DocumentPicker || !FileSystem) {
+  if (!DocumentPicker || !FS?.File) {
     return { imported: 0, skipped: 0, error: 'seletor de ficheiros indisponível' };
   }
 
@@ -54,6 +54,8 @@ export async function pickAndImportTrackFile(): Promise<ImportOutcome | null> {
   const ficheiro = resultado?.assets?.[0];
   if (!ficheiro?.uri) return null;
 
-  const conteudo = await FileSystem.readAsStringAsync(ficheiro.uri);
+  // `readAsStringAsync` foi removido no SDK 57 — não é só um aviso, lança em
+  // tempo de execução. A API nova é a classe File.
+  const conteudo: string = await new FS.File(ficheiro.uri).text();
   return importTrackFile(ficheiro.name ?? 'ficheiro', conteudo);
 }
