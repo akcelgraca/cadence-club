@@ -1044,6 +1044,10 @@ const en = {
   import_fail_no_timestamps: 'This is a planned route, not a recorded workout — it has no timestamps.',
   import_error_title: 'Could not import',
 
+  settings_premium: 'Cadence Club Premium',
+  settings_premium_sub: 'See what premium adds',
+  settings_premium_active: 'Active',
+
   // Paywall
   premium_chart_free: 'last {{months}} months',
   premium_chart_rest: 'everything before',

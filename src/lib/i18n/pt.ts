@@ -1044,6 +1044,10 @@ const pt = {
   import_fail_no_timestamps: 'O ficheiro é um percurso planeado, não um treino gravado — não tem horas.',
   import_error_title: 'Não foi possível importar',
 
+  settings_premium: 'Cadence Club Premium',
+  settings_premium_sub: 'Ver o que o premium acrescenta',
+  settings_premium_active: 'Ativo',
+
   // Paywall
   premium_chart_free: 'últimos {{months}} meses',
   premium_chart_rest: 'todo o resto',

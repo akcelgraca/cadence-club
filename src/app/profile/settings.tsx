@@ -11,6 +11,7 @@ import { typography } from '../../lib/theme';
 import { useColors } from '../../hooks/useColors';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useHealthSync } from '../../hooks/useHealthSync';
+import { usePremium } from '../../hooks/usePremium';
 import { pickAndImportTrackFile } from '../../services/import/pickAndImport';
 import { setPickerConfig } from './settings/picker';
 import type {
@@ -38,6 +39,7 @@ export default function SettingsScreen() {
   const [importando, setImportando] = useState(false);
 
   const health = useHealthSync();
+  const premium = usePremium();
   const styles = useMemo(() => createStyles(c), [c]);
 
   useEffect(() => {
@@ -285,6 +287,23 @@ export default function SettingsScreen() {
       {/* Section 1: Perfil & Conta */}
       <SectionTitle title={t('settings_profile_account')} styles={styles} />
       <View style={styles.card}>
+        {/* Entrada para o paywall. Fica visível mesmo com o gating desligado:
+            é o único sítio de onde se chega ao ecrã, e sem ele não há como
+            alguém subscrever por vontade própria. */}
+        <TouchableOpacity
+          style={styles.linkRow}
+          onPress={() => router.push('/premium')}
+          activeOpacity={0.6}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.linkLabel}>{t('settings_premium')}</Text>
+            <Text style={styles.linkSub}>
+              {premium.isPremium ? t('settings_premium_active') : t('settings_premium_sub')}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={c.mutedForeground} />
+        </TouchableOpacity>
+        <Separator styles={styles} />
         <LinkRow label={t('settings_equipment')} onPress={() => router.push('/profile/equipment')} colors={c} />
         <Separator styles={styles} />
         <LinkRow label={t('settings_training_preferences')} onPress={() => router.push('/profile/questionnaire')} colors={c} />
