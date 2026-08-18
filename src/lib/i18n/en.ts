@@ -1031,6 +1031,18 @@ const en = {
   health_sync_result_title: 'Sync complete',
   health_sync_imported_none: 'There were no new workouts to import.',
   health_sync_check_permissions: 'If you expected to see workouts here, check that Cadence Club still has access to {{platform}}.',
+
+  // Workout file import
+  import_file_label: 'Import a file',
+  import_file_hint: 'GPX or TCX, from Strava, Garmin or another app',
+  import_result_title: 'Import',
+  import_ok: 'Activity imported.',
+  import_skipped: 'Nothing imported — this activity is already here.',
+  import_fail_unsupported_format: 'Unsupported format. GPX and TCX only, for now.',
+  import_fail_malformed: 'The file could not be read. It may be corrupted.',
+  import_fail_no_points: 'The file has no track points.',
+  import_fail_no_timestamps: 'This is a planned route, not a recorded workout — it has no timestamps.',
+  import_error_title: 'Could not import',
   health_sync_imported_one: 'Imported 1 workout.',
   health_sync_imported_other: 'Imported {{count}} workouts.',
   health_sync_skipped: ' {{count}} were skipped because they already existed.',

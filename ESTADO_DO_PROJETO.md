@@ -202,6 +202,41 @@ npx expo run:ios
 
 Em **Android não há bloqueio nenhum** — o Health Connect testa-se com o APK do EAS num telemóvel real.
 
+### 4.5 Importação de ficheiros — fase 1 feita (18 ago 2026) 🚧
+
+`src/services/import/` lê **GPX e TCX**, um ficheiro de cada vez.
+**Definições → Rastreamento e dispositivos → Importar ficheiro.**
+
+**O que reaproveita.** Um ficheiro é convertido em `ExternalWorkout` e entregue ao `planImport` do módulo de saúde — que já sabe deduplicar (id externo + sobreposição temporal), mapear modalidades e descartar treinos curtos. Essa parte tem 22 testes e foi validada em simulador; não foi reescrita.
+
+**O que acrescenta.** O traçado. A sincronização com a Saúde nunca traz pontos de GPS (ficam no relógio), por isso as atividades vindas de lá não têm mapa, splits nem deteção de troços. Um GPX traz os pontos todos → `route_summary` **e** `activity_points` ficam preenchidos, e a atividade fica tão completa como uma gravada na app. Também passa a estar sujeita às zonas de privacidade, que é o comportamento certo.
+
+| Peça | Ficheiro |
+|---|---|
+| Leitores | `parseGpx.ts`, `parseTcx.ts` (via `fast-xml-parser` — JS puro, não há DOM em RN) |
+| Derivações | `track.ts` — distância, desnível com limiar de 3 m, resumo do percurso |
+| Orquestração | `importFile.ts` — deteção de formato, hash do conteúdo, dedup, escrita |
+| Seletor | `pickAndImport.ts` (`expo-document-picker`, carregado com `require()` dentro de `try`) |
+| Base de dados | `supabase/migrations/044_import_sources.sql` |
+
+**Decisões que valem a pena reter:**
+- **`external_id` é o hash SHA-256 do conteúdo**, prefixado com `file:`. Pelo nome não dava — o Strava numera as exportações e o mesmo treino sai com nomes diferentes. Assim, reimportar o mesmo ficheiro é apanhado pela defesa que já existia.
+- **Distância declarada ganha à calculada.** O TCX traz `DistanceMeters` por volta; quem gravou tinha roda ou passada, não só coordenadas.
+- **Sem modalidade declarada assume-se corrida.** Descartar por falta de etiqueta custaria a atividade toda.
+- **Sem tempos é rota, não treino** — rejeitado com motivo próprio (`no_timestamps`), em vez de entrar com duração zero.
+- **Importado entra privado.** Importar não é publicar.
+- **Um ponto corrompido não custa o ficheiro todo** — salta-se o ponto.
+
+⚠️ **`expo-document-picker` é módulo nativo: exige rebuild** antes de a linha funcionar.
+
+**Testes:** 29 novos (`track.test.ts`, `parsers.test.ts`), com os pontos ao longo de um meridiano para dar distâncias exactas.
+
+**Falta para cumprir o objetivo do roadmap:**
+- **FIT** — a exportação em massa do Strava traz sobretudo `.fit` para atividades gravadas com relógio; só as gravadas na app deles saem em `.gpx`. Sem FIT, um utilizador de Garmin importa pouco
+- **Lote a partir do `.zip`** — ninguém com 500 atividades as importa uma a uma. Precisa de `fflate` (o zip traz `.gz` lá dentro), progresso e retoma
+
+*(A API do Strava não é caminho: os termos proíbem uso por apps concorrentes e já cortaram acesso a quem o fez. O `.zip` de exportação é a via limpa, porque são os dados do próprio utilizador.)*
+
 ### 4.2 Monetização — a app não cobra nada ⚠️
 
 Dos três motivos que puseram o paywall em espera em agosto, **dois já caíram**:
@@ -361,7 +396,7 @@ Coisas já mordidas, para não se repetirem:
 7. Decidir sobre a **conta Apple Developer paga** (99 USD/ano). Obrigatória apenas para: HealthKit **no iPhone físico**, push remoto, TestFlight, e builds que não expiram em 7 dias. **Não** é precisa para validar a lógica de saúde — o simulador chega
 
 ### Médio prazo (produto)
-8. **Importação de GPX/FIT** — desbloqueia a migração de utilizadores do Strava. Provavelmente o item de maior retorno da lista
+8. **Importação de ficheiros** — 🚧 **fase 1 feita (GPX + TCX, um ficheiro)**, ver 4.5. Falta FIT e importação em lote do `.zip` do Strava, que é o que cumpre mesmo a migração
 9. Coluna de **frequência cardíaca** em `activities` + distância no Health Connect
 10. Ligar a **monetização**: escolher IAP/RevenueCat, escrever a migração de gating, trocar o `can()` por `state.isPremium`
 
@@ -479,6 +514,11 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ---
 
 ## 11. Registo de alterações
+
+**18 ago 2026 (7.ª sessão)**
+- 🚧 **Importação de ficheiros, fase 1** — GPX + TCX, um ficheiro. Novo módulo `src/services/import/`, migração **044** (a CHECK de `activities.source` rejeitava qualquer importação), 29 testes novos. Ver 4.5
+- `HealthSource` alargado para `ImportSource` e mapa `FILE_BY_NAME` acrescentado ao `mapping.ts`, para o pipeline de saúde servir também ficheiros
+- ⚠️ **Por aplicar:** migração `044_import_sources.sql`. ⚠️ **Por fazer:** rebuild, porque o `expo-document-picker` é nativo
 
 **18 ago 2026 (6.ª sessão)**
 - 🐛 **Corrigido `hasPermissions()` no `adapters.ts`** — `Array.isArray()` sobre uma leitura devolvia `true` sempre, incluindo a quem nunca tinha sido perguntado nada. Substituído por `getRequestStatusForAuthorization`. Ver 4.1.1

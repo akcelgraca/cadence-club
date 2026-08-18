@@ -11,6 +11,7 @@ import { typography } from '../../lib/theme';
 import { useColors } from '../../hooks/useColors';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useHealthSync } from '../../hooks/useHealthSync';
+import { pickAndImportTrackFile } from '../../services/import/pickAndImport';
 import { setPickerConfig } from './settings/picker';
 import type {
   IntensityPreference,
@@ -34,6 +35,7 @@ export default function SettingsScreen() {
   const [emailModalVisible, setEmailModalVisible] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [isChangingEmail, setIsChangingEmail] = useState(false);
+  const [importando, setImportando] = useState(false);
 
   const health = useHealthSync();
   const styles = useMemo(() => createStyles(c), [c]);
@@ -145,6 +147,38 @@ export default function SettingsScreen() {
       : '';
 
     Alert.alert(t('health_sync_result_title'), importados + detalhe + dica);
+  };
+
+  // --- Importação de ficheiro ---
+
+  const handleImportPress = async () => {
+    setImportando(true);
+    try {
+      const r = await pickAndImportTrackFile();
+      // Null significa que o utilizador fechou o seletor — não há resultado
+      // nenhum a mostrar.
+      if (!r) return;
+
+      if (r.error) {
+        Alert.alert(t('import_error_title'), r.error);
+        return;
+      }
+      // Um motivo de falha é mais útil do que "0 importados": diz ao
+      // utilizador o que fazer a seguir.
+      if (r.failure) {
+        Alert.alert(t('import_error_title'), t(`import_fail_${r.failure}` as any));
+        return;
+      }
+
+      Alert.alert(
+        t('import_result_title'),
+        r.imported > 0 ? t('import_ok') : t('import_skipped'),
+      );
+    } catch (err: any) {
+      Alert.alert(t('import_error_title'), err?.message ?? '');
+    } finally {
+      setImportando(false);
+    }
   };
 
   const handleSeedPress = async () => {
@@ -296,6 +330,22 @@ export default function SettingsScreen() {
             <Separator styles={styles} />
           </>
         )}
+
+        {/* Importar ficheiro. Ao contrário da Saúde, não depende de nenhuma
+            capacidade da plataforma, por isso aparece sempre. */}
+        <TouchableOpacity
+          style={styles.linkRow}
+          onPress={handleImportPress}
+          disabled={importando}
+          activeOpacity={0.6}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.linkLabel}>{t('import_file_label')}</Text>
+            <Text style={styles.linkSub}>{t('import_file_hint')}</Text>
+          </View>
+          {importando && <ActivityIndicator size="small" color={c.primary} />}
+        </TouchableOpacity>
+        <Separator styles={styles} />
 
         {/* Um Apple Watch não se emparelha com o simulador — este atalho é a
             única forma de lá pôr treinos. Nunca aparece em produção. */}
