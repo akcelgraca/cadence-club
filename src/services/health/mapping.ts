@@ -1,5 +1,5 @@
 import type { ActivityType } from '../../lib/types';
-import type { HealthSource } from './types';
+import type { ImportSource } from './types';
 
 /**
  * Tradução das modalidades das plataformas para as da app.
@@ -130,6 +130,64 @@ const HEALTH_CONNECT_BY_NAME: Record<string, ActivityType> = {
 };
 
 /**
+ * Modalidades escritas em ficheiros GPX e TCX.
+ *
+ * Aqui não há enums: são cadeias livres, e cada exportador escreve à sua
+ * maneira. O Strava põe "running"/"cycling" no `<type>` do GPX; o Garmin põe
+ * "Running"/"Biking" no atributo `Sport` do TCX; e há exportadores que metem
+ * o número do Strava ("9") ou frases inteiras.
+ *
+ * A normalização do `mapWorkoutType` (minúsculas, sem espaços nem hífenes)
+ * trata das variações de caixa, por isso as chaves aqui ficam em minúsculas.
+ */
+const FILE_BY_NAME: Record<string, ActivityType> = {
+  running: 'run',
+  run: 'run',
+  jogging: 'run',
+  trailrunning: 'trail_run',
+  trailrun: 'trail_run',
+  walking: 'walk',
+  walk: 'walk',
+  hiking: 'walk',
+  hike: 'walk',
+  cycling: 'cycle',
+  biking: 'cycle',
+  bike: 'cycle',
+  ride: 'cycle',
+  road_biking: 'cycle',
+  ebikeride: 'ebike',
+  mountainbiking: 'mtb',
+  mountainbikeride: 'mtb',
+  swimming: 'swimming',
+  swim: 'swimming',
+  rowing: 'rowing',
+  kayaking: 'kayak',
+  canoeing: 'canoeing',
+  standuppaddling: 'stand_up_paddle',
+  surfing: 'surf',
+  sailing: 'sailing',
+  snowboarding: 'snowboard',
+  alpineski: 'alpine_skiing',
+  iceskate: 'ice_skating',
+  yoga: 'yoga',
+  workout: 'workout',
+  weighttraining: 'weight_training',
+  crossfit: 'crossfit',
+  pilates: 'pilates',
+  dance: 'dance',
+  skateboarding: 'skateboard',
+  wheelchair: 'wheelchair',
+  football: 'football',
+  soccer: 'football',
+  basketball: 'basketball',
+  volleyball: 'volleyball',
+  tennis: 'tennis',
+  padel: 'padel',
+  squash: 'squash',
+  badminton: 'badminton',
+};
+
+/**
  * Modalidade da app para um treino externo, ou null se não soubermos
  * representá-la.
  *
@@ -138,10 +196,18 @@ const HEALTH_CONNECT_BY_NAME: Record<string, ActivityType> = {
  */
 export function mapWorkoutType(
   rawType: number | string,
-  source: HealthSource,
+  source: ImportSource,
 ): ActivityType | null {
-  const porNumero = source === 'healthkit' ? HEALTHKIT_BY_NUMBER : HEALTH_CONNECT_BY_NUMBER;
-  const porNome = source === 'healthkit' ? HEALTHKIT_BY_NAME : HEALTH_CONNECT_BY_NAME;
+  const deFicheiro = source === 'gpx' || source === 'tcx' || source === 'fit';
+
+  // Ficheiros não trazem enums numéricos que valha a pena traduzir: um número
+  // sozinho num GPX não tem tabela conhecida. Fica só o mapa por nome.
+  const porNumero = deFicheiro
+    ? {}
+    : source === 'healthkit' ? HEALTHKIT_BY_NUMBER : HEALTH_CONNECT_BY_NUMBER;
+  const porNome = deFicheiro
+    ? FILE_BY_NAME
+    : source === 'healthkit' ? HEALTHKIT_BY_NAME : HEALTH_CONNECT_BY_NAME;
 
   if (typeof rawType === 'number') return porNumero[rawType] ?? null;
 

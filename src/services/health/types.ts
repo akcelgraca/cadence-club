@@ -36,6 +36,16 @@ export interface ExternalWorkout {
 export type HealthSource = 'healthkit' | 'healthconnect';
 
 /**
+ * Origem de qualquer atividade que não foi gravada na app.
+ *
+ * A sincronização com a Saúde e a importação de ficheiros partilham o mesmo
+ * pipeline (`planImport`, `mapWorkoutType`), por isso partilham o tipo. Os
+ * valores têm de existir na CHECK de `activities.source` — ver a migração
+ * 044.
+ */
+export type ImportSource = HealthSource | 'gpx' | 'tcx' | 'fit';
+
+/**
  * O que um adaptador de plataforma tem de saber fazer.
  *
  * Manter isto pequeno é deliberado: é a única parte que depende de código

@@ -1,6 +1,6 @@
 import { mapWorkoutType } from './mapping';
 import type {
-  ActivityWindow, ExternalWorkout, HealthSource, ImportCandidate, SkipReason,
+  ActivityWindow, ExternalWorkout, ImportSource, ImportCandidate, SkipReason,
 } from './types';
 
 /**
@@ -104,7 +104,7 @@ export interface PlanOptions {
 export function planImport(
   workouts: ExternalWorkout[],
   existing: ActivityWindow[],
-  source: HealthSource,
+  source: ImportSource,
   options: PlanOptions = {},
 ): PlanResult {
   const jaImportados = new Set(
