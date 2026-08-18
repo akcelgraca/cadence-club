@@ -42,6 +42,20 @@ export const FREE_STATE: SubscriptionState = {
  * não pode deixar a app num estado indefinido. O contrário — assumir premium
  * em caso de dúvida — abria a porta a bloquear a rede e ter tudo de graça.
  */
+/**
+ * O gating premium está ligado no servidor?
+ *
+ * Flag `premium_gating` em `app_flags` (migração 045). Falhar devolve false —
+ * ou seja, app aberta. Em dúvida deixa-se passar: os limites a sério são
+ * impostos pelo servidor, e fechar a app por causa de um erro de rede seria
+ * pior do que deixar alguém ver tendências a mais.
+ */
+export async function gatingEnabled(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('premium_gating_enabled');
+  if (error) return false;
+  return data === true;
+}
+
 export async function getMySubscription(): Promise<SubscriptionState> {
   const { data, error } = await supabase.rpc('get_my_subscription').single();
   if (error || !data) return FREE_STATE;

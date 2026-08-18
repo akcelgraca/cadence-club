@@ -49,6 +49,15 @@ type EventMap = {
     feature: 'map_3d' | 'map_styles' | 'trends' | 'segment_history' | 'photo_gallery' | 'export';
   };
 
+  /**
+   * O paywall foi visto. Com o `premium_purchased`, dá a taxa de conversão —
+   * a pergunta que decide se o preço está certo.
+   */
+  paywall_viewed: undefined;
+
+  /** Compra concluída na loja. O direito só existe depois do webhook. */
+  premium_purchased: { plan: string };
+
   /** O laço de crescimento: quem partilha traz gente. */
   activity_shared: { destination: 'instagram_stories' | 'system' | 'gallery' };
 };

@@ -5,7 +5,7 @@ jest.mock('./supabase', () => {
 
 import { supabase } from './supabase';
 import type { SupabaseMock } from '../test-utils/supabaseMock';
-import { getMySubscription, FREE_STATE } from './subscription';
+import { gatingEnabled, getMySubscription, FREE_STATE } from './subscription';
 
 const mockSupabase = supabase as unknown as SupabaseMock;
 
@@ -70,5 +70,34 @@ describe('getMySubscription', () => {
     const estado = await getMySubscription();
     expect(estado.isPremium).toBe(true);
     expect(estado.willRenew).toBe(false);
+  });
+});
+
+describe('gatingEnabled', () => {
+  it('lê a flag do servidor', async () => {
+    mockSupabase.setRpc('premium_gating_enabled', { data: true });
+    await expect(gatingEnabled()).resolves.toBe(true);
+  });
+
+  it('devolve false quando o gating está desligado', async () => {
+    mockSupabase.setRpc('premium_gating_enabled', { data: false });
+    await expect(gatingEnabled()).resolves.toBe(false);
+  });
+
+  it('em erro deixa a app aberta', async () => {
+    // Falhar a ler a flag não pode fechar funcionalidades a quem já as usava.
+    // O contrário — assumir que está fechado — transformava uma falha de rede
+    // num paywall para toda a gente. Os limites a sério são impostos no
+    // servidor, por isso arriscar aqui não custa nada.
+    mockSupabase.setRpc('premium_gating_enabled', {
+      data: null,
+      error: { message: 'network' },
+    });
+    await expect(gatingEnabled()).resolves.toBe(false);
+  });
+
+  it('não confunde um valor estranho com verdadeiro', async () => {
+    mockSupabase.setRpc('premium_gating_enabled', { data: 'sim' });
+    await expect(gatingEnabled()).resolves.toBe(false);
   });
 });

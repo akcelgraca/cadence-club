@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../store/authStore';
-import { getMySubscription, FREE_STATE, type SubscriptionState } from '../services/subscription';
+import {
+  gatingEnabled, getMySubscription, FREE_STATE, type SubscriptionState,
+} from '../services/subscription';
 
 /** Chaves premium — a lista do que fica atrás do paywall, num sítio só. */
 export type PremiumFeature =
@@ -36,16 +38,35 @@ export function usePremium() {
     staleTime: 60_000,
   });
 
+  /**
+   * O gating está ligado?
+   *
+   * Quem manda é o servidor, através da flag `premium_gating` (migração 045).
+   * Deixar isto do lado da app significaria ter de publicar versão nova para
+   * ligar ou desligar a monetização — e, pior, não haveria como voltar atrás
+   * depressa se corresse mal.
+   *
+   * Enquanto a flag estiver a false, `can()` devolve sempre true e a app
+   * comporta-se como sempre se comportou. As mesmas verificações estão
+   * também no servidor: isto aqui é só para mostrar o cadeado.
+   */
+  const { data: gatingLigado } = useQuery<boolean>({
+    queryKey: ['premium-gating'],
+    queryFn: gatingEnabled,
+    // Muda uma vez na vida da app; não vale a pena perguntar a toda a hora.
+    staleTime: 10 * 60_000,
+  });
+
   const state = data ?? FREE_STATE;
+  // Em dúvida, deixa passar. Falhar a ler a flag não pode fechar a app a
+  // quem já a usava — o servidor impõe os limites de qualquer forma.
+  const fechado = gatingLigado === true;
 
   return {
     ...state,
     isLoading,
-    /**
-     * Enquanto não houver paywall lançado, tudo está aberto. Trocar isto por
-     * `state.isPremium` é o interruptor que liga a monetização — e só deve
-     * acontecer no dia em que a migração de gating for aplicada.
-     */
-    can: (_feature: PremiumFeature) => true,
+    /** O paywall está a valer? Serve para decidir se se mostra o cadeado. */
+    gatingEnabled: fechado,
+    can: (_feature: PremiumFeature) => !fechado || state.isPremium,
   };
 }
