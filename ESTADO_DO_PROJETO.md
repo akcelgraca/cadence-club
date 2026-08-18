@@ -237,6 +237,41 @@ Em **Android não há bloqueio nenhum** — o Health Connect testa-se com o APK 
 
 *(A API do Strava não é caminho: os termos proíbem uso por apps concorrentes e já cortaram acesso a quem o fez. O `.zip` de exportação é a via limpa, porque são os dados do próprio utilizador.)*
 
+### 4.6 Monetização — canalização construída e **desligada** (18 ago 2026) 🔌
+
+Tudo escrito, nada ativo. Liga-se com **um `UPDATE`**, sem publicar app nova:
+
+```sql
+UPDATE public.app_flags SET enabled = true, updated_at = now()
+WHERE key = 'premium_gating';
+```
+
+| Peça | Onde | Estado |
+|---|---|---|
+| Limites impostos no servidor | `migrations/045_premium_gating.sql` | ⚠️ por aplicar |
+| Webhook do RevenueCat | `functions/revenuecat-webhook/` | por publicar |
+| SDK de compras | `src/services/purchases/` | inerte sem chaves |
+| Paywall | `src/app/premium.tsx` | pronto |
+| `can()` a ler o estado real | `src/hooks/usePremium.ts` | ✅ ligado à flag |
+
+**Porquê RevenueCat.** Grátis até 2500 USD/mês de receita, 1% acima. Trata da validação de recibos contra a Apple e a Google, renovações, períodos de graça e reembolsos — a parte que mais costuma correr mal e que é toda servidor. Aceita o Stripe como fonte, o que junta app e site num só sistema de direitos.
+
+**O que o servidor impõe, e o que não pode impor.** Vista 3D, estilos de mapa e exportação são renderização no cliente: nenhum servidor os consegue bloquear, e fingir que sim seria pior. A migração 045 impõe só o que é acesso a dados — tendências (limita a janela de meses), histórico de troços (limita o `LIMIT`) e fotos (trigger no `INSERT`). Um cliente modificado não passa por cima destes três.
+
+**Quem escreve o quê.** A app **nunca** escreve em `subscriptions` — se escrevesse, bastava um cliente alterado para se dar premium. O webhook escreve com a service role; a app lê. O `event_id` é UNIQUE, por isso uma reentrega do RevenueCat é ignorada em vez de processada duas vezes.
+
+**Falhar deixa a app aberta.** Não conseguir ler a flag devolve "gating desligado". O contrário transformava uma falha de rede num paywall para toda a gente — e os limites reais estão no servidor de qualquer forma. Há quatro testes só sobre isto.
+
+#### Falta, e depende de contas pagas
+1. **Conta Apple Developer** (99 USD/ano) e **Play Console** (25 USD, uma vez). Sem elas não há produtos, nem sandbox, nem forma de testar
+2. Criar os produtos no App Store Connect / Play Console e ligá-los ao RevenueCat
+3. `npx expo install react-native-purchases` + **rebuild** (é nativo)
+4. `EXPO_PUBLIC_REVENUECAT_IOS_KEY` / `_ANDROID_KEY` no `.env`
+5. Publicar a edge function e pôr `REVENUECAT_WEBHOOK_SECRET`
+6. **Decidir o preço** — a fazer com dados, não a adivinhar: os eventos `paywall_viewed` e `premium_purchased` dão a conversão
+
+⚠️ **Ordem que interessa:** aplicar a 045 **antes** de ligar a flag. Aplicar a migração não muda nada visível — é a flag que liga.
+
 ### 4.2 Monetização — a app não cobra nada ⚠️
 
 Dos três motivos que puseram o paywall em espera em agosto, **dois já caíram**:
@@ -514,6 +549,12 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ---
 
 ## 11. Registo de alterações
+
+**18 ago 2026 (8.ª sessão)**
+- 🔌 **Canalização de monetização construída e desligada** — migração **045** (limites impostos no servidor + flag `premium_gating`), webhook do RevenueCat, `services/purchases/`, paywall `app/premium.tsx`, e o `can()` finalmente a ler o estado real. Liga-se com um `UPDATE`. Ver 4.6
+- 4 testes novos sobre o interruptor, incluindo o que garante que falhar a ler a flag **deixa a app aberta**
+- Eventos `paywall_viewed` e `premium_purchased` no analytics — dão a conversão, que é o que decide o preço
+- ⚠️ **Por aplicar:** migração `045_premium_gating.sql`
 
 **18 ago 2026 (7.ª sessão)**
 - 🚧 **Importação de ficheiros, fase 1** — GPX + TCX, um ficheiro. Novo módulo `src/services/import/`, migração **044** (a CHECK de `activities.source` rejeitava qualquer importação), 29 testes novos. Ver 4.5
