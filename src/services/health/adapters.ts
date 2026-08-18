@@ -43,6 +43,15 @@ const HEALTHKIT_READ = [
   'HKQuantityTypeIdentifierHeartRate',
 ] as const;
 
+/**
+ * HKAuthorizationRequestStatus.unnecessary — o diálogo já foi apresentado.
+ * Os outros valores são `unknown = 0` e `shouldRequest = 1`. Fica em número
+ * literal de propósito: importar o enum obrigava a carregar a biblioteca no
+ * topo do ficheiro, e todo o módulo depende de ela ser carregada só quando
+ * existe (ver `carregar`).
+ */
+const AUTH_REQUEST_UNNECESSARY = 2;
+
 export const healthKitAdapter: HealthAdapter = {
   source: 'healthkit',
 
@@ -63,10 +72,24 @@ export const healthKitAdapter: HealthAdapter = {
     if (!HealthKit) return false;
     try {
       // A Apple não revela se a LEITURA foi concedida — por design, para não
-      // se poder inferir que alguém escondeu um tipo de dados. O melhor que dá
-      // é tentar ler: sem permissão vem uma lista vazia, sem erro.
-      const amostra = await HealthKit.queryWorkoutSamples({ limit: 1 });
-      return Array.isArray(amostra);
+      // se poder inferir que alguém escondeu um tipo de dados. O que revela é
+      // se ainda FALTA perguntar, e isso chega para o caso que interessa:
+      // nunca dizer "ligado" a quem nunca foi perguntado.
+      //
+      // A versão anterior fazia `Array.isArray(await queryWorkoutSamples())`,
+      // que devolvia true SEMPRE — sem permissão vem lista vazia, e uma lista
+      // vazia continua a ser um array. Era o defeito do stub antigo por outra
+      // via.
+      //
+      // O que isto continua a NÃO apanhar: quem concedeu e depois revogou.
+      // O estado passa a `unnecessary` na mesma, e a leitura devolve vazio,
+      // indistinguível de "não há treinos". Esse caso não é detetável em iOS;
+      // trata-se na interface, com a dica em `health_sync_check_permissions`.
+      const status = await HealthKit.getRequestStatusForAuthorization({
+        toRead: HEALTHKIT_READ,
+        toShare: [],
+      });
+      return status === AUTH_REQUEST_UNNECESSARY;
     } catch {
       return false;
     }
