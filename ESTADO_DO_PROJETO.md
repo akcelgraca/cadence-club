@@ -407,9 +407,9 @@ Coisas já mordidas, para não se repetirem:
 
 ## 9. Plano de teste no iPhone físico
 
-**Build instalada: 18 ago 2026, 02:18.** Verificado por inspeção do próprio bundle:
-- `main.jsbundle` contém `1895867934721207` → ✅ **a partilha para Instagram Stories já funciona**
-- `codesign -d --entitlements` → **sem HealthKit, sem push remoto**
+**Build instalada: 18 ago 2026, ~16h.** Inclui a importação de ficheiros, a correção das permissões de saúde e a correção do `File.text()`. Verificado por inspeção do bundle (`import_file_label`, `1895867934721207` presentes).
+- É Release com JS embutido → **não fala com o Metro**. Alterações de código só chegam cá com novo build; o simulador é que recarrega na hora
+- **Sem HealthKit, sem push remoto e sem Sign in with Apple** — os quatro entitlements foram removidos para poder assinar com Personal Team. **Entrar só por email ou Google**
 - É Release → **o `devSeed` não existe** (só corre em `__DEV__`)
 - ⏰ **Expira a 25 ago 2026** (7 dias do free provisioning)
 
