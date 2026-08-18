@@ -138,10 +138,27 @@ O caso 7 é o de maior consequência para o utilizador: prova que a marca de "j�
 
 | Caso | Estado |
 |---|---|
-| 2 — recusar a permissão | ⏳ testável no simulador (Saúde → Partilha → Apps) |
+| 2 — recusar a permissão | ⚠️ **não é detetável em iOS** — reescrito e mitigado, ver 4.1.1 |
 | 4 — app e relógio a gravar o mesmo treino | ❌ **exige relógio real**; depende da sobreposição temporal, e os treinos do `devSeed` têm `sourceApp` da própria app |
-| 8 — negar só os treinos em iOS | ⏳ |
+| 8 — negar só os treinos em iOS | ⏳ mesma limitação do caso 2 |
 | 9 — Android sem Health Connect | ⏳ exige Android |
+
+#### 4.1.1 Bug encontrado e corrigido: `hasPermissions()` mentia (18 ago 2026)
+
+Ao preparar o caso 2, a leitura do código revelou um defeito real:
+
+```js
+const amostra = await HealthKit.queryWorkoutSamples({ limit: 1 });
+return Array.isArray(amostra);   // true SEMPRE
+```
+
+Sem permissão, o HealthKit devolve **lista vazia, sem erro** — e uma lista vazia continua a ser um array. A função devolvia `true` mesmo a quem **nunca tinha sido perguntado nada**. Era o defeito do stub antigo por outra via, no código que o substituiu.
+
+**Corrigido** para `getRequestStatusForAuthorization(...) === unnecessary`, que distingue "ainda falta perguntar" de "já foi perguntado".
+
+**O que continua impossível, e porquê.** A Apple esconde de propósito o estado das permissões de **leitura**, para não se poder inferir que alguém escondeu um tipo de dados. `getRequestStatusForAuthorization` devolve `unnecessary` assim que o diálogo aparece, tenha o utilizador aceitado ou recusado; `authorizationStatusFor` só vale para escrita. Quem concede e depois revoga é indistinguível de quem não tem treinos.
+
+**Mitigação na interface:** quando uma sincronização não importa **nem** descarta nada, não se leu um único treino — aí aparece a dica `health_sync_check_permissions`. Se algo foi descartado, houve leitura e a permissão está boa, e a dica não aparece.
 
 O módulo `src/services/health/` tem os nomes de campos e assinaturas verificados contra as tipagens reais, e a lógica de deduplicação e mapeamento tem 22 testes.
 
@@ -462,6 +479,13 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ---
 
 ## 11. Registo de alterações
+
+**18 ago 2026 (6.ª sessão)**
+- 🐛 **Corrigido `hasPermissions()` no `adapters.ts`** — `Array.isArray()` sobre uma leitura devolvia `true` sempre, incluindo a quem nunca tinha sido perguntado nada. Substituído por `getRequestStatusForAuthorization`. Ver 4.1.1
+- **Dica na interface** quando não se lê nada (`imported === 0 && skipped === 0`) → nova chave `health_sync_check_permissions` em PT e EN
+- **Caso 2 do README reescrito** — pedia `isConnected === false` depois de recusar, que não é obtível em iOS. Agora pede o que é verificável ("nunca perguntado → `false`") e documenta a limitação da Apple
+- Verificado: `tsc --noEmit` limpo, **263 testes verdes**
+- 7 commits enviados para `origin/main` (o repositório estava parado desde 14 ago)
 
 **18 ago 2026 (5.ª sessão)**
 - 🎉 **Sincronização com a Saúde validada no simulador** — `devSeed` deu **3 importados, 2 descartados**, e a segunda sincronização deu **zero**. Era a maior pendência técnica do projeto: código escrito da documentação que nunca tinha corrido

@@ -71,9 +71,24 @@ integrações de saúde noutras apps.
 
 **Ainda por verificar:**
 
-2. **Recusar a permissão.** `isConnected` tem de ficar `false`. Era exatamente
-   isto que o stub antigo fazia mal: dizia "ligado" sem ter perguntado.
-   *Testável no simulador* — revogar em Saúde → Partilha → Apps.
+2. **Nunca ter perguntado.** Antes de qualquer diálogo, `hasPermissions()` tem
+   de dar `false`. Era isto que o stub antigo fazia mal: dizia "ligado" sem ter
+   perguntado. *Testável no simulador* — desinstalar e reinstalar, e verificar
+   antes de conceder.
+
+   ⚠️ **Recusar a permissão não é detetável em iOS.** A versão original deste
+   caso pedia `isConnected === false` depois de recusar, e isso **não é
+   obtível**: a Apple esconde de propósito o estado das permissões de LEITURA,
+   para não se poder inferir que alguém escondeu um tipo de dados.
+   `getRequestStatusForAuthorization` devolve `unnecessary` assim que o
+   diálogo é apresentado, tenha o utilizador aceitado ou recusado, e
+   `authorizationStatusFor` só é válido para escrita. Sem permissão, a leitura
+   devolve lista vazia — indistinguível de "não há treinos".
+
+   O que se faz em vez disso: quando uma sincronização não importa **nem**
+   descarta nada, a interface acrescenta a dica
+   `health_sync_check_permissions`. Se algo foi descartado, houve leitura e a
+   permissão está boa, por isso a dica não aparece.
 4. **Gravar na app com o relógio a gravar também.** Só deve aparecer **uma**
    atividade. É o caso que o id externo não apanha — depende da sobreposição
    temporal. **Exige relógio real**; o `devSeed` não o consegue reproduzir,
