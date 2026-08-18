@@ -550,6 +550,11 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 
 ## 11. Registo de alterações
 
+**18 ago 2026 (9.ª sessão)**
+- 🐛 **`cadence://` nunca foi registado no iOS** — `ios.infoPlist.CFBundleURLTypes` definido à mão apagava o que o `scheme` geraria. Links de email (confirmação, recuperação de palavra-passe) não voltavam à app no iOS; o Android nunca foi afetado. Corrigido no `app.json`, **exige rebuild**. Ver secção 12
+- **Paywall ligado às Definições** — a rota existia mas nada navegava para lá
+- App antiga `com.cadence.app` removida do simulador (bundle id de outra era; eram os dois ícones)
+
 **18 ago 2026 (8.ª sessão)**
 - 🔌 **Canalização de monetização construída e desligada** — migração **045** (limites impostos no servidor + flag `premium_gating`), webhook do RevenueCat, `services/purchases/`, paywall `app/premium.tsx`, e o `can()` finalmente a ler o estado real. Liga-se com um `UPDATE`. Ver 4.6
 - 4 testes novos sobre o interruptor, incluindo o que garante que falhar a ler a flag **deixa a app aberta**
@@ -603,3 +608,22 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 - `supabase/VERIFICAR_MIGRACOES.sql` criado para confirmar as migrações 042/043
 - **Correção:** testar HealthKit **não** exige conta Apple paga — o simulador não impõe provisioning. Secção 4.1 reescrita com o procedimento via `devSeed`
 - Regra de manutenção deste documento acrescentada ao `AGENTS.md`
+
+---
+
+## 12. Armadilha: `infoPlist` manual apaga o `scheme`
+
+**Encontrado a 18 ago 2026.** O `app.json` tinha `scheme: "cadence"` **e**, ao mesmo tempo, um `ios.infoPlist.CFBundleURLTypes` definido à mão só com o esquema do Google Sign-In.
+
+Quando se define `CFBundleURLTypes` à mão, esse valor **substitui** o que o `scheme` geraria. Resultado: o `cadence://` nunca chegou ao `Info.plist` do iOS. O Android não foi afetado — o `AndroidManifest.xml` tinha `android:scheme="cadence"` na mesma.
+
+**Sintoma:** `xcrun simctl openurl booted "cadence://..."` falha com `LSApplicationWorkspaceErrorDomain error 115`.
+
+**Impacto real, medido:**
+- ❌ **Links de email não voltam à app no iOS** — confirmação de conta e recuperação de palavra-passe. O handler em `_layout.tsx:307` lê o `access_token` do fragmento e cria a sessão, mas nunca é chamado porque o sistema não sabe abrir `cadence://`
+- ✅ **Google Sign-In escapa** — o `WebBrowser.openAuthSessionAsync` usa o `ASWebAuthenticationSession`, que intercepta o retorno internamente, sem depender do esquema registado
+- ✅ Android sempre funcionou
+
+**Corrigido** acrescentando `cadence` ao array em `app.json`, à frente do esquema do Google. ⚠️ **Exige rebuild** para ter efeito.
+
+**Regra:** ao definir `ios.infoPlist.CFBundleURLTypes` à mão, incluir sempre o esquema próprio da app. O campo `scheme` sozinho deixa de bastar.

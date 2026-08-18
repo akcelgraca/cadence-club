@@ -15,6 +15,11 @@
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
+              "cadence"
+            ]
+          },
+          {
+            "CFBundleURLSchemes": [
               "com.googleusercontent.apps.515721507518-vnn8u53q207l2bami05inpu0v5c190q5"
             ]
           }
