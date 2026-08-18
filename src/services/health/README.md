@@ -9,8 +9,9 @@ Importa treinos do **Apple Saúde** (iOS) e do **Health Connect** (Android).
 | Deduplicação e mapeamento | `dedup.ts`, `mapping.ts` | ✅ 22 testes |
 | Nomes de campos e API | `adapters.ts` | ✅ contra as tipagens instaladas |
 | Orquestração e escrita | `sync.ts` | ⚠️ tipos apenas |
-| **Comportamento em dispositivo** | tudo | ❌ **por verificar** |
-| Base de dados | `../../../../supabase/migrations/043_health_sync.sql` | ⚠️ por aplicar |
+| **Comportamento em simulador** | caminho de leitura | ✅ **validado 18 ago 2026** (ver abaixo) |
+| **Comportamento com relógio real** | sobreposição temporal | ❌ **por verificar** |
+| Base de dados | `../../../supabase/migrations/043_health_sync.sql` | ✅ aplicada (18 ago 2026) |
 
 As bibliotecas estão instaladas e os plugins configurados. Os nomes de campos e
 as assinaturas foram verificados contra as tipagens reais — foi assim que se
@@ -47,20 +48,36 @@ aparece onde a plataforma o suporta.
 ## Testar no dispositivo
 
 Nenhum destes casos é coberto por testes automáticos. Todos já partiram
-integrações de saúde noutras apps:
+integrações de saúde noutras apps.
 
-1. **Primeira ligação.** Conceder permissão → importa os últimos 30 dias.
+**Validado no simulador iOS a 18 ago 2026**, com o `devSeed` (3 importados,
+2 descartados; segunda sincronização deu zero):
+
+1. ✅ **Primeira ligação.** Conceder permissão → importa. O caminho de leitura
+   inteiro funciona: query, nomes dos campos, enums numéricos de modalidade,
+   desembrulhar dos `Quantity`, datas e escrita na base de dados.
+3. ✅ **Sincronizar duas vezes seguidas.** A segunda importou **zero** — a
+   deduplicação por `external_id` funciona.
+5. ✅ **Treino sem distância** (ioga). Entrou com `distance: 0`, sem dividir
+   por zero.
+6. ✅ **Modalidade não suportada** (tiro com arco). Descartada em silêncio, não
+   forçada a "workout". A corrida de 30 s também foi descartada por ser curta
+   demais.
+7. ✅ **Reinstalar a app.** Desinstalada e reinstalada de raiz, com nova
+   autorização do HealthKit e novo login: sincronizou **zero**. Os cinco
+   treinos continuavam no HealthKit (desinstalar a app não apaga dados de
+   saúde), por isso a defesa foi mesmo exercitada. Confirma que o estado vive
+   no servidor — trocar de telemóvel não duplica o histórico.
+
+**Ainda por verificar:**
+
 2. **Recusar a permissão.** `isConnected` tem de ficar `false`. Era exatamente
    isto que o stub antigo fazia mal: dizia "ligado" sem ter perguntado.
-3. **Sincronizar duas vezes seguidas.** A segunda tem de importar **zero**.
+   *Testável no simulador* — revogar em Saúde → Partilha → Apps.
 4. **Gravar na app com o relógio a gravar também.** Só deve aparecer **uma**
    atividade. É o caso que o id externo não apanha — depende da sobreposição
-   temporal.
-5. **Treino sem distância** (ioga, musculação). Entra com `distance: 0` e
-   `avg_pace` nulo, sem dividir por zero.
-6. **Modalidade não suportada** (tiro com arco). Ignorada em silêncio, não
-   forçada a "workout".
-7. **Reinstalar a app.** O estado vive no servidor; não deve reimportar tudo.
+   temporal. **Exige relógio real**; o `devSeed` não o consegue reproduzir,
+   porque os treinos que escreve têm `sourceApp` da própria app.
 8. **iOS: negar só os treinos e permitir o resto.** A Apple não diz o que foi
    negado na leitura — `hasPermissions()` tenta ler e infere. Confirmar que
    este caso não fica preso em "ligado" sem dados.
