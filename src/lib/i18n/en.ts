@@ -1030,6 +1030,7 @@ const en = {
   health_sync_denied_body: 'Without access to {{platform}}, workouts from your watch cannot be imported. You can grant it later in your system settings.',
   health_sync_result_title: 'Sync complete',
   health_sync_imported_none: 'There were no new workouts to import.',
+  health_sync_check_permissions: 'If you expected to see workouts here, check that Cadence Club still has access to {{platform}}.',
   health_sync_imported_one: 'Imported 1 workout.',
   health_sync_imported_other: 'Imported {{count}} workouts.',
   health_sync_skipped: ' {{count}} were skipped because they already existed.',

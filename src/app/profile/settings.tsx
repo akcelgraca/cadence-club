@@ -134,7 +134,17 @@ export default function SettingsScreen() {
       ? `\n\n${t('health_sync_skipped_intro')} ${motivos.join(', ')}.`
       : '';
 
-    Alert.alert(t('health_sync_result_title'), importados + detalhe);
+    // Nada importado E nada descartado significa que não se leu um único
+    // treino. Ou não há mesmo nenhum, ou a permissão foi revogada — e a Apple
+    // não deixa distinguir os dois casos (ver hasPermissions em adapters.ts).
+    // Se algo foi descartado, houve leitura e a permissão está boa; aí a dica
+    // seria ruído.
+    const nadaLido = resultado.imported === 0 && resultado.skipped === 0;
+    const dica = nadaLido
+      ? `\n\n${t('health_sync_check_permissions', { platform: health.platformName })}`
+      : '';
+
+    Alert.alert(t('health_sync_result_title'), importados + detalhe + dica);
   };
 
   const handleSeedPress = async () => {

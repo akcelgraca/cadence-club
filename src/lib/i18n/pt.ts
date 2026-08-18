@@ -1030,6 +1030,7 @@ const pt = {
   health_sync_denied_body: 'Sem acesso à {{platform}}, os treinos do relógio não podem ser importados. Podes conceder mais tarde nas definições do sistema.',
   health_sync_result_title: 'Sincronização concluída',
   health_sync_imported_none: 'Não havia treinos novos para importar.',
+  health_sync_check_permissions: 'Se esperavas ver treinos aqui, confirma que o Cadence Club continua com acesso à {{platform}}.',
   health_sync_imported_one: 'Importado 1 treino.',
   health_sync_imported_other: 'Importados {{count}} treinos.',
   health_sync_skipped: ' {{count}} foram ignorados por já existirem.',
