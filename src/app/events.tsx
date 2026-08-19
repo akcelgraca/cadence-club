@@ -61,8 +61,8 @@ export default function EventsScreen() {
       {/* Abas */}
       <View style={styles.segment}>
         {([
-          { key: 'mine' as const, label: 'Os meus clubes' },
-          { key: 'discover' as const, label: 'Descobrir' },
+          { key: 'mine' as const, label: t('events_tab_mine') },
+          { key: 'discover' as const, label: t('events_tab_discover') },
         ]).map((opt) => (
           <TouchableOpacity
             key={opt.key}
@@ -82,7 +82,7 @@ export default function EventsScreen() {
           <Ionicons name="location-outline" size={15} color={colors.mutedForeground} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Cidade (ex: Lisboa)"
+            placeholder={t('events_city_placeholder')}
             placeholderTextColor={colors.mutedForeground}
             value={city}
             onChangeText={setCity}
