@@ -2,6 +2,9 @@ import { View, Text, StyleSheet, ActivityIndicator, useWindowDimensions } from '
 import { LineChart } from 'react-native-gifted-charts';
 import { useWeeklyDailyBreakdown, useWeeklySummary } from '../../hooks/useProfileStats';
 import { useAuthStore } from '../../store/authStore';
+import { useWeekActivities } from '../../hooks/useActivity';
+import { sumActivityCalories } from '../../utils/calculateCalories';
+import { ageFromBirthDate } from '../../utils/heartRate';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import { formatDuration } from '../../utils/dateHelpers';
 import type { WeeklyDaySummary } from '../../lib/types';
@@ -54,17 +57,25 @@ export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
   const { t } = useTranslation();
   const { data, isLoading, isError } = useWeeklyDailyBreakdown(userId);
   const { data: weekly } = useWeeklySummary(userId);
-  const weightKg = useAuthStore((s) => s.profile?.weight_kg) ?? 70;
+  const perfil = useAuthStore((s) => s.profile);
+  const { data: atividadesDaSemana = [] } = useWeekActivities(userId);
 
-  // Estimativa MET simples — sem frequência cardíaca não dá para ser exato
-  const estCalories = Math.round(weightKg * ((weekly?.total_duration ?? 0) / 3600) * 7);
+  // A mesma conta de todo o lado: por modalidade, e por batimento quando o há.
+  // Antes era `peso × horas × 7` — um MET fixo que punha ioga e corrida a
+  // valer o mesmo, e dava um número diferente do resto da app.
+  const estCalories = Math.round(
+    sumActivityCalories(atividadesDaSemana, perfil?.weight_kg, {
+      ageYears: ageFromBirthDate(perfil?.birth_date),
+      gender: perfil?.gender,
+    }),
+  );
 
   const footerStats = [
     {
       icon: 'time-outline' as const,
       value: weekly?.total_duration ? formatWeeklyTime(weekly.total_duration) : '--',
       unit: 'min',
-      label: 'Tempo',
+      label: t('post_stat_time'),
     },
     {
       icon: 'flash-outline' as const,

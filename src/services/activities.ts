@@ -390,3 +390,22 @@ export async function getDiscoverActivities(limit = 10) {
   if (error) return [];
   return attachHasKudosed((data ?? []).map(mapCounts));
 }
+
+/**
+ * Atividades desde uma data, com só o que o cálculo de calorias precisa.
+ *
+ * Não usa ACTIVITY_SELECT de propósito: trazer perfis, fotos e contagens para
+ * somar calorias era puxar dezenas de kB por um número. Aqui vêm cinco
+ * colunas.
+ */
+export async function getActivitiesSince(userId: string, since: Date): Promise<Activity[]> {
+  const { data, error } = await supabase
+    .from('activities')
+    .select('id, type, start_time, duration, distance, avg_pace, avg_heart_rate')
+    .eq('user_id', userId)
+    .gte('start_time', since.toISOString())
+    .order('start_time', { ascending: false });
+
+  if (error) return [];
+  return (data ?? []) as Activity[];
+}

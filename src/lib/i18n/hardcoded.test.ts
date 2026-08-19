@@ -34,6 +34,42 @@ function pareceTexto(s: string): boolean {
   return !EXCECOES.has(s);
 }
 
+/**
+ * Texto visível passado por propriedade, e não como conteúdo de JSX.
+ *
+ *   label: 'Tempo'          ← apanha
+ *   label: t('post_stat_time')  ← certo
+ *
+ * Existe porque o `label: 'Tempo'` do WeeklyChartCard escapou à migração de
+ * i18n **e** ao teste do JSX: não é conteúdo entre tags, é uma string dentro
+ * de um objeto de propriedades.
+ */
+describe('texto fixo em propriedades', () => {
+  /** Propriedades cujo valor chega aos olhos de alguém. */
+  const PROPS = ['label', 'title', 'placeholder', 'subtitle', 'accessibilityLabel', 'unit'];
+
+  it('todo o texto passado por propriedade passa pelo t()', () => {
+    const encontrados: string[] = [];
+    const padrao = new RegExp(`\\b(${PROPS.join('|')})\\s*[:=]\\s*(['"])([^'"\n]{2,})\\2`, 'g');
+
+    for (const ficheiro of ficheirosDeEcra()) {
+      const src = readFileSync(path.join(raiz, ficheiro), 'utf8');
+      for (const m of src.matchAll(padrao)) {
+        const valor = m[3].trim();
+        // Só interessa o que parece uma frase para uma pessoa: com acento, ou
+        // com espaço e a começar por maiúscula. Isto deixa passar chaves e
+        // identificadores, que também vivem nestas propriedades.
+        const pareceTextoHumano =
+          /[áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]/.test(valor) ||
+          (/\s/.test(valor) && /^[A-ZÁÉÍÓÚ]/.test(valor));
+        if (pareceTextoHumano) encontrados.push(`${valor}  (${ficheiro})`);
+      }
+    }
+
+    expect(encontrados).toEqual([]);
+  });
+});
+
 describe('texto fixo no JSX', () => {
   it('todo o texto visível passa pelo t()', () => {
     const encontrados: string[] = [];
