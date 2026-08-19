@@ -1,4 +1,6 @@
-import { calculateActivityCalories, calculateMonthlyCalories } from './calculateCalories';
+import {
+  calculateActivityCalories, calculateMonthlyCalories, sumActivityCalories,
+} from './calculateCalories';
 import { makeActivity, makeEffort } from '../test-utils/activityFixtures';
 
 /** MET × peso(kg) × horas — a fórmula que a implementação usa. */
@@ -103,6 +105,78 @@ describe('calculateActivityCalories', () => {
   });
 });
 
+describe('calorias com batimento cardíaco', () => {
+  const corrida = makeEffort('run', 10000, 3300); // 55 min, 5'30"/km
+
+  it('usa o batimento quando há batimento e idade', () => {
+    const semHr = calculateActivityCalories(corrida, 70);
+    const comHr = calculateActivityCalories(corrida, 70, {
+      avgHeartRate: 165, ageYears: 30, gender: 'male',
+    });
+
+    // Os dois métodos não têm de coincidir — o objetivo é precisamente que o
+    // batimento mande quando existe.
+    expect(comHr).not.toBeCloseTo(semHr, 0);
+    expect(comHr).toBeGreaterThan(0);
+  });
+
+  it('distingue esforços diferentes ao mesmo ritmo', () => {
+    // É isto que o MET não consegue: mesma corrida, pessoas diferentes.
+    const leve = calculateActivityCalories(corrida, 70, {
+      avgHeartRate: 130, ageYears: 30, gender: 'male',
+    });
+    const duro = calculateActivityCalories(corrida, 70, {
+      avgHeartRate: 175, ageYears: 30, gender: 'male',
+    });
+
+    expect(duro).toBeGreaterThan(leve);
+  });
+
+  it('cai no MET sem batimento', () => {
+    const base = calculateActivityCalories(corrida, 70);
+    expect(calculateActivityCalories(corrida, 70, { ageYears: 30 })).toBeCloseTo(base, 6);
+    expect(calculateActivityCalories(corrida, 70, { avgHeartRate: null, ageYears: 30 }))
+      .toBeCloseTo(base, 6);
+  });
+
+  it('cai no MET sem idade — a fórmula precisa dela', () => {
+    const base = calculateActivityCalories(corrida, 70);
+    expect(calculateActivityCalories(corrida, 70, { avgHeartRate: 165 })).toBeCloseTo(base, 6);
+  });
+
+  it('usa a média das fórmulas quando o sexo não é indicado', () => {
+    const homem = calculateActivityCalories(corrida, 70, {
+      avgHeartRate: 165, ageYears: 30, gender: 'male',
+    });
+    const mulher = calculateActivityCalories(corrida, 70, {
+      avgHeartRate: 165, ageYears: 30, gender: 'female',
+    });
+    const semDizer = calculateActivityCalories(corrida, 70, {
+      avgHeartRate: 165, ageYears: 30, gender: 'prefer_not_to_say',
+    });
+
+    expect(semDizer).toBeCloseTo((homem + mulher) / 2, 6);
+    expect(semDizer).toBeGreaterThan(mulher);
+    expect(semDizer).toBeLessThan(homem);
+  });
+
+  it('cai no MET quando a fórmula daria negativo', () => {
+    // Keytel dá valores negativos em batimentos de repouso; nesse caso não
+    // houve esforço a contabilizar.
+    const base = calculateActivityCalories(corrida, 70);
+    expect(calculateActivityCalories(corrida, 70, {
+      avgHeartRate: 45, ageYears: 25, gender: 'female',
+    })).toBeCloseTo(base, 6);
+  });
+
+  it('devolve 0 para duração nula, com ou sem batimento', () => {
+    const parada = makeActivity({ duration: 0, distance: 0, avg_pace: 0 });
+    expect(calculateActivityCalories(parada, 70, {
+      avgHeartRate: 150, ageYears: 30,
+    })).toBe(0);
+  });
+});
+
 describe('calculateMonthlyCalories', () => {
   const julho = [
     makeEffort('run', 10000, 3300, { start_time: '2026-07-01T08:00:00.000Z' }),
@@ -145,5 +219,53 @@ describe('calculateMonthlyCalories', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+});
+
+describe('sumActivityCalories', () => {
+  const semana = [
+    makeEffort('run', 10000, 3300, { start_time: '2026-08-17T08:00:00.000Z' }),
+    makeEffort('cycle', 25000, 3600, { start_time: '2026-08-18T08:00:00.000Z' }),
+    makeActivity({ type: 'yoga', distance: 0, duration: 2700, avg_pace: 0,
+      start_time: '2026-08-19T08:00:00.000Z' }),
+  ];
+
+  it('soma o mesmo que somar as parcelas à mão', () => {
+    // A propriedade que interessa: o total do resumo tem de bater certo com a
+    // soma do que se vê em cada atividade. Era isto que falhava quando o
+    // cartão semanal tinha fórmula própria.
+    const parcelas = semana.reduce((t, a) => t + calculateActivityCalories(a, 70), 0);
+    expect(sumActivityCalories(semana, 70)).toBeCloseTo(parcelas, 6);
+  });
+
+  it('distingue modalidades — não usa um MET fixo', () => {
+    // A conta antiga do cartão semanal era peso × horas × 7 para tudo: uma
+    // hora de ioga valia o mesmo que uma hora de bicicleta.
+    const ioga = makeActivity({ type: 'yoga', distance: 0, duration: 3600, avg_pace: 0 });
+    const bike = makeEffort('cycle', 30000, 3600);
+
+    expect(sumActivityCalories([bike], 70)).toBeGreaterThan(sumActivityCalories([ioga], 70));
+  });
+
+  it('usa o batimento de cada atividade', () => {
+    const semHr = makeEffort('run', 10000, 3300);
+    const comHr = makeEffort('run', 10000, 3300, { avg_heart_rate: 175 });
+
+    const a = sumActivityCalories([semHr], 70, { ageYears: 30, gender: 'male' });
+    const b = sumActivityCalories([comHr], 70, { ageYears: 30, gender: 'male' });
+    expect(a).not.toBeCloseTo(b, 0);
+  });
+
+  it('devolve 0 sem atividades', () => {
+    expect(sumActivityCalories([], 70)).toBe(0);
+  });
+
+  it('assume 70 kg quando o perfil não tem peso', () => {
+    expect(sumActivityCalories(semana, null)).toBeCloseTo(sumActivityCalories(semana, 70), 6);
+  });
+
+  it('o total do mês é a soma das atividades desse mês', () => {
+    const agosto = calculateMonthlyCalories(semana, 70, '2026-08');
+    expect(agosto).toBeCloseTo(sumActivityCalories(semana, 70), 6);
   });
 });

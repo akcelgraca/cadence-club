@@ -55,6 +55,8 @@ export interface Profile {
   birth_date?: string;
   gender?: Gender;
   weight_kg?: number;
+  /** Máximo medido, indicado pelo utilizador. Null = estimar pela idade. */
+  max_heart_rate?: number | null;
   height_cm?: number;
   main_sport?: MainSport;
   // Questionnaire
@@ -183,6 +185,9 @@ export interface Activity {
   duration: number; // segundos
   elevation_gain: number; // metros
   avg_pace: number; // segundos/km
+  /** Batimento médio (bpm). Null quando a origem não o deu. */
+  avg_heart_rate?: number | null;
+  max_heart_rate?: number | null;
   start_time: string;
   end_time: string | null;
   route_summary: number[][] | null; // [[lat, lng], ...] resumido
