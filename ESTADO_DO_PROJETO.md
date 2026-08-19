@@ -615,6 +615,28 @@ Coisas já mordidas, para não se repetirem:
 - É Release → **o `devSeed` não existe** (só corre em `__DEV__`)
 - ⏰ **Expira a 25 ago 2026** (7 dias do free provisioning)
 
+**Nada do que foi feito a 19 ago está nesta build** — é anterior a tudo, e sendo
+Release com JS embutido não há recarregamento que a alcance. Também não há saída
+por OTA: o `expo-updates` não está instalado, portanto o único caminho até ao
+telemóvel é um build novo.
+
+Antes desse build, duas coisas do lado nativo:
+
+1. **`ios/CadenceClub/Info.plist` tinha `UIUserInterfaceStyle = Light`** — já
+   corrigido para `Automatic`. A alteração do `app.json` só produz efeito no
+   plist *gerado*, e a pasta `ios/` é local e gitignorada, por isso a correção
+   não viaja no repositório: quem clonar tem de correr `expo prebuild`, que
+   agora já gera o valor certo. Sem isto, o `useColorScheme()` responde sempre
+   "claro" e a opção 'sistema' nunca escurece — por muito que o JS esteja bom.
+2. **O `CadenceClub.entitlements` está na configuração de SIMULADOR** (as quatro
+   capabilities presentes). Para iPhone físico com Apple ID grátis, esvaziar o
+   `dict` primeiro, senão falha na assinatura. É o interruptor manual descrito
+   na secção 5.
+
+E mesmo depois do build: o **PostHog continua a não recolher nada** enquanto a
+`EXPO_PUBLIC_POSTHOG_KEY` for `phc_COLAR_AQUI`, porque as `EXPO_PUBLIC_*` são
+embutidas no momento do build.
+
 ### 9.1 Testável agora, sem rebuild
 Tudo isto nunca correu num telemóvel — a última build Android é de 1 ago, do commit `67bf1a79`.
 
