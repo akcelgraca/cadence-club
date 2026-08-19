@@ -21,9 +21,42 @@ import { POSTHOG_API_KEY, POSTHOG_HOST } from './constants';
  * tentação de acrescentar um campo destes à pressa.
  */
 
-const ENABLED = POSTHOG_API_KEY !== 'your-posthog-key';
+/**
+ * Só conta como chave real uma *project API key* do PostHog. Começam sempre
+ * por `phc_`, e é essa a verificação: comparar com o valor de exemplo do
+ * `.env` deixava passar a chave vazia, e deixava passar sobretudo o engano
+ * mais comum — copiar a *personal API key* (`phx_`), que é lida do sítio
+ * errado das definições, é aceite sem queixa pelo SDK e não entrega um único
+ * evento.
+ */
+const KEY = POSTHOG_API_KEY.trim();
+export const ANALYTICS_ENABLED = /^phc_[A-Za-z0-9_-]{20,}$/.test(KEY);
 
-export const posthog = new PostHog(POSTHOG_API_KEY, { host: POSTHOG_HOST });
+/**
+ * O cliente nasce desligado quando não há chave. Travar só o `track()` não
+ * chegava: o `PostHogProvider` faz autocapture de ecrãs e de ciclo de vida por
+ * sua conta, e sem o `disabled` ficava a tentar entregar esses eventos a uma
+ * chave inválida, com retries, enquanto a app estivesse aberta.
+ */
+export const posthog = new PostHog(KEY, {
+  host: POSTHOG_HOST,
+  disabled: !ANALYTICS_ENABLED,
+  // Em desenvolvimento vale mais ver o evento aparecer no painel em segundos
+  // do que poupar pedidos — é assim que se confirma que a chave está boa.
+  ...(__DEV__ ? { flushAt: 1 } : {}),
+});
+
+// `NODE_ENV === 'test'` de fora: nos testes a chave nunca está lá, e o aviso
+// enchia a saída do jest de ruído sem que ninguém o pudesse resolver.
+if (__DEV__ && !ANALYTICS_ENABLED && process.env.NODE_ENV !== 'test') {
+  // Barulhento de propósito. O estado antigo — sem chave, sem erro, sem dados —
+  // custa um mês de calendário a descobrir, porque a retenção a 30 dias só
+  // começa a contar no dia em que o primeiro evento chega.
+  console.warn(
+    '[analytics] EXPO_PUBLIC_POSTHOG_KEY em falta ou inválida: nada está a ser ' +
+      'recolhido. Põe a project API key (phc_…) no .env e reinicia com `npx expo start -c`.',
+  );
+}
 
 /** Propriedades permitidas em cada evento. Nada de texto livre do utilizador. */
 type EventMap = {
@@ -69,7 +102,7 @@ type EventMap = {
 export function track<K extends keyof EventMap>(
   ...args: EventMap[K] extends undefined ? [event: K] : [event: K, properties: EventMap[K]]
 ): void {
-  if (!ENABLED) return;
+  if (!ANALYTICS_ENABLED) return;
   const [event, properties] = args;
   try {
     posthog.capture(event as string, properties as PostHogEventProperties | undefined);
@@ -87,7 +120,7 @@ export function track<K extends keyof EventMap>(
  * de RGPD.
  */
 export function identifyUser(userId: string): void {
-  if (!ENABLED) return;
+  if (!ANALYTICS_ENABLED) return;
   try {
     posthog.identify(userId);
   } catch {
@@ -97,7 +130,7 @@ export function identifyUser(userId: string): void {
 
 /** Fim de sessão: desliga os eventos seguintes desta pessoa. */
 export function resetAnalytics(): void {
-  if (!ENABLED) return;
+  if (!ANALYTICS_ENABLED) return;
   try {
     posthog.reset();
   } catch {

@@ -56,4 +56,34 @@ describe('analytics', () => {
 
     expect(infratores).toEqual([]);
   });
+
+  it('só aceita uma project API key (phc_), e não o valor de exemplo do .env', () => {
+    // Testa a expressão tal como está na fonte, em vez de a repetir aqui: se
+    // alguém a alargar para desbloquear um caso, este teste vem atrás.
+    const declarada = src.match(/ANALYTICS_ENABLED = (\/.+\/)\.test/);
+    expect(declarada).not.toBeNull();
+    const regex = new RegExp(declarada![1].slice(1, -1));
+
+    // O engano caro: chave por preencher, ou a personal API key. Ambas deixam
+    // a app a correr sem erros e o painel vazio.
+    expect(regex.test('')).toBe(false);
+    expect(regex.test('your-posthog-key')).toBe(false);
+    expect(regex.test('phc_COLAR_AQUI')).toBe(false);
+    expect(regex.test('phx_KJ2h3kJH23kjh23KJH23kjh23KJH2')).toBe(false);
+
+    expect(regex.test('phc_KJ2h3kJH23kjh23KJH23kjh23KJH2')).toBe(true);
+  });
+
+  it('desliga o cliente inteiro sem chave, não só o track()', () => {
+    // O PostHogProvider faz autocapture de ecrãs por sua conta. Sem o
+    // `disabled`, esses eventos iam bater numa chave inválida em ciclo.
+    expect(src).toMatch(/disabled:\s*!ANALYTICS_ENABLED/);
+  });
+
+  it('o .env.example não sugere uma chave que passe a validação', () => {
+    const exemplo = readFileSync(path.join(raiz, '.env.example'), 'utf8');
+    const linha = exemplo.match(/^EXPO_PUBLIC_POSTHOG_KEY=(.*)$/m);
+    expect(linha).not.toBeNull();
+    expect(/^phc_[A-Za-z0-9_-]{20,}$/.test(linha![1].trim())).toBe(false);
+  });
 });
