@@ -1,7 +1,7 @@
 # Cadence Club — Estado do Projeto
 
-**Data:** 17 de agosto de 2026
-**Commit:** `f8308a5` (14 ago 2026) — `main`, sincronizado com `origin/main`, working tree limpo
+**Data:** 19 de agosto de 2026
+**Commit:** `ddecc45` — `main`, sincronizado com `origin/main`, working tree limpo
 **Objetivo do produto:** app de fitness social para rivalizar com o Strava, focada no mercado português e em atletas casuais.
 
 > Sobre este documento: o que está marcado ✅ foi verificado a correr nesta máquina (testes, typecheck, build, inspeção do código). O que está marcado ⚠️ ou ❌ é pendência conhecida. A secção "Lacunas face ao Strava" é análise de produto, não facto verificado.
@@ -14,19 +14,29 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 | Indicador | Estado |
 |---|---|
-| Testes | ✅ 263 testes, 21 suites, todos a passar (3,2 s) |
+| Testes | ✅ 296 testes, 23 suites, todos a passar |
 | Typecheck (`tsc --noEmit`) | ✅ limpo |
-| Ecrãs (expo-router) | 43 |
+| Ecrãs (expo-router) | 44 |
 | Componentes | 67 |
-| Serviços | 24 (+ módulo `health/`) |
+| Serviços | 36 |
 | Stores (Zustand) | 6 |
 | Hooks | 17 |
-| Linhas em `src/` | ~39 000 |
-| Chaves i18n | 1144 PT + 1144 EN (equilibradas ✅) |
-| Migrações Supabase | 43 (`001` → `043`) |
-| Build iOS em dispositivo | ✅ instalada no iPhone 15 a 17 ago 2026 |
+| Linhas em `src/` | ~40 800 |
+| Chaves i18n | 1188 PT + 1188 EN (equilibradas ✅) |
+| Migrações Supabase | 44 ficheiros (`001` → `045`; não existe `025`) |
+| Edge functions | 2 (`send-push`, `revenuecat-webhook`) |
+| Build iOS em dispositivo | ✅ iPhone 15, 18 ago — ⏰ expira **25 ago 2026** |
+| Build iOS em simulador | ✅ Debug, com Metro |
 
-**O maior risco não é código em falta — é código nunca executado em dispositivo real.** A sincronização com a Saúde é o exemplo central: está escrita e a lógica pura tem testes, mas os adaptadores nativos foram escritos a partir da documentação e nunca correram contra dados reais.
+**O risco mudou de sítio.** A 17 de agosto, o maior risco era código nunca executado — a sincronização com a Saúde tinha sido escrita a partir da documentação e nunca corrida. Isso ficou validado a 18 de agosto, e o processo apanhou **três bugs reais** que nenhum teste automático teria encontrado:
+
+- `hasPermissions()` devolvia `true` a quem nunca tinha sido perguntado nada (4.1.1)
+- `readAsStringAsync` foi removido no SDK 57 e lançava em tempo de execução, partindo a importação de ficheiros **e** a partilha para Instagram Stories
+- `cadence://` nunca chegou a ser registado no iOS, o que impedia os links de email de voltarem à app (secção 12)
+
+**O risco de hoje é comercial, não técnico.** A canalização de monetização está construída e desligada (4.6), a importação de ficheiros está na fase 1 (4.5), e nada disto se pode testar a sério nem lançar sem **conta paga da Apple**. A app também não tem utilizadores, por isso não há dados de retenção para decidir preços.
+
+**⚠️ Migrações por aplicar:** `044_import_sources.sql` e `045_premium_gating.sql`. Sem a 044 a importação falha ao gravar; a 045 não muda nada até a flag ser ligada.
 
 ---
 
@@ -99,7 +109,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 ### 3.9 Internacionalização
 - **Bilingue PT/EN, completa.** Segue o idioma do telemóvel, mudável nas Definições
-- 1144 chaves em cada idioma
+- 1188 chaves em cada idioma
 - ✅ Três testes protegem isto: dicionários com as mesmas chaves, mesmos marcadores `{{}}` nos dois idiomas, e todas as chamadas `t()` a apontar para chaves existentes (uma chave em falta não estoira — aparece em bruto ao utilizador)
 - Padrão: constantes com texto visível guardam `i18n_key`, nunca o texto
 
@@ -107,14 +117,14 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 - Email/password, Google Sign-In, Apple Sign-In
 
 ### 3.11 Analytics
-- Wrapper PostHog com 15 eventos instrumentados: `app_opened`, `activity_recorded`, `premium_feature_used`, `activity_shared`, `signed_up`, `onboarding_completed`
+- Wrapper PostHog com 17 eventos instrumentados: `app_opened`, `activity_recorded`, `premium_feature_used`, `activity_shared`, `signed_up`, `onboarding_completed`, `paywall_viewed`, `premium_purchased`
 - ✅ Coberto por testes (`analytics.test.ts`)
 
 ### 3.12 Infraestrutura de subscrição
 - Migração `042_subscriptions.sql` cria a canalização (tabelas + `has_entitlement()` no servidor)
 - `usePremium()` com a lista de funcionalidades premium num sítio só
 - ✅ Coberto por testes (`subscription.test.ts`)
-- ⚠️ **Não cobra nada** — ver secção 4.2
+- ⚠️ **Não cobra nada** — a canalização está construída e desligada, ver secção 4.6
 
 ---
 
