@@ -843,6 +843,15 @@ const pt = {
   location_tracking_title: 'Cadence Club',
   location_tracking_body: 'A gravar a tua atividade...',
 
+  hr_zone_1: 'Recuperação',
+  hr_zone_2: 'Base',
+  hr_zone_3: 'Aeróbio',
+  hr_zone_4: 'Limiar',
+  hr_zone_5: 'Máximo',
+  hr_avg: 'FC média',
+  hr_max: 'FC máx',
+  hr_zone_label: 'Zona {{zone}} · {{name}}',
+
   // --- Atividade (detalhe e edição) ---
   activity_create_segment: 'Criar troço',
   activity_delete: 'Eliminar atividade',
@@ -1005,6 +1014,11 @@ const pt = {
   edit_profile_public_on: 'Qualquer pessoa vê o teu perfil e as atividades públicas.',
   edit_profile_public_off: 'Só quem já te segue vê o teu perfil.',
   edit_profile_choose: 'Escolher',
+  edit_profile_max_hr: 'FC máxima',
+  edit_profile_max_hr_estimated: 'Estimamos {{bpm}} bpm pela tua idade. Se fizeste um teste de esforço, indica o valor real.',
+  edit_profile_max_hr_no_age: 'Sem data de nascimento, assumimos 190 bpm. Indica a data ou o teu máximo real.',
+  edit_profile_max_hr_invalid: 'Indica um valor entre 120 e 240 bpm.',
+  edit_profile_zones_title: 'As tuas zonas',
   edit_profile_save_changes: 'Guardar alterações',
   edit_profile_all_saved: 'Tudo guardado',
   edit_profile_unsaved_title: 'Alterações por guardar',

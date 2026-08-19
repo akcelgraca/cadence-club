@@ -29,7 +29,7 @@ function pareceTexto(s: string): boolean {
   if (s.length < 2) return false;
   if (/[&|?()=<>{}]/.test(s)) return false;          // pedaços de expressões JSX
   if (/^[\d\s.,:%°·—–-]+$/.test(s)) return false;    // só números e pontuação
-  if (/^(km|m|kg|h|min|s|ft|mi|mph|@)$/i.test(s)) return false;
+  if (/^(km|m|kg|h|min|s|ft|mi|mph|bpm|@)$/i.test(s)) return false;
   if (!/[A-Za-zÀ-ÿ]{2}/.test(s)) return false;
   return !EXCECOES.has(s);
 }

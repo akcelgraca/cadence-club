@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { goBackOr } from '../../lib/navigation';
 import {
   View, Text, StyleSheet, ScrollView, ActivityIndicator, Image,
   TouchableOpacity, Alert, useWindowDimensions,
 } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { useAuthStore } from '../../store/authStore';
+import { zoneForHeartRate, resolveMaxHeartRate, ageFromBirthDate } from '../../utils/heartRate';
+import { calculateActivityCalories } from '../../utils/calculateCalories';
 import { deleteActivity } from '../../services/activities';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +15,6 @@ import { hasKudosed } from '../../services/social';
 import { SplitsTable } from '../../components/activity/SplitsTable';
 import { ActivitySegments } from '../../components/activity/ActivitySegments';
 import { Ionicons } from '@expo/vector-icons';
-import { withAlpha } from '../../lib/theme';
 import { formatDistance } from '../../utils/formatDistance';
 import { formatPace } from '../../utils/formatPace';
 import { useSettingsStore } from '../../store/settingsStore';
@@ -25,7 +25,8 @@ import { CommentThread } from '../../components/social/CommentThread';
 import { ActivityMap } from '../../components/activity/ActivityMap';
 import { ElevationProfile } from '../../components/activity/ElevationProfile';
 import { ActivityIcon } from '../../components/common/ActivityIcon';
-import { colors, typography } from '../../lib/theme';
+import { colors, typography, withAlpha, zoneColors } from '../../lib/theme';
+import { goBackOr } from '../../lib/navigation';
 
 const MOOD_IMAGES: Record<number, any> = {
   1: require('../../../assets/images/moods/sentimento-1-muito-mal.png'),
@@ -37,6 +38,7 @@ const MOOD_IMAGES: Record<number, any> = {
 
 export default function ActivityDetailScreen() {
   const { t } = useTranslation();
+  const perfil = useAuthStore((s) => s.profile);
   const { id } = useLocalSearchParams<{ id: string }>();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   const myId = useAuthStore((s) => s.profile?.id);
@@ -86,6 +88,25 @@ export default function ActivityDetailScreen() {
   }
 
   const isOwner = !!myId && activity.user_id === myId;
+
+  // A zona depende do máximo da pessoa, não de um número universal: 150 bpm
+  // é zona 3 para uns e zona 4 para outros.
+  // Com batimento a estimativa usa Keytel; sem ele cai no MET. É a diferença
+  // entre "quanto gasta alguém a este ritmo" e "quanto gastaste tu".
+  const calorias = Math.round(
+    calculateActivityCalories(activity, perfil?.weight_kg ?? 70, {
+      avgHeartRate: activity.avg_heart_rate,
+      ageYears: ageFromBirthDate(perfil?.birth_date),
+      gender: perfil?.gender,
+    }),
+  );
+
+  const zonaMedia = activity.avg_heart_rate
+    ? zoneForHeartRate(
+        activity.avg_heart_rate,
+        resolveMaxHeartRate(perfil?.max_heart_rate, perfil?.birth_date),
+      )
+    : null;
 
   // Galeria (migração 037); a capa serve de recurso para dados antigos.
   // O cartão gerado vai para o fim e mostra-se sobre fundo escuro.
@@ -173,7 +194,42 @@ export default function ActivityDetailScreen() {
           <Text style={styles.metricValue}>{Math.round(activity.elevation_gain)}m</Text>
           <Text style={styles.metricLabel}>{t('elevation')}</Text>
         </View>
+
+        {/* Só aparece quando a origem deu batimento — a maioria das atividades
+            gravadas no telemóvel não dá, e uma célula vazia é pior do que
+            célula nenhuma. */}
+        {activity.avg_heart_rate ? (
+          <View style={styles.metricItem}>
+            <Text style={styles.metricValue}>{activity.avg_heart_rate}</Text>
+            <Text style={styles.metricLabel}>{t('hr_avg')}</Text>
+          </View>
+        ) : null}
+        {activity.max_heart_rate ? (
+          <View style={styles.metricItem}>
+            <Text style={styles.metricValue}>{activity.max_heart_rate}</Text>
+            <Text style={styles.metricLabel}>{t('hr_max')}</Text>
+          </View>
+        ) : null}
+        {calorias > 0 ? (
+          <View style={styles.metricItem}>
+            <Text style={styles.metricValue}>{calorias}</Text>
+            <Text style={styles.metricLabel}>{t('activity_calories')}</Text>
+          </View>
+        ) : null}
       </View>
+
+      {/* Zona de treino — é o que transforma "148 bpm" em informação útil. */}
+      {zonaMedia && (
+        <View style={styles.zoneRow}>
+          <View style={[styles.zoneDot, { backgroundColor: zoneColors[zonaMedia] }]} />
+          <Text style={styles.zoneText}>
+            {t('hr_zone_label', {
+              zone: zonaMedia,
+              name: t(`hr_zone_${zonaMedia}` as any),
+            })}
+          </Text>
+        </View>
+      )}
 
       {/* Comparação com a média do próprio utilizador na mesma modalidade */}
       {paceComparison && Math.abs(paceComparison.percentDiff) >= 1 && (
@@ -320,6 +376,12 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
   },
+  zoneRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: 20, paddingBottom: 12,
+  },
+  zoneDot: { width: 10, height: 10, borderRadius: 5 },
+  zoneText: { ...typography.bodyMedium, fontSize: 14, color: colors.mutedForeground },
   metricValue: { ...typography.statNumber, fontSize: 28, color: colors.foreground, letterSpacing: 0.3 },
   metricLabel: {
     fontFamily: 'Barlow_500Medium',

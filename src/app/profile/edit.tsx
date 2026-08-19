@@ -1,5 +1,4 @@
 import { useState, useCallback, useMemo, useRef, useEffect, type ReactNode } from 'react';
-import { goBackOr } from '../../lib/navigation';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Switch,
   ActivityIndicator, KeyboardAvoidingView, Platform,
@@ -13,10 +12,14 @@ import { uploadAvatar } from '../../services/auth';
 import { Avatar } from '../../components/common/Avatar';
 import DateWheelPicker from '../../components/common/DateWheelPicker';
 import { ACTIVITY_GOALS, MAIN_SPORTS, GENDERS, COUNTRIES, getCountryKey, MONTH_SHORT_KEYS, ACTIVITY_CATEGORIES } from '../../lib/constants';
-import { typography } from '../../lib/theme';
+import { typography, zoneColors } from '../../lib/theme';
+import {
+  ageFromBirthDate, estimateMaxHeartRate, resolveMaxHeartRate, heartRateZones,
+} from '../../utils/heartRate';
 import { useColors } from '../../hooks/useColors';
 import { setPickerConfig } from './settings/picker';
 import type { ActivityGoal, MainSport, Gender } from '../../lib/types';
+import { goBackOr } from '../../lib/navigation';
 
 const BIO_MAX = 160;
 
@@ -44,6 +47,7 @@ export default function EditProfileScreen() {
   const [birthDate, setBirthDate] = useState(profile?.birth_date ?? '');
   const [gender, setGender] = useState<Gender | null>(profile?.gender ?? null);
   const [weightKg, setWeightKg] = useState(profile?.weight_kg ? String(profile.weight_kg) : '');
+  const [maxHr, setMaxHr] = useState(profile?.max_heart_rate ? String(profile.max_heart_rate) : '');
   const [goal, setGoal] = useState<ActivityGoal | null>(profile?.goal ?? null);
   const [weeklyKmTarget, setWeeklyKmTarget] = useState(profile?.weekly_km_target ? String(profile.weekly_km_target) : '');
   const [isPublic, setIsPublic] = useState(profile?.is_public ?? true);
@@ -67,6 +71,7 @@ export default function EditProfileScreen() {
     birthDate !== (profile?.birth_date ?? '') ||
     gender !== (profile?.gender ?? null) ||
     weightKg !== (profile?.weight_kg ? String(profile.weight_kg) : '') ||
+    maxHr !== (profile?.max_heart_rate ? String(profile.max_heart_rate) : '') ||
     goal !== (profile?.goal ?? null) ||
     weeklyKmTarget !== (profile?.weekly_km_target ? String(profile.weekly_km_target) : '') ||
     isPublic !== (profile?.is_public ?? true);
@@ -127,6 +132,25 @@ export default function EditProfileScreen() {
       .sort((a, b) => a.label.localeCompare(b.label)),
     [t],
   );
+
+  // O que a app usa neste momento: o valor indicado, ou a estimativa pela
+  // idade. É o que o marcador do campo mostra.
+  const idade = ageFromBirthDate(birthDate || null);
+  const maxHrIndicado = maxHr ? parseInt(maxHr, 10) : null;
+  const maxHrEmUso = resolveMaxHeartRate(maxHrIndicado, birthDate || null);
+
+  const maxHrError = maxHr && (maxHrIndicado! < 120 || maxHrIndicado! > 240)
+    ? t('edit_profile_max_hr_invalid')
+    : null;
+
+  const maxHrHint = maxHr
+    ? undefined
+    : idade
+      ? t('edit_profile_max_hr_estimated', { bpm: estimateMaxHeartRate(idade) })
+      : t('edit_profile_max_hr_no_age');
+
+  // As zonas seguem o que estiver no campo, para se ver o efeito ao escrever.
+  const zonas = heartRateZones(maxHrError ? resolveMaxHeartRate(null, birthDate || null) : maxHrEmUso);
 
   const countryKey = getCountryKey(country);
   const countryLabel = countryKey ? t(countryKey as any) : country;
@@ -210,6 +234,7 @@ export default function EditProfileScreen() {
         birth_date: birthDate.trim() || null,
         gender: gender,
         weight_kg: weightKg ? parseFloat(weightKg) : null,
+        max_heart_rate: maxHr ? parseInt(maxHr, 10) : null,
         main_sport: mainSport,
         weekly_km_target: weeklyKmTarget ? parseFloat(weeklyKmTarget) : null,
       };
@@ -477,6 +502,49 @@ export default function EditProfileScreen() {
               />
               <Text style={styles.unit}>kg</Text>
             </InlineField>
+
+            <Divider styles={styles} />
+
+            {/* Vive ao lado do peso porque é a mesma categoria: um dado
+                fisiológico que serve para calcular, não para descrever. */}
+            <InlineField
+              label={t('edit_profile_max_hr')}
+              hint={maxHrHint}
+              error={maxHrError}
+              styles={styles}
+            >
+              <TextInput
+                style={styles.inlineInput}
+                value={maxHr}
+                onChangeText={(v) => setMaxHr(v.replace(/[^0-9]/g, ''))}
+                keyboardType="number-pad"
+                maxLength={3}
+                // O marcador mostra o valor que a app usa agora, não um número
+                // genérico — assim vê-se logo o que muda ao preencher.
+                placeholder={String(maxHrEmUso)}
+                placeholderTextColor={c.mutedForeground}
+                textAlign="right"
+              />
+              <Text style={styles.unit}>bpm</Text>
+            </InlineField>
+          </Card>
+
+          {/* As zonas tornam o número concreto: sem elas, "187 bpm" não diz
+              nada a ninguém. */}
+          <SectionTitle title={t('edit_profile_zones_title')} styles={styles} />
+          <Card styles={styles}>
+            {zonas.map((zona, i) => (
+              <View key={zona.zone}>
+                {i > 0 && <Divider styles={styles} />}
+                <View style={styles.row}>
+                  <View style={[styles.zoneDot, { backgroundColor: zoneColors[zona.zone] }]} />
+                  <View style={styles.rowLabelBlock}>
+                    <Text style={styles.rowLabel}>{t(zona.i18nKey as any)}</Text>
+                  </View>
+                  <Text style={styles.zoneRange}>{zona.minBpm}–{zona.maxBpm}</Text>
+                </View>
+              </View>
+            ))}
           </Card>
 
           {/* --- Privacidade ------------------------------------------- */}
@@ -572,10 +640,11 @@ function TextField({
 
 /** Valor curto: etiqueta à esquerda, campo à direita, na mesma linha. */
 function InlineField({
-  label, hint, children, styles,
+  label, hint, error, children, styles,
 }: {
   label: string;
   hint?: string;
+  error?: string | null;
   children: ReactNode;
   styles: S;
 }) {
@@ -583,7 +652,9 @@ function InlineField({
     <View style={styles.row}>
       <View style={styles.rowLabelBlock}>
         <Text style={styles.rowLabel}>{label}</Text>
-        {hint ? <Text style={styles.rowHint}>{hint}</Text> : null}
+        {error
+          ? <Text style={styles.fieldError}>{error}</Text>
+          : hint ? <Text style={styles.rowHint}>{hint}</Text> : null}
       </View>
       <View style={styles.rowControl}>{children}</View>
     </View>
@@ -697,6 +768,9 @@ function createStyles(c: ReturnType<typeof useColors>) {
     unit: { ...typography.body, fontSize: 15, color: c.mutedForeground },
 
     // --- Guardar ---
+    zoneDot: { width: 10, height: 10, borderRadius: 5 },
+    zoneRange: { ...typography.mono, fontSize: 14, color: c.mutedForeground },
+
     saveButton: {
       backgroundColor: c.primary,
       borderRadius: 12,

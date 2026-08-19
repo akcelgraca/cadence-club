@@ -88,6 +88,21 @@ export const runTypeColors: Record<string, string> = {
   Longo: '#a78bfa',
 };
 
+/**
+ * Cores das zonas de treino, do azul calmo ao vermelho do esforço.
+ *
+ * A escala é a informação: dá para ler a intensidade sem legenda. Vive aqui
+ * porque é usada no detalhe da atividade e na edição do perfil — em dois
+ * sítios seria só uma questão de tempo até divergirem.
+ */
+export const zoneColors: Record<number, string> = {
+  1: '#38bdf8',
+  2: '#22c55e',
+  3: '#eab308',
+  4: '#f97316',
+  5: '#ef4444',
+};
+
 export const healthColors = {
   heart: '#fb7185',
   vo2max: '#38bdf8',
