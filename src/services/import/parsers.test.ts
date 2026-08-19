@@ -80,6 +80,7 @@ describe('parseGpx', () => {
       lat: 38.7223,
       lng: -9.1393,
       elevation: 10.5,
+      heartRate: null,
       time: '2026-08-18T09:00:00.000Z',
     });
     // O GPX não declara distância — tem de ser calculada a partir dos pontos.
@@ -163,5 +164,88 @@ describe('parseTcx', () => {
 
   it('devolve null quando não é um TCX', () => {
     expect(parseTcx('<gpx><trk/></gpx>')).toBeNull();
+  });
+});
+
+
+// ============================================================
+// Frequência cardíaca
+// ============================================================
+
+describe('frequência cardíaca nos ficheiros', () => {
+  it('lê o batimento de um GPX do Garmin', () => {
+    // Nem o formato GPX prevê batimento: vive em <extensions>, com o prefixo
+    // de namespace de cada fabricante.
+    const gpx = `<?xml version="1.0"?>
+<gpx version="1.1">
+  <trk><name>Corrida</name><type>running</type><trkseg>
+    <trkpt lat="38.7223" lon="-9.1393">
+      <ele>10</ele><time>2026-08-18T09:00:00Z</time>
+      <extensions><gpxtpx:TrackPointExtension><gpxtpx:hr>142</gpxtpx:hr></gpxtpx:TrackPointExtension></extensions>
+    </trkpt>
+    <trkpt lat="38.7233" lon="-9.1393">
+      <ele>12</ele><time>2026-08-18T09:05:00Z</time>
+      <extensions><gpxtpx:TrackPointExtension><gpxtpx:hr>158</gpxtpx:hr></gpxtpx:TrackPointExtension></extensions>
+    </trkpt>
+  </trkseg></trk>
+</gpx>`;
+
+    const t = parseGpx(gpx);
+    expect(t!.points.map((p) => p.heartRate)).toEqual([142, 158]);
+  });
+
+  it('lê o batimento sem prefixo de namespace', () => {
+    // Há exportadores que largam o prefixo. Procurar pelo sufixo da chave
+    // trata dos dois casos sem ter de listar fabricantes.
+    const gpx = `<?xml version="1.0"?>
+<gpx version="1.1">
+  <trk><trkseg>
+    <trkpt lat="38.7223" lon="-9.1393">
+      <time>2026-08-18T09:00:00Z</time>
+      <extensions><TrackPointExtension><hr>131</hr></TrackPointExtension></extensions>
+    </trkpt>
+  </trkseg></trk>
+</gpx>`;
+
+    expect(parseGpx(gpx)!.points[0].heartRate).toBe(131);
+  });
+
+  it('devolve null quando o GPX não traz batimento', () => {
+    const gpx = `<?xml version="1.0"?>
+<gpx version="1.1"><trk><trkseg>
+  <trkpt lat="38.7223" lon="-9.1393"><time>2026-08-18T09:00:00Z</time></trkpt>
+</trkseg></trk></gpx>`;
+
+    expect(parseGpx(gpx)!.points[0].heartRate).toBeNull();
+  });
+
+  it('lê o batimento de um TCX, que o embrulha em <Value>', () => {
+    const tcx = `<?xml version="1.0"?>
+<TrainingCenterDatabase><Activities><Activity Sport="Running"><Lap><Track>
+  <Trackpoint>
+    <Time>2026-08-18T09:00:00Z</Time>
+    <Position><LatitudeDegrees>38.7223</LatitudeDegrees><LongitudeDegrees>-9.1393</LongitudeDegrees></Position>
+    <HeartRateBpm><Value>147</Value></HeartRateBpm>
+  </Trackpoint>
+  <Trackpoint>
+    <Time>2026-08-18T09:05:00Z</Time>
+    <Position><LatitudeDegrees>38.7233</LatitudeDegrees><LongitudeDegrees>-9.1393</LongitudeDegrees></Position>
+    <HeartRateBpm><Value>163</Value></HeartRateBpm>
+  </Trackpoint>
+</Track></Lap></Activity></Activities></TrainingCenterDatabase>`;
+
+    const t = parseTcx(tcx);
+    expect(t!.points.map((p) => p.heartRate)).toEqual([147, 163]);
+  });
+
+  it('ignora batimentos fora do plausível', () => {
+    const gpx = `<?xml version="1.0"?>
+<gpx version="1.1"><trk><trkseg>
+  <trkpt lat="38.7223" lon="-9.1393"><time>2026-08-18T09:00:00Z</time>
+    <extensions><gpxtpx:hr>0</gpxtpx:hr></extensions>
+  </trkpt>
+</trkseg></trk></gpx>`;
+
+    expect(parseGpx(gpx)!.points[0].heartRate).toBeNull();
   });
 });

@@ -73,6 +73,8 @@ export function parseTcx(xml: string): ParsedTrack | null {
             lat,
             lng,
             elevation: numero(p.AltitudeMeters),
+            // O TCX embrulha o batimento: <HeartRateBpm><Value>150</Value>.
+            heartRate: numero(p.HeartRateBpm?.Value),
             time: tempo(p.Time),
           });
         }
