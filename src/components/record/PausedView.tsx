@@ -1,4 +1,6 @@
+import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useActivityStore } from '../../store/activityStore';
@@ -8,10 +10,12 @@ import { formatDuration } from '../../utils/dateHelpers';
 import { formatDistance } from '../../utils/formatDistance';
 import { formatPace, formatSpeed, formatElevation } from '../../utils/formatPace';
 import { calculateActivityCalories } from '../../utils/calculateCalories';
-import { colors } from '../../lib/theme';
-import { styles } from './recordStyles';
+import { type Colors } from '../../lib/theme';
+import { makeStyles } from './recordStyles';
 
 export function PausedView() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const resume = useActivityStore((s) => s.resume);
   const finish = useActivityStore((s) => s.finish);
@@ -47,7 +51,7 @@ export function PausedView() {
     <View style={[styles.container, styles.pausedContainer]}>
       {/* Paused indicator */}
       <View style={styles.pausedIndicator}>
-        <Ionicons name="pause-circle" size={18} color={colors.warning} />
+        <Ionicons name="pause-circle" size={18} color={c.warning} />
         <Text style={styles.pausedTitle}>{t('activity_paused')}</Text>
       </View>
 
@@ -96,15 +100,15 @@ export function PausedView() {
       {/* Action buttons */}
       <View style={styles.pausedButtons}>
         <TouchableOpacity style={styles.discardButton} onPress={handleDiscard} activeOpacity={0.7}>
-          <Ionicons name="trash-outline" size={16} color={colors.destructive} />
+          <Ionicons name="trash-outline" size={16} color={c.destructive} />
           <Text style={styles.discardButtonText}>{t('activity_discard')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.resumeButton} onPress={resume} activeOpacity={0.7}>
-          <Ionicons name="play" size={16} color={colors.gpsGood} />
+          <Ionicons name="play" size={16} color={c.gpsGood} />
           <Text style={styles.resumeButtonText}>{t('activity_resume')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.finishButton} onPress={finish} activeOpacity={0.85}>
-          <Ionicons name="stop" size={16} color={colors.primaryForeground} />
+          <Ionicons name="stop" size={16} color={c.primaryForeground} />
           <Text style={styles.finishButtonText}>{t('activity_finish')}</Text>
         </TouchableOpacity>
       </View>

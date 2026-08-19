@@ -1,5 +1,6 @@
 import { ShapeSource, LineLayer } from '@rnmapbox/maps';
-import { colors } from '../../lib/theme';
+import { useColors } from '../../hooks/useColors';
+import { type Colors } from '../../lib/theme';
 
 interface RoutePolylineProps {
   id: string;
@@ -18,6 +19,7 @@ export function RoutePolyline({
   isSelected = false,
   opacity = 0.4,
 }: RoutePolylineProps) {
+  const c = useColors();
   if (coordinates.length < 2) return null;
 
   const geoJson = {
@@ -29,7 +31,7 @@ export function RoutePolyline({
     properties: {},
   };
 
-  const lineColor = isSelected ? colors.primary : color ?? colors.primary;
+  const lineColor = isSelected ? c.primary : color ?? c.primary;
   const lineWidth = isSelected ? (width ?? 3) + 1 : width ?? 3;
 
   return (

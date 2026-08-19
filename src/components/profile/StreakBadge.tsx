@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 
 interface StreakBadgeProps {
   currentStreak: number;
@@ -11,6 +13,8 @@ interface StreakBadgeProps {
 
 /** Render the 7 day-of-week dots. Filled up to `filled` days. */
 function WeekDots({ filled }: { filled: number }) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   return (
     <View style={styles.weekDots}>
       {[0, 1, 2, 3, 4, 5, 6].map((i) => (
@@ -27,6 +31,8 @@ function WeekDots({ filled }: { filled: number }) {
 }
 
 export function StreakBadge({ currentStreak, longestStreak, isActive }: StreakBadgeProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
 
   // Show week dots for current streak (max 7 dots)
@@ -37,7 +43,7 @@ export function StreakBadge({ currentStreak, longestStreak, isActive }: StreakBa
       {/* Top section: flame icon + current streak */}
       <View style={styles.topSection}>
         <View style={styles.flameContainer}>
-          <Ionicons name="flame" size={32} color={colors.warning} />
+          <Ionicons name="flame" size={32} color={c.warning} />
         </View>
         <View style={styles.streakInfo}>
           <View style={styles.streakRow}>
@@ -64,7 +70,7 @@ export function StreakBadge({ currentStreak, longestStreak, isActive }: StreakBa
 
       {/* Bottom: personal record */}
       <View style={styles.recordRow}>
-        <Ionicons name="trophy-outline" size={14} color={colors.mutedForeground} />
+        <Ionicons name="trophy-outline" size={14} color={c.mutedForeground} />
         <Text style={styles.recordLabel}>{t('streak_longest')}</Text>
         <Text style={styles.recordValue}>{longestStreak} {t('streak_days')}</Text>
       </View>
@@ -72,13 +78,13 @@ export function StreakBadge({ currentStreak, longestStreak, isActive }: StreakBa
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 20,
     padding: 20,
     // Subtle inner glow
-    shadowColor: colors.warning,
+    shadowColor: c.warning,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.08,
     shadowRadius: 16,
@@ -96,7 +102,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: withAlpha(colors.warning, 0.1),
+    backgroundColor: withAlpha(c.warning, 0.1),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -110,18 +116,18 @@ const styles = StyleSheet.create({
   streakValue: {
     ...typography.statNumber,
     fontSize: 44,
-    color: colors.warning,
+    color: c.warning,
     lineHeight: 48,
   },
   streakUnit: {
     ...typography.body,
     fontSize: 16,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   streakLabel: {
     ...typography.bodyBold,
     fontSize: 13,
-    color: colors.foreground,
+    color: c.foreground,
     marginTop: 2,
   },
 
@@ -135,10 +141,10 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 4,
     borderRadius: 2,
-    backgroundColor: withAlpha(colors.foreground, 0.08),
+    backgroundColor: withAlpha(c.foreground, 0.08),
   },
   weekDotFilled: {
-    backgroundColor: colors.warning,
+    backgroundColor: c.warning,
   },
 
   // ---- Active ----
@@ -152,12 +158,12 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.success,
+    backgroundColor: c.success,
   },
   activeText: {
     ...typography.mono,
     fontSize: 11,
-    color: colors.success,
+    color: c.success,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -165,7 +171,7 @@ const styles = StyleSheet.create({
   // ---- Divider ----
   divider: {
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
     marginBottom: 14,
   },
 
@@ -178,12 +184,12 @@ const styles = StyleSheet.create({
   recordLabel: {
     ...typography.body,
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     flex: 1,
   },
   recordValue: {
     ...typography.bodyBold,
     fontSize: 13,
-    color: colors.foreground,
+    color: c.foreground,
   },
 });

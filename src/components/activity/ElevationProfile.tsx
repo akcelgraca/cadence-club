@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 import { haversineDistance } from '../../utils/geo';
 import { useTranslation } from 'react-i18next';
 
@@ -18,6 +19,8 @@ interface ElevationProfileProps {
 }
 
 export function ElevationProfile({ points, height = 160, style }: ElevationProfileProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { width: screenWidth } = useWindowDimensions();
   const [containerWidth, setContainerWidth] = useState(0);
@@ -114,13 +117,13 @@ export function ElevationProfile({ points, height = 160, style }: ElevationProfi
           spacing={chartSpacing}
           initialSpacing={SIDE_SPACING}
           endSpacing={SIDE_SPACING}
-          color={colors.primary}
+          color={c.primary}
           thickness={2}
           curved
           curvature={0}
           strokeLinecap="round"
-          startFillColor={colors.primary + '30'}
-          endFillColor={colors.primary + '00'}
+          startFillColor={c.primary + '30'}
+          endFillColor={c.primary + '00'}
           startOpacity={0.3}
           endOpacity={0}
           hideDataPoints
@@ -131,10 +134,10 @@ export function ElevationProfile({ points, height = 160, style }: ElevationProfi
           xAxisLabelTextStyle={{ color: 'transparent' }}
           pointerConfig={{
             pointerStripHeight: height - 20,
-            pointerStripColor: colors.mutedForeground,
+            pointerStripColor: c.mutedForeground,
             pointerStripWidth: 1,
             strokeDashArray: [2, 5],
-            pointerColor: colors.primary,
+            pointerColor: c.primary,
             radius: 5,
             pointerLabelWidth: 90,
             pointerLabelHeight: 48,
@@ -169,9 +172,9 @@ export function ElevationProfile({ points, height = 160, style }: ElevationProfi
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 16,
     paddingVertical: 15,
     paddingHorizontal: 10,
@@ -187,13 +190,13 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
     textTransform: 'uppercase',
   },
   total: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 13,
-    color: colors.primary,
+    color: c.primary,
   },
   chartWrapper: {
     alignSelf: 'stretch',
@@ -210,10 +213,10 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   tooltip: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     paddingHorizontal: 6,
     paddingVertical: 4,
     borderRadius: 12,
@@ -222,12 +225,12 @@ const styles = StyleSheet.create({
   tooltipDistance: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 10,
-    color: colors.foreground,
+    color: c.foreground,
   },
   tooltipElevation: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 10,
-    color: colors.primary,
+    color: c.primary,
   },
   yAxisLabels: {
     position: 'absolute',
@@ -239,6 +242,6 @@ const styles = StyleSheet.create({
   yAxisLabel: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 9,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
 });

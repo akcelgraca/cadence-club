@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   TextInput, ActivityIndicator, RefreshControl,
@@ -8,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { discoverClubs, getMyClubs } from '../../services/clubs';
 import { ClubCard } from '../../components/social/ClubCard';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { Club } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
 import { goBackOr } from '../../lib/navigation';
@@ -18,6 +19,8 @@ import { goBackOr } from '../../lib/navigation';
  * entrar). As sugestões por localização vivem na aba Clubes — aqui é só busca.
  */
 export default function DiscoverClubsScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [clubs, setClubs] = useState<Club[]>([]);
@@ -58,14 +61,14 @@ export default function DiscoverClubsScreen() {
       {/* Header com pesquisa */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => goBackOr('/(tabs)/social')} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+          <Ionicons name="chevron-back" size={24} color={c.foreground} />
         </TouchableOpacity>
         <View style={styles.searchBox}>
-          <Ionicons name="search" size={15} color={colors.mutedForeground} />
+          <Ionicons name="search" size={15} color={c.mutedForeground} />
           <TextInput
             style={styles.searchInput}
             placeholder={t('club_discover_placeholder')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={search}
             onChangeText={setSearch}
             returnKeyType="search"
@@ -73,14 +76,14 @@ export default function DiscoverClubsScreen() {
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
-              <Ionicons name="close-circle" size={15} color={colors.mutedForeground} />
+              <Ionicons name="close-circle" size={15} color={c.mutedForeground} />
             </TouchableOpacity>
           )}
         </View>
       </View>
 
       {loading ? (
-        <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>
+        <View style={styles.center}><ActivityIndicator color={c.primary} /></View>
       ) : (
         <FlatList
           data={clubs}
@@ -89,7 +92,7 @@ export default function DiscoverClubsScreen() {
           ListEmptyComponent={
             <View style={styles.empty}>
               <View style={styles.emptyIcon}>
-                <Ionicons name="search-outline" size={40} color={colors.primary} />
+                <Ionicons name="search-outline" size={40} color={c.primary} />
               </View>
               <Text style={styles.emptyTitle}>
                 {search.trim() ? t('club_discover_no_results') : t('club_discover_title')}
@@ -101,7 +104,7 @@ export default function DiscoverClubsScreen() {
               </Text>
               {!!search.trim() && (
                 <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/club/create')}>
-                  <Ionicons name="add" size={16} color={colors.primaryForeground} />
+                  <Ionicons name="add" size={16} color={c.primaryForeground} />
                   <Text style={styles.emptyBtnText}>{t('clubs_create')}</Text>
                 </TouchableOpacity>
               )}
@@ -115,7 +118,7 @@ export default function DiscoverClubsScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={() => { setRefreshing(true); load(search.trim()); }}
-                tintColor={colors.primary}
+                tintColor={c.primary}
               />
             ) : undefined
           }
@@ -125,8 +128,8 @@ export default function DiscoverClubsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingBottom: 40, flexGrow: 1 },
 
@@ -137,7 +140,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   searchBox: {
     flex: 1,
@@ -147,25 +150,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 38,
     borderRadius: 10,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
-  searchInput: { flex: 1, ...typography.body, fontSize: 14, color: colors.foreground },
+  searchInput: { flex: 1, ...typography.body, fontSize: 14, color: c.foreground },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 10 },
   emptyIcon: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: withAlpha(colors.primary, 0.1),
+    backgroundColor: withAlpha(c.primary, 0.1),
     alignItems: 'center', justifyContent: 'center', marginBottom: 6,
   },
-  emptyTitle: { ...typography.bodyBold, fontSize: 17, color: colors.foreground },
+  emptyTitle: { ...typography.bodyBold, fontSize: 17, color: c.foreground },
   emptyBody: {
-    ...typography.body, fontSize: 14, color: colors.mutedForeground,
+    ...typography.body, fontSize: 14, color: c.mutedForeground,
     textAlign: 'center', lineHeight: 20,
   },
   emptyBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     marginTop: 8, paddingHorizontal: 18, paddingVertical: 10,
-    borderRadius: 20, backgroundColor: colors.primary,
+    borderRadius: 20, backgroundColor: c.primary,
   },
-  emptyBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: colors.primaryForeground },
+  emptyBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: c.primaryForeground },
 });

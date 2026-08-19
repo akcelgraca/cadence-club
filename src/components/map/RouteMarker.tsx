@@ -1,22 +1,33 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { PointAnnotation } from '@rnmapbox/maps';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../lib/theme';
+import { type Colors } from '../../lib/theme';
 
 type MarkerType = 'start' | 'finish' | 'water' | 'viewpoint' | 'restroom' | 'parking' | 'cafe' | 'landmark' | 'custom' | 'waypoint';
 
-const ICON_MAP: Record<MarkerType, { icon: string; color: string; bg: string }> = {
-  start: { icon: 'flag', color: colors.primaryForeground, bg: colors.markerStart },
-  finish: { icon: 'flag', color: colors.primaryForeground, bg: colors.markerEnd },
-  water: { icon: 'water', color: colors.primaryForeground, bg: colors.markerWater },
-  viewpoint: { icon: 'eye', color: colors.primaryForeground, bg: colors.markerViewpoint },
-  restroom: { icon: 'man', color: colors.primaryForeground, bg: colors.markerRestroom },
-  parking: { icon: 'car', color: colors.primaryForeground, bg: colors.markerParking },
-  cafe: { icon: 'cafe', color: colors.primaryForeground, bg: colors.markerCafe },
-  landmark: { icon: 'star', color: colors.primaryForeground, bg: colors.markerLandmark },
-  custom: { icon: 'ellipse', color: colors.primaryForeground, bg: colors.primary },
-  waypoint: { icon: 'ellipse', color: colors.primaryForeground, bg: colors.primary },
-};
+/**
+ * Ícone e cor por tipo de marcador.
+ *
+ * Função da paleta, e não constante de módulo, porque os dois genéricos
+ * (`custom` e `waypoint`) usam o verde da marca, que muda entre temas. Os
+ * restantes são iguais nos dois de propósito: vivem por cima do mapa, não da
+ * interface, e o significado de cada cor — água, miradouro, estacionamento —
+ * tem de ser o mesmo de dia e de noite.
+ */
+const iconMap = (c: Colors): Record<MarkerType, { icon: string; bg: string }> => ({
+  start: { icon: 'flag', bg: c.markerStart },
+  finish: { icon: 'flag', bg: c.markerEnd },
+  water: { icon: 'water', bg: c.markerWater },
+  viewpoint: { icon: 'eye', bg: c.markerViewpoint },
+  restroom: { icon: 'man', bg: c.markerRestroom },
+  parking: { icon: 'car', bg: c.markerParking },
+  cafe: { icon: 'cafe', bg: c.markerCafe },
+  landmark: { icon: 'star', bg: c.markerLandmark },
+  custom: { icon: 'ellipse', bg: c.primary },
+  waypoint: { icon: 'ellipse', bg: c.primary },
+});
 
 interface RouteMarkerProps {
   id: string;
@@ -33,7 +44,9 @@ export function RouteMarker({
   label,
   onPress,
 }: RouteMarkerProps) {
-  const { icon, bg } = ICON_MAP[type];
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
+  const { icon, bg } = useMemo(() => iconMap(c), [c])[type];
 
   return (
     <PointAnnotation
@@ -43,7 +56,7 @@ export function RouteMarker({
     >
       <View style={styles.markerWrapper}>
         <View style={[styles.marker, { backgroundColor: bg }]}>
-          <Ionicons name={icon as any} size={10} color={colors.primaryForeground} />
+          <Ionicons name={icon as any} size={10} color={c.primaryForeground} />
         </View>
         {label ? <Text style={styles.label}>{label}</Text> : <View />}
       </View>
@@ -51,7 +64,7 @@ export function RouteMarker({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   markerWrapper: {
     alignItems: 'center',
   },
@@ -62,15 +75,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: colors.primaryForeground,
+    borderColor: c.primaryForeground,
   },
   label: {
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
     fontSize: 9,
     fontFamily: 'Barlow_600SemiBold',
     textAlign: 'center',
     marginTop: 2,
-    backgroundColor: colors.overlayDark,
+    backgroundColor: c.overlayDark,
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 3,

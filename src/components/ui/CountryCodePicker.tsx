@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View,
   Text,
@@ -9,7 +10,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 import { useTranslation } from 'react-i18next';
 
 export interface CountryCode {
@@ -57,6 +58,8 @@ export function CountryCodePicker({
   onPhoneChange,
   placeholder,
 }: CountryCodePickerProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -71,13 +74,13 @@ export function CountryCodePicker({
         >
           <Text style={styles.flag}>{selectedCountry.flag}</Text>
           <Text style={styles.codeText}>{selectedCountry.code}</Text>
-          <Ionicons name="chevron-down" size={14} color={colors.mutedForeground} />
+          <Ionicons name="chevron-down" size={14} color={c.mutedForeground} />
         </TouchableOpacity>
 
         <TextInput
           style={styles.phoneInput}
           placeholder={placeholder ?? t('phone_number_placeholder')}
-          placeholderTextColor={colors.mutedForeground}
+          placeholderTextColor={c.mutedForeground}
           value={phoneNumber}
           onChangeText={onPhoneChange}
           keyboardType="phone-pad"
@@ -95,7 +98,7 @@ export function CountryCodePicker({
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('country_code')}</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={24} color={colors.foreground} />
+                <Ionicons name="close" size={24} color={c.foreground} />
               </TouchableOpacity>
             </View>
 
@@ -117,7 +120,7 @@ export function CountryCodePicker({
                   <Text style={styles.countryName}>{t(item.i18n_key as any)}</Text>
                   <Text style={styles.countryCode}>{item.code}</Text>
                   {value === item.code && (
-                    <Ionicons name="checkmark" size={18} color={colors.primary} />
+                    <Ionicons name="checkmark" size={18} color={c.primary} />
                   )}
                 </TouchableOpacity>
               )}
@@ -130,7 +133,7 @@ export function CountryCodePicker({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: 10,
@@ -143,7 +146,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 15,
     borderRadius: 12,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     minWidth: 110,
   },
   flag: {
@@ -152,7 +155,7 @@ const styles = StyleSheet.create({
   codeText: {
     ...typography.body,
     fontSize: 15,
-    color: colors.foreground,
+    color: c.foreground,
   },
   phoneInput: {
     ...typography.body,
@@ -160,17 +163,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 15,
     fontSize: 15,
-    backgroundColor: colors.inputBackground,
-    color: colors.foreground,
+    backgroundColor: c.inputBackground,
+    color: c.foreground,
   },
   // Modal styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlayDark,
+    backgroundColor: c.overlayDark,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '70%',
@@ -182,12 +185,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   modalTitle: {
     ...typography.headline,
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
   },
   countryItem: {
     flexDirection: 'row',
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   countryItemActive: {
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
   },
   countryFlag: {
     fontSize: 22,
@@ -207,12 +210,12 @@ const styles = StyleSheet.create({
     ...typography.body,
     flex: 1,
     fontSize: 15,
-    color: colors.foreground,
+    color: c.foreground,
   },
   countryCode: {
     ...typography.body,
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     fontFamily: 'DMMono_400Regular',
   },
 });

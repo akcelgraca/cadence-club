@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { MAPBOX_STYLES, type MapboxStyleKey } from '../map/MapViewWrapper';
-import { colors } from '../../lib/theme';
-import { styles } from './recordStyles';
+import { type Colors } from '../../lib/theme';
+import { makeStyles } from './recordStyles';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -51,6 +53,8 @@ export function MapControls({
   onToggle3D: () => void;
   onCenterOnUser: () => void;
 }) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const top = insets.top + 8;
@@ -73,7 +77,7 @@ export function MapControls({
           activeOpacity={0.7}
           accessibilityLabel={t('settings_map_style')}
         >
-          <Ionicons name="layers-outline" size={18} color={colors.foreground} />
+          <Ionicons name="layers-outline" size={18} color={c.foreground} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -85,7 +89,7 @@ export function MapControls({
           <Ionicons
             name="triangle"
             size={17}
-            color={showTerrain ? colors.primary : colors.mutedForeground}
+            color={showTerrain ? c.primary : c.mutedForeground}
           />
         </TouchableOpacity>
 
@@ -98,7 +102,7 @@ export function MapControls({
           <Ionicons
             name="cube-outline"
             size={18}
-            color={show3D ? colors.primary : colors.mutedForeground}
+            color={show3D ? c.primary : c.mutedForeground}
           />
         </TouchableOpacity>
 
@@ -108,7 +112,7 @@ export function MapControls({
           activeOpacity={0.7}
           accessibilityLabel={t('map_center_on_me')}
         >
-          <Ionicons name="locate-outline" size={18} color={colors.foreground} />
+          <Ionicons name="locate-outline" size={18} color={c.foreground} />
         </TouchableOpacity>
       </View>
 

@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { Ionicons } from '@expo/vector-icons';
 import type { UserBadge } from '../../lib/types';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 import { getBadgeImage } from '../../lib/badgeImages';
 import { useTranslation } from 'react-i18next';
 
@@ -10,6 +12,8 @@ interface BadgeCollectionProps {
 }
 
 export function BadgeCollection({ badges }: BadgeCollectionProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   if (badges.length === 0) {
     return (
@@ -29,7 +33,7 @@ export function BadgeCollection({ badges }: BadgeCollectionProps) {
               {getBadgeImage(ub.badge?.icon ?? '') ? (
                 <Image source={getBadgeImage(ub.badge?.icon ?? '')} style={styles.badgeImage} resizeMode="contain" />
               ) : (
-                <Ionicons name={(ub.badge?.icon as any) ?? 'ribbon'} size={28} color={colors.primary} />
+                <Ionicons name={(ub.badge?.icon as any) ?? 'ribbon'} size={28} color={c.primary} />
               )}
             </View>
             <Text style={styles.badgeName} numberOfLines={2}>{ub.badge?.name}</Text>
@@ -40,22 +44,22 @@ export function BadgeCollection({ badges }: BadgeCollectionProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   emptyContainer: { alignItems: 'center', padding: 20 },
-  emptyText: { ...typography.bodyBold, fontSize: 14, color: colors.mutedForeground },
-  emptySubtext: { ...typography.body, fontSize: 12, color: colors.mutedForeground, marginTop: 4 },
+  emptyText: { ...typography.bodyBold, fontSize: 14, color: c.mutedForeground },
+  emptySubtext: { ...typography.body, fontSize: 12, color: c.mutedForeground, marginTop: 4 },
   row: { flexDirection: 'row', gap: 16, paddingHorizontal: 4 },
   badgeItem: { alignItems: 'center', width: 72 },
   badgeIconContainer: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 6,
   },
   badgeIcon: { fontSize: 28 },
   badgeImage: { width: 36, height: 36 },
-  badgeName: { ...typography.bodyBold, fontSize: 11, textAlign: 'center', color: colors.foreground },
+  badgeName: { ...typography.bodyBold, fontSize: 11, textAlign: 'center', color: c.foreground },
 });

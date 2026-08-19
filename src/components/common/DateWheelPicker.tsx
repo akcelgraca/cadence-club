@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View,
   Text,
@@ -8,7 +9,7 @@ import {
   FlatList,
   Platform,
 } from 'react-native';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 import { useTranslation } from 'react-i18next';
 
 const MONTHS = [
@@ -37,6 +38,8 @@ interface DateWheelPickerProps {
 }
 
 export default function DateWheelPicker({ visible, value, onConfirm, onCancel }: DateWheelPickerProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const parsed = useMemo(() => {
     const parts = value.split('-');
@@ -209,14 +212,14 @@ export default function DateWheelPicker({ visible, value, onConfirm, onCancel }:
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: Platform.OS === 'ios' ? 40 : 20,
@@ -228,22 +231,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   title: {
     ...typography.bodyBold,
     fontSize: 16,
-    color: colors.foreground,
+    color: c.foreground,
   },
   cancelText: {
     ...typography.body,
     fontSize: 15,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   confirmText: {
     ...typography.bodyBold,
     fontSize: 15,
-    color: colors.primary,
+    color: c.primary,
   },
   pickerWrapper: {
     position: 'relative',
@@ -264,12 +267,12 @@ const styles = StyleSheet.create({
   itemText: {
     ...typography.body,
     fontSize: 17,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   selectedItemText: {
     ...typography.bodyBold,
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
   },
   highlightBar: {
     position: 'absolute',
@@ -284,6 +287,6 @@ const styles = StyleSheet.create({
     width: '100%',
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
 });

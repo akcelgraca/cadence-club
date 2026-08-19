@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View,
   Text,
@@ -17,7 +18,7 @@ import { formatRelativeTime } from '../../utils/dateHelpers';
 import { getComments, addComment, deleteComment } from '../../services/social';
 import { useAuthStore } from '../../store/authStore';
 import { Avatar } from '../common/Avatar';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { Comment } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
 
@@ -29,6 +30,8 @@ interface CommentsSheetProps {
 }
 
 export function CommentsSheet({ activityId, visible, onClose, onCountChange }: CommentsSheetProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { profile } = useAuthStore();
   const [comments, setComments] = useState<Comment[]>([]);
@@ -113,7 +116,7 @@ export function CommentsSheet({ activityId, visible, onClose, onCountChange }: C
             onPress={() => handleDeleteComment(item.id)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="trash-outline" size={16} color={colors.mutedForeground} />
+            <Ionicons name="trash-outline" size={16} color={c.mutedForeground} />
           </TouchableOpacity>
         )}
       </View>
@@ -135,14 +138,14 @@ export function CommentsSheet({ activityId, visible, onClose, onCountChange }: C
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>{t('comments')}</Text>
             <TouchableOpacity onPress={onClose} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-              <Ionicons name="close" size={22} color={colors.foreground} />
+              <Ionicons name="close" size={22} color={c.foreground} />
             </TouchableOpacity>
           </View>
 
           {/* List */}
           {loading ? (
             <View style={styles.center}>
-              <ActivityIndicator color={colors.primary} />
+              <ActivityIndicator color={c.primary} />
             </View>
           ) : (
             <FlatList
@@ -151,7 +154,7 @@ export function CommentsSheet({ activityId, visible, onClose, onCountChange }: C
               renderItem={renderComment}
               ListEmptyComponent={
                 <View style={styles.center}>
-                  <Ionicons name="chatbubble-outline" size={40} color={colors.mutedForeground} />
+                  <Ionicons name="chatbubble-outline" size={40} color={c.mutedForeground} />
                   <Text style={styles.emptyText}>{t('comments_empty')}</Text>
                   <Text style={styles.emptySubText}>{t('be_first_comment')}</Text>
                 </View>
@@ -173,7 +176,7 @@ export function CommentsSheet({ activityId, visible, onClose, onCountChange }: C
               ref={inputRef}
               style={styles.input}
               placeholder={t('comment_placeholder')}
-              placeholderTextColor={colors.mutedForeground}
+              placeholderTextColor={c.mutedForeground}
               value={text}
               onChangeText={setText}
               multiline
@@ -188,9 +191,9 @@ export function CommentsSheet({ activityId, visible, onClose, onCountChange }: C
               ]}
             >
               {sending ? (
-                <ActivityIndicator size="small" color={colors.primaryForeground} />
+                <ActivityIndicator size="small" color={c.primaryForeground} />
               ) : (
-                <Ionicons name="send" size={15} color={colors.primaryForeground} />
+                <Ionicons name="send" size={15} color={c.primaryForeground} />
               )}
             </TouchableOpacity>
           </View>
@@ -200,7 +203,7 @@ export function CommentsSheet({ activityId, visible, onClose, onCountChange }: C
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -210,7 +213,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   sheet: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -220,7 +223,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
     alignSelf: 'center',
     marginTop: 10,
     marginBottom: 4,
@@ -232,12 +235,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   sheetTitle: {
     ...typography.bodyBold,
     fontSize: 16,
-    color: colors.foreground,
+    color: c.foreground,
   },
   center: {
     flex: 1,
@@ -249,12 +252,12 @@ const styles = StyleSheet.create({
   emptyText: {
     ...typography.bodyBold,
     fontSize: 15,
-    color: colors.foreground,
+    color: c.foreground,
   },
   emptySubText: {
     ...typography.body,
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   listContent: {
     padding: 16,
@@ -268,7 +271,7 @@ const styles = StyleSheet.create({
   },
   commentBubble: {
     flex: 1,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -282,17 +285,17 @@ const styles = StyleSheet.create({
   commentName: {
     ...typography.bodyBold,
     fontSize: 13,
-    color: colors.foreground,
+    color: c.foreground,
   },
   commentTime: {
     ...typography.body,
     fontSize: 11,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   commentBody: {
     ...typography.body,
     fontSize: 14,
-    color: colors.foreground,
+    color: c.foreground,
     lineHeight: 20,
   },
   inputRow: {
@@ -302,14 +305,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
+    borderTopColor: c.border,
   },
   input: {
     flex: 1,
     ...typography.body,
     fontSize: 14,
-    color: colors.foreground,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    color: c.foreground,
+    backgroundColor: withAlpha(c.foreground, 0.06),
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -319,7 +322,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },

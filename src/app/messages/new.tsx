@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   TextInput, ActivityIndicator,
@@ -9,12 +10,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { searchUsersToMessage } from '../../services/messages';
 import { useAuthStore } from '../../store/authStore';
 import { Avatar } from '../../components/common/Avatar';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { Profile } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
 import { goBackOr } from '../../lib/navigation';
 
 export default function NewMessageScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Partial<Profile>[]>([]);
@@ -56,7 +59,7 @@ export default function NewMessageScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => goBackOr('/(tabs)/social')} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+          <Ionicons name="chevron-back" size={24} color={c.foreground} />
         </TouchableOpacity>
         <Text style={styles.title}>{t('messages_new_title')}</Text>
         <View style={{ width: 32 }} />
@@ -64,21 +67,21 @@ export default function NewMessageScreen() {
 
       {/* Search */}
       <View style={styles.searchBox}>
-        <Ionicons name="search" size={16} color={colors.mutedForeground} />
+        <Ionicons name="search" size={16} color={c.mutedForeground} />
         <TextInput
           style={styles.searchInput}
           placeholder={t('messages_search_user')}
-          placeholderTextColor={colors.mutedForeground}
+          placeholderTextColor={c.mutedForeground}
           value={query}
           onChangeText={setQuery}
           autoFocus
           returnKeyType="search"
         />
         {loading
-          ? <ActivityIndicator size="small" color={colors.primary} />
+          ? <ActivityIndicator size="small" color={c.primary} />
           : query.length > 0
             ? <TouchableOpacity onPress={() => setQuery('')} hitSlop={8}>
-                <Ionicons name="close-circle" size={16} color={colors.mutedForeground} />
+                <Ionicons name="close-circle" size={16} color={c.mutedForeground} />
               </TouchableOpacity>
             : null
         }
@@ -102,7 +105,7 @@ export default function NewMessageScreen() {
               <Text style={styles.userName}>{item.full_name ?? 'Atleta'}</Text>
               <Text style={styles.userHandle}>@{item.username}</Text>
             </View>
-            <Ionicons name="chatbubble-outline" size={20} color={colors.mutedForeground} />
+            <Ionicons name="chatbubble-outline" size={20} color={c.mutedForeground} />
           </TouchableOpacity>
         )}
         ListEmptyComponent={
@@ -110,13 +113,13 @@ export default function NewMessageScreen() {
             {query.trim()
               ? (
                 <>
-                  <Ionicons name="search-outline" size={40} color={colors.mutedForeground} />
+                  <Ionicons name="search-outline" size={40} color={c.mutedForeground} />
                   <Text style={styles.emptyText}>Sem resultados para "{query}"</Text>
                 </>
               )
               : (
                 <>
-                  <Ionicons name="people-outline" size={44} color={colors.mutedForeground} />
+                  <Ionicons name="people-outline" size={44} color={c.mutedForeground} />
                   <Text style={styles.emptyText}>{t('messages_search_hint')}</Text>
                 </>
               )
@@ -133,8 +136,8 @@ export default function NewMessageScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
 
   header: {
     flexDirection: 'row',
@@ -143,12 +146,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   title: {
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
   },
 
   searchBox: {
@@ -159,13 +162,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 40,
     borderRadius: 12,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
   searchInput: {
     flex: 1,
     ...typography.body,
     fontSize: 15,
-    color: colors.foreground,
+    color: c.foreground,
   },
 
   list: { flexGrow: 1 },
@@ -176,12 +179,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.card,
+    borderBottomColor: c.border,
+    backgroundColor: c.card,
   },
   userInfo: { flex: 1 },
-  userName: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
-  userHandle: { ...typography.body, fontSize: 13, color: colors.mutedForeground, marginTop: 2 },
+  userName: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
+  userHandle: { ...typography.body, fontSize: 13, color: c.mutedForeground, marginTop: 2 },
 
   empty: {
     flex: 1,
@@ -194,7 +197,7 @@ const styles = StyleSheet.create({
   emptyText: {
     ...typography.body,
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textAlign: 'center',
   },
 });

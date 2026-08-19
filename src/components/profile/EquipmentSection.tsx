@@ -1,11 +1,13 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { formatDistance } from '../../utils/formatDistance';
 import { EQUIPMENT_TYPES } from '../../lib/constants';
 import { useSettingsStore } from '../../store/settingsStore';
 import type { Equipment } from '../../lib/types';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 import { useTranslation } from 'react-i18next';
 
 interface EquipmentSectionProps {
@@ -26,13 +28,15 @@ export function EquipmentSection({
   isError,
   isOwnProfile = false,
 }: EquipmentSectionProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   if (isLoading) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>{t('settings_equipment')}</Text>
-        <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 16 }} />
+        <ActivityIndicator size="small" color={c.primary} style={{ marginTop: 16 }} />
       </View>
     );
   }
@@ -80,7 +84,7 @@ export function EquipmentSection({
             }}
             activeOpacity={isOwnProfile ? 0.7 : 1}
           >
-            <Ionicons name={getEquipmentIcon(item.type) as any} size={28} color={colors.primary} style={styles.equipmentIcon} />
+            <Ionicons name={getEquipmentIcon(item.type) as any} size={28} color={c.primary} style={styles.equipmentIcon} />
             <View style={styles.equipmentInfo}>
               <Text style={styles.equipmentName}>
                 {item.name}
@@ -102,9 +106,9 @@ export function EquipmentSection({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 16,
@@ -116,15 +120,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  title: { ...typography.headline, fontSize: 18, color: colors.foreground },
-  addButton: { ...typography.bodyBold, color: colors.primary, fontSize: 14 },
+  title: { ...typography.headline, fontSize: 18, color: c.foreground },
+  addButton: { ...typography.bodyBold, color: c.primary, fontSize: 14 },
   emptyInner: { alignItems: 'center', paddingVertical: 16 },
-  emptyText: { ...typography.body, fontSize: 14, color: colors.mutedForeground, textAlign: 'center' },
-  emptySubtext: { ...typography.body, fontSize: 12, color: colors.mutedForeground, textAlign: 'center', marginTop: 4 },
+  emptyText: { ...typography.body, fontSize: 14, color: c.mutedForeground, textAlign: 'center' },
+  emptySubtext: { ...typography.body, fontSize: 12, color: c.mutedForeground, textAlign: 'center', marginTop: 4 },
   equipmentCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
@@ -132,7 +136,7 @@ const styles = StyleSheet.create({
   retired: { opacity: 0.4 },
   equipmentIcon: { fontSize: 28, marginRight: 12 },
   equipmentInfo: { flex: 1 },
-  equipmentName: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
-  equipmentDetail: { ...typography.body, fontSize: 13, color: colors.mutedForeground, marginTop: 2 },
-  equipmentDistance: { ...typography.mono, fontSize: 12, color: colors.primary, marginTop: 2 },
+  equipmentName: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
+  equipmentDetail: { ...typography.body, fontSize: 13, color: c.mutedForeground, marginTop: 2 },
+  equipmentDistance: { ...typography.mono, fontSize: 12, color: c.primary, marginTop: 2 },
 });

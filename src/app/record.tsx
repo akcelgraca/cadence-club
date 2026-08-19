@@ -1,4 +1,5 @@
 import { View } from 'react-native';
+import { useColors } from '../hooks/useColors';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import { useLocalSearchParams } from 'expo-router';
@@ -16,7 +17,7 @@ import { PausedView } from '../components/record/PausedView';
 import { NonDistancePausedView } from '../components/record/NonDistancePausedView';
 import { FinishedView } from '../components/record/FinishedView';
 import { MapControls, mapControlsHeight } from '../components/record/MapControls';
-import { colors } from '../lib/theme';
+import { type Colors } from '../lib/theme';
 
 /**
  * Orquestra o fluxo de gravação: escolhe a vista conforme o estado da atividade
@@ -24,6 +25,7 @@ import { colors } from '../lib/theme';
  * Cada vista vive no seu ficheiro em components/record/.
  */
 export default function RecordScreen() {
+  const c = useColors();
   const insets = useSafeAreaInsets();
   const state = useActivityStore((s) => s.state);
   const type = useActivityStore((s) => s.type);
@@ -65,7 +67,7 @@ export default function RecordScreen() {
 
   /** Mapa em cima + vista em baixo, o arranjo comum a idle/gravação/pausa. */
   const withMap = (mapFlex: number, children: ReactNode) => (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: c.background }}>
       <View style={{ flex: mapFlex }}>
         <LiveRecordingMap
           style={{ flex: 1 }}
@@ -95,7 +97,7 @@ export default function RecordScreen() {
 
   /** Atividades sem GPS ocupam o ecrã todo, sem mapa. */
   const withoutMap = (children: ReactNode) => (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.background }}>
       {children}
     </SafeAreaView>
   );

@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import type { TrainingPlanDay } from '../../lib/types';
-import { colors } from '../../lib/theme';
+import { type Colors } from '../../lib/theme';
 
 /**
  * O herói do ecrã Hoje: responde a "o que faço hoje?" numa só olhada e
@@ -16,26 +18,30 @@ interface TodayGoalCardProps {
 }
 
 function StartButton({ label }: { label: string }) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   return (
     <TouchableOpacity
       style={styles.startButton}
       onPress={() => router.push('/record')}
       activeOpacity={0.85}
     >
-      <Ionicons name="play" size={13} color={colors.primary} />
+      <Ionicons name="play" size={13} color={c.primary} />
       <Text style={styles.startText}>{label}</Text>
     </TouchableOpacity>
   );
 }
 
 export function TodayGoalCard({ todayPlan, isLoading }: TodayGoalCardProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
 
   if (isLoading) {
     return (
       <View style={[styles.card, styles.cardLoading]}>
         <Text style={styles.label}>{t('today_goal')}</Text>
-        <ActivityIndicator size="small" color={colors.primaryForeground} style={{ marginTop: 12 }} />
+        <ActivityIndicator size="small" color={c.primaryForeground} style={{ marginTop: 12 }} />
       </View>
     );
   }
@@ -103,7 +109,7 @@ export function TodayGoalCard({ todayPlan, isLoading }: TodayGoalCardProps) {
         <Text style={styles.label}>{t('today_goal')}</Text>
         {isDone && (
           <View style={styles.donePill}>
-            <Ionicons name="checkmark" size={11} color={colors.primary} />
+            <Ionicons name="checkmark" size={11} color={c.primary} />
             <Text style={styles.doneText}>{t('today_done')}</Text>
           </View>
         )}
@@ -128,9 +134,9 @@ export function TodayGoalCard({ todayPlan, isLoading }: TodayGoalCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   card: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
@@ -142,7 +148,7 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 12,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
     opacity: 0.75,
     textTransform: 'uppercase',
     letterSpacing: 1.4,
@@ -151,7 +157,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: colors.primaryForeground,
+    backgroundColor: c.primaryForeground,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -159,7 +165,7 @@ const styles = StyleSheet.create({
   doneText: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 10,
-    color: colors.primary,
+    color: c.primary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -170,12 +176,12 @@ const styles = StyleSheet.create({
     fontSize: 60,
     lineHeight: 58,
     letterSpacing: -1,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
   },
   unit: {
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 19,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
     opacity: 0.85,
     marginBottom: 6,
     flexShrink: 1,
@@ -186,7 +192,7 @@ const styles = StyleSheet.create({
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 38,
     lineHeight: 40,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
     textTransform: 'uppercase',
     marginTop: 6,
   },
@@ -194,7 +200,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Barlow_400Regular',
     fontSize: 13,
     lineHeight: 18,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
     opacity: 0.85,
     marginTop: 4,
     marginBottom: 4,
@@ -210,13 +216,13 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: 5,
-    backgroundColor: colors.primaryForeground,
+    backgroundColor: c.primaryForeground,
     borderRadius: 3,
   },
   progressText: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
     opacity: 0.8,
   },
 
@@ -225,7 +231,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.primaryForeground,
+    backgroundColor: c.primaryForeground,
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 22,
@@ -234,7 +240,7 @@ const styles = StyleSheet.create({
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 14,
     letterSpacing: 0.5,
-    color: colors.primary,
+    color: c.primary,
     textTransform: 'uppercase',
   },
 });

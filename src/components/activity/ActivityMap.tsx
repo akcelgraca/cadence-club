@@ -3,7 +3,6 @@ import { MapViewWrapper, MAPBOX_STYLES } from '../map/MapViewWrapper';
 import { RoutePolyline } from '../map/RoutePolyline';
 import { RouteMarker } from '../map/RouteMarker';
 import { useSettingsStore } from '../../store/settingsStore';
-import { colors } from '../../lib/theme';
 
 interface ActivityMapProps {
   points?: { lat: number; lng: number }[];

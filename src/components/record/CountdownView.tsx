@@ -1,10 +1,13 @@
 import { View, Text } from 'react-native';
-import { useEffect } from 'react';
+import { useColors } from '../../hooks/useColors';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useActivityStore } from '../../store/activityStore';
-import { styles } from './recordStyles';
+import { makeStyles } from './recordStyles';
 
 export function CountdownView() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const countdown = useActivityStore((s) => s.countdown);
   const tickCountdown = useActivityStore((s) => s.tickCountdown);

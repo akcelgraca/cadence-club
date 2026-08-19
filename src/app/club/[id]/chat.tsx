@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useColors } from '../../../hooks/useColors';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput,
   ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
@@ -14,13 +15,15 @@ import { supabase } from '../../../services/supabase';
 import { useAuthStore } from '../../../store/authStore';
 import { useKeyboardVisible } from '../../../hooks/useKeyboardVisible';
 import { Avatar } from '../../../components/common/Avatar';
-import { colors, typography, withAlpha } from '../../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../../lib/theme';
 import { formatRelativeTime } from '../../../utils/dateHelpers';
 import type { ClubMessage } from '../../../lib/types';
 import { useTranslation } from 'react-i18next';
 import { goBackOr } from '../../../lib/navigation';
 
 export default function ClubChatScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const myId = useAuthStore((s) => s.profile?.id);
@@ -134,7 +137,7 @@ export default function ClubChatScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => goBackOr(`/club/${id}`)} hitSlop={12} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+          <Ionicons name="chevron-back" size={24} color={c.foreground} />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.headerClub}
@@ -160,10 +163,10 @@ export default function ClubChatScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {loading ? (
-          <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>
+          <View style={styles.center}><ActivityIndicator color={c.primary} /></View>
         ) : !isMember ? (
           <View style={styles.locked}>
-            <Ionicons name="lock-closed-outline" size={40} color={colors.mutedForeground} />
+            <Ionicons name="lock-closed-outline" size={40} color={c.mutedForeground} />
             <Text style={styles.lockedTitle}>{t('club_chat_members_only')}</Text>
             <Text style={styles.lockedSub}>{t('club_chat_join_to_talk')}</Text>
             <TouchableOpacity style={styles.lockedBtn} onPress={() => router.push(`/club/${id}`)}>
@@ -181,7 +184,7 @@ export default function ClubChatScreen() {
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <View style={styles.emptyChat}>
-                  <Ionicons name="chatbubbles-outline" size={40} color={colors.mutedForeground} />
+                  <Ionicons name="chatbubbles-outline" size={40} color={c.mutedForeground} />
                   <Text style={styles.emptyTitle}>{t('club_chat_empty')}</Text>
                   <Text style={styles.emptySub}>{t('club_chat_empty_body')}</Text>
                 </View>
@@ -196,7 +199,7 @@ export default function ClubChatScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('club_chat_placeholder')}
-                placeholderTextColor={colors.mutedForeground}
+                placeholderTextColor={c.mutedForeground}
                 value={text}
                 onChangeText={setText}
                 multiline
@@ -208,8 +211,8 @@ export default function ClubChatScreen() {
                 disabled={!text.trim() || sending}
               >
                 {sending
-                  ? <ActivityIndicator size="small" color={colors.primaryForeground} />
-                  : <Ionicons name="send" size={16} color={colors.primaryForeground} />}
+                  ? <ActivityIndicator size="small" color={c.primaryForeground} />
+                  : <Ionicons name="send" size={16} color={c.primaryForeground} />}
               </TouchableOpacity>
             </View>
           </>
@@ -219,8 +222,8 @@ export default function ClubChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   header: {
@@ -230,36 +233,36 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 6,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.card,
+    borderBottomColor: c.border,
+    backgroundColor: c.card,
   },
   backBtn: { padding: 2 },
   headerClub: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   headerAvatar: {
     width: 34, height: 34, borderRadius: 11,
-    backgroundColor: withAlpha(colors.primary, 0.15),
+    backgroundColor: withAlpha(c.primary, 0.15),
     alignItems: 'center', justifyContent: 'center',
   },
   headerAvatarLetter: {
-    fontFamily: 'BarlowCondensed_700Bold', fontSize: 17, color: colors.primary,
+    fontFamily: 'BarlowCondensed_700Bold', fontSize: 17, color: c.primary,
   },
-  headerName: { fontFamily: 'Barlow_600SemiBold', fontSize: 15, color: colors.foreground },
-  headerSub: { ...typography.body, fontSize: 11, color: colors.mutedForeground, marginTop: 1 },
+  headerName: { fontFamily: 'Barlow_600SemiBold', fontSize: 15, color: c.foreground },
+  headerSub: { ...typography.body, fontSize: 11, color: c.mutedForeground, marginTop: 1 },
 
   listContent: { paddingHorizontal: 14, paddingVertical: 12, flexGrow: 1, justifyContent: 'flex-end' },
 
   locked: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40, gap: 10 },
-  lockedTitle: { ...typography.bodyBold, fontSize: 16, color: colors.foreground },
-  lockedSub: { ...typography.body, fontSize: 13, color: colors.mutedForeground, textAlign: 'center' },
+  lockedTitle: { ...typography.bodyBold, fontSize: 16, color: c.foreground },
+  lockedSub: { ...typography.body, fontSize: 13, color: c.mutedForeground, textAlign: 'center' },
   lockedBtn: {
     marginTop: 8,
     paddingHorizontal: 20, paddingVertical: 10,
-    borderRadius: 20, backgroundColor: colors.primary,
+    borderRadius: 20, backgroundColor: c.primary,
   },
-  lockedBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: colors.primaryForeground },
+  lockedBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: c.primaryForeground },
 
   msgWrapper: { marginBottom: 3 },
-  msgTime: { ...typography.body, fontSize: 11, color: colors.mutedForeground, textAlign: 'center', marginVertical: 8 },
+  msgTime: { ...typography.body, fontSize: 11, color: c.mutedForeground, textAlign: 'center', marginVertical: 8 },
   msgRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
   msgRowMe: { justifyContent: 'flex-end' },
   msgAvatar: { width: 28 },
@@ -270,16 +273,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginBottom: 2,
   },
-  bubbleMe: { alignSelf: 'flex-end', backgroundColor: colors.primary, borderBottomRightRadius: 4 },
-  bubbleThem: { alignSelf: 'flex-start', backgroundColor: colors.inputBackground, borderBottomLeftRadius: 4 },
-  bubbleAuthor: { fontFamily: 'Barlow_600SemiBold', fontSize: 12, color: colors.primary, marginBottom: 2 },
+  bubbleMe: { alignSelf: 'flex-end', backgroundColor: c.primary, borderBottomRightRadius: 4 },
+  bubbleThem: { alignSelf: 'flex-start', backgroundColor: c.inputBackground, borderBottomLeftRadius: 4 },
+  bubbleAuthor: { fontFamily: 'Barlow_600SemiBold', fontSize: 12, color: c.primary, marginBottom: 2 },
   bubbleText: { ...typography.body, fontSize: 15, lineHeight: 20 },
-  bubbleTextMe: { color: colors.primaryForeground },
-  bubbleTextThem: { color: colors.foreground },
+  bubbleTextMe: { color: c.primaryForeground },
+  bubbleTextThem: { color: c.foreground },
 
   emptyChat: { alignItems: 'center', paddingVertical: 60, gap: 8, transform: [{ scaleY: -1 }] },
-  emptyTitle: { ...typography.bodyBold, fontSize: 16, color: colors.foreground },
-  emptySub: { ...typography.body, fontSize: 13, color: colors.mutedForeground },
+  emptyTitle: { ...typography.bodyBold, fontSize: 16, color: c.foreground },
+  emptySub: { ...typography.body, fontSize: 13, color: c.mutedForeground },
 
   inputBar: {
     flexDirection: 'row',
@@ -288,15 +291,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-    backgroundColor: colors.card,
+    borderTopColor: c.border,
+    backgroundColor: c.card,
   },
   input: {
     flex: 1,
     ...typography.body,
     fontSize: 15,
-    color: colors.foreground,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    color: c.foreground,
+    backgroundColor: withAlpha(c.foreground, 0.06),
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 9,
@@ -304,7 +307,7 @@ const styles = StyleSheet.create({
   },
   sendBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     alignItems: 'center', justifyContent: 'center',
   },
   sendBtnDisabled: { opacity: 0.4 },

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useColors } from '../hooks/useColors';
 import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,7 +12,7 @@ import { Avatar } from '../components/common/Avatar';
 import { FollowButton } from '../components/social/FollowButton';
 import { formatDistance } from '../utils/formatDistance';
 import { ActivityIcon } from '../components/common/ActivityIcon';
-import { colors, typography, withAlpha } from '../lib/theme';
+import { typography, withAlpha, type Colors } from '../lib/theme';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import type { Profile } from '../lib/types';
@@ -27,6 +28,8 @@ const TABS: { key: SearchTab; icon: keyof typeof Ionicons.glyphMap; i18n: string
 ];
 
 export default function SearchScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const currentProfileId = useAuthStore((s) => s.profile?.id);
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
@@ -132,12 +135,12 @@ export default function SearchScreen() {
     return (
       <TouchableOpacity style={styles.resultItem} onPress={() => handleRoutePress(item)}>
         <View style={styles.routeIconContainer}>
-          <ActivityIcon activityKey={item.activity_type ?? ''} size={20} tintColor={colors.primary} />
+          <ActivityIcon activityKey={item.activity_type ?? ''} size={20} tintColor={c.primary} />
         </View>
         <View style={styles.resultContent}>
           <Text style={styles.resultName}>{item.name}</Text>
           <View style={styles.routeMeta}>
-            <Ionicons name="location-outline" size={12} color={colors.mutedForeground} />
+            <Ionicons name="location-outline" size={12} color={c.mutedForeground} />
             <Text style={styles.resultSub}>
               {item.city ? `${item.city} · ` : ''}{formatDistance(item.distance ?? 0, unitSystem)}
             </Text>
@@ -147,7 +150,7 @@ export default function SearchScreen() {
           <Ionicons
             name={isSaved ? 'bookmark' : 'bookmark-outline'}
             size={20}
-            color={isSaved ? colors.primary : colors.mutedForeground}
+            color={isSaved ? c.primary : c.mutedForeground}
           />
         </TouchableOpacity>
       </TouchableOpacity>
@@ -159,7 +162,7 @@ export default function SearchScreen() {
     if (!query.trim()) {
       return (
         <View style={styles.emptyContainer}>
-          <Ionicons name="search-outline" size={48} color={colors.mutedForeground} />
+          <Ionicons name="search-outline" size={48} color={c.mutedForeground} />
           <Text style={styles.emptyTitle}>{t('search_title')}</Text>
           <Text style={styles.emptySubtitle}>
             {activeTab === 'cities' ? t('search_cities_subtext') : t('search_initial_subtext')}
@@ -169,7 +172,7 @@ export default function SearchScreen() {
     }
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="search-outline" size={48} color={colors.mutedForeground} />
+        <Ionicons name="search-outline" size={48} color={c.mutedForeground} />
         <Text style={styles.emptyTitle}>{t('search_no_results')}</Text>
         <Text style={styles.emptySubtitle}>
           {t('search_no_results_subtext')}
@@ -183,11 +186,11 @@ export default function SearchScreen() {
       {/* Search input */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputRow}>
-          <Ionicons name="search" size={18} color={colors.mutedForeground} />
+          <Ionicons name="search" size={18} color={c.mutedForeground} />
           <TextInput
             style={styles.searchInput}
             placeholder={t('feed_search_placeholder')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={query}
             onChangeText={setQuery}
             autoFocus
@@ -195,7 +198,7 @@ export default function SearchScreen() {
           />
           {query.length > 0 && (
             <TouchableOpacity onPress={() => setQuery('')}>
-              <Ionicons name="close-circle" size={18} color={colors.mutedForeground} />
+              <Ionicons name="close-circle" size={18} color={c.mutedForeground} />
             </TouchableOpacity>
           )}
         </View>
@@ -217,7 +220,7 @@ export default function SearchScreen() {
               <Ionicons
                 name={tab.icon}
                 size={16}
-                color={isActive ? colors.primary : colors.mutedForeground}
+                color={isActive ? c.primary : c.mutedForeground}
               />
               <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
                 {t(tab.i18n as any)}
@@ -230,7 +233,7 @@ export default function SearchScreen() {
       {/* Results */}
       {isLoading ? (
         <View style={styles.centerLoader}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={c.primary} />
         </View>
       ) : (
         <FlatList<SearchResult>
@@ -247,10 +250,10 @@ export default function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
   },
   content: {
     padding: 16,
@@ -263,14 +266,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   searchInputRow: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 40,
@@ -278,13 +281,13 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: colors.foreground,
+    color: c.foreground,
     ...typography.body,
   },
   cancelText: {
     ...typography.body,
     fontSize: 14,
-    color: colors.primary,
+    color: c.primary,
   },
   tabs: {
     flexDirection: 'row',
@@ -292,7 +295,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   tab: {
     flexDirection: 'row',
@@ -301,19 +304,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
   },
   tabActive: {
-    borderColor: colors.primary,
-    backgroundColor: withAlpha(colors.primary, 0.08),
+    borderColor: c.primary,
+    backgroundColor: withAlpha(c.primary, 0.08),
   },
   tabText: {
     ...typography.body,
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   tabTextActive: {
-    color: colors.primary,
+    color: c.primary,
     fontFamily: 'Barlow_600SemiBold',
   },
   centerLoader: {
@@ -326,7 +329,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
     marginBottom: 8,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 12,
     gap: 12,
   },
@@ -336,19 +339,19 @@ const styles = StyleSheet.create({
   resultName: {
     ...typography.bodyBold,
     fontSize: 15,
-    color: colors.foreground,
+    color: c.foreground,
   },
   resultSub: {
     ...typography.body,
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 2,
   },
   routeIconContainer: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: withAlpha(colors.primary, 0.1),
+    backgroundColor: withAlpha(c.primary, 0.1),
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -369,12 +372,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     ...typography.bodyBold,
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
   },
   emptySubtitle: {
     ...typography.body,
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textAlign: 'center',
     paddingHorizontal: 40,
   },

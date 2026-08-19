@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from './Button';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 
 interface EmptyStateProps {
   title: string;
@@ -13,9 +15,11 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ title, subtitle, action }: EmptyStateProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   return (
     <View style={styles.container}>
-      <Ionicons name="file-tray-outline" size={48} color={colors.mutedForeground} />
+      <Ionicons name="file-tray-outline" size={48} color={c.mutedForeground} />
       <Text style={styles.title}>{title}</Text>
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       {action && (
@@ -25,9 +29,9 @@ export function EmptyState({ title, subtitle, action }: EmptyStateProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
   icon: { fontSize: 48, marginBottom: 16 },
-  title: { ...typography.bodyBold, fontSize: 18, textAlign: 'center', marginBottom: 8, color: colors.foreground },
-  subtitle: { ...typography.body, fontSize: 14, color: colors.mutedForeground, textAlign: 'center', marginBottom: 20 },
+  title: { ...typography.bodyBold, fontSize: 18, textAlign: 'center', marginBottom: 8, color: c.foreground },
+  subtitle: { ...typography.body, fontSize: 14, color: c.mutedForeground, textAlign: 'center', marginBottom: 20 },
 });

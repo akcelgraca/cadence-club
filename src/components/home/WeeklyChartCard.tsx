@@ -1,11 +1,13 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { LineChart } from 'react-native-gifted-charts';
 import { useWeeklyDailyBreakdown, useWeeklySummary } from '../../hooks/useProfileStats';
 import { useAuthStore } from '../../store/authStore';
 import { useWeekActivities } from '../../hooks/useActivity';
 import { sumActivityCalories } from '../../utils/calculateCalories';
 import { ageFromBirthDate } from '../../utils/heartRate';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { formatDuration } from '../../utils/dateHelpers';
 import type { WeeklyDaySummary } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
@@ -54,6 +56,8 @@ interface WeeklyChartCardProps {
 }
 
 export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { data, isLoading, isError } = useWeeklyDailyBreakdown(userId);
   const { data: weekly } = useWeeklySummary(userId);
@@ -106,7 +110,7 @@ export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
 
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={colors.primary} />
+          <ActivityIndicator size="small" color={c.primary} />
         </View>
       ) : isError ? (
         <View style={styles.loadingContainer}>
@@ -121,13 +125,13 @@ export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
             spacing={chartSpacing}
             initialSpacing={20}
             endSpacing={20}
-            color={colors.primary}
+            color={c.primary}
             thickness={2}
             curved
             curvature={0}
             strokeLinecap="round"
-            startFillColor={colors.primary + '30'}
-            endFillColor={colors.primary + '00'}
+            startFillColor={c.primary + '30'}
+            endFillColor={c.primary + '00'}
             startOpacity={0.3}
             endOpacity={0}
             hideDataPoints
@@ -136,15 +140,15 @@ export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
             xAxisLabelTextStyle={{
               fontFamily: 'DMMono_400Regular',
               fontSize: 9,
-              color: colors.mutedForeground,
+              color: c.mutedForeground,
             }}
             yAxisTextStyle={{ color: 'transparent' }}
             pointerConfig={{
               pointerStripHeight: 80,
-              pointerStripColor: colors.mutedForeground,
+              pointerStripColor: c.mutedForeground,
               pointerStripWidth: 1,
               strokeDashArray: [2, 5],
-              pointerColor: colors.primary,
+              pointerColor: c.primary,
               radius: 5,
               pointerLabelWidth: 80,
               pointerLabelHeight: 60,
@@ -224,43 +228,43 @@ export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   footer: {
     flexDirection: 'row',
     marginTop: 14,
     paddingTop: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: withAlpha(colors.foreground, 0.08),
+    borderTopColor: withAlpha(c.foreground, 0.08),
   },
   footerItem: { flex: 1, alignItems: 'center' },
   footerDivider: {
     position: 'absolute',
     left: 0, top: 2, bottom: 2,
     width: StyleSheet.hairlineWidth,
-    backgroundColor: withAlpha(colors.foreground, 0.08),
+    backgroundColor: withAlpha(c.foreground, 0.08),
   },
   footerValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 2 },
   footerValue: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 20,
     lineHeight: 22,
-    color: colors.foreground,
+    color: c.foreground,
   },
   footerUnit: {
     fontFamily: 'Barlow_500Medium',
     fontSize: 11,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   footerLabel: {
     fontFamily: 'Barlow_500Medium',
     fontSize: 9,
     letterSpacing: 0.8,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textTransform: 'uppercase',
     marginTop: 2,
   },
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 16,
@@ -275,23 +279,23 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
     textTransform: 'uppercase',
   },
   total: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 13,
-    color: colors.primary,
+    color: c.primary,
   },
   chartWrapper: { alignSelf: 'stretch', marginBottom: 8 },
   loadingContainer: { height: 108, alignItems: 'center', justifyContent: 'center' },
   emptyText: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   tooltip: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     paddingHorizontal: 3,
     paddingVertical: 3,
     borderRadius: 12,
@@ -300,7 +304,7 @@ const styles = StyleSheet.create({
   tooltipDay: {
     ...typography.statNumber,
     fontSize: 16,
-    color: colors.primary,
+    color: c.primary,
     marginBottom: 4,
   },
   tooltipMetrics: {
@@ -310,35 +314,35 @@ const styles = StyleSheet.create({
   tooltipDistance: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 10,
-    color: colors.foreground,
+    color: c.foreground,
   },
   tooltipDuration: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 10,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   tooltipCount: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 2,
   },
   tooltipEmpty: {
     ...typography.body,
     fontSize: 8,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     fontStyle: 'italic',
   },
   dotsRow: { height: 12, marginTop: 4 },
   dot: { width: 6, height: 6, borderRadius: 3 },
   dotToday: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     width: 10,
     height: 10,
     borderRadius: 5,
     borderWidth: 2,
-    borderColor: colors.background,
+    borderColor: c.background,
   },
-  dotActive: { backgroundColor: colors.primary },
-  dotMuted: { backgroundColor: colors.border },
+  dotActive: { backgroundColor: c.primary },
+  dotMuted: { backgroundColor: c.border },
 });

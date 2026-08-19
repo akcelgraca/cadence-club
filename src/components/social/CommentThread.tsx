@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { getComments, addComment } from '../../services/social';
 import { Avatar } from '../common/Avatar';
 import { formatRelativeTime } from '../../utils/dateHelpers';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 import type { Comment } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
 
@@ -13,6 +14,8 @@ interface CommentThreadProps {
 }
 
 export function CommentThread({ activityId }: CommentThreadProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [newComment, setNewComment] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -92,7 +95,7 @@ export function CommentThread({ activityId }: CommentThreadProps) {
         <TextInput
           style={styles.input}
           placeholder={t('comment_placeholder')}
-          placeholderTextColor={colors.mutedForeground}
+          placeholderTextColor={c.mutedForeground}
           value={newComment}
           onChangeText={setNewComment}
           multiline
@@ -109,34 +112,34 @@ export function CommentThread({ activityId }: CommentThreadProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: { marginTop: 20 },
-  title: { ...typography.headline, fontSize: 18, marginBottom: 12, color: colors.foreground },
-  errorText: { ...typography.body, color: colors.destructive, textAlign: 'center', padding: 20 },
-  emptyText: { ...typography.body, color: colors.mutedForeground, textAlign: 'center', padding: 20 },
+  title: { ...typography.headline, fontSize: 18, marginBottom: 12, color: c.foreground },
+  errorText: { ...typography.body, color: c.destructive, textAlign: 'center', padding: 20 },
+  emptyText: { ...typography.body, color: c.mutedForeground, textAlign: 'center', padding: 20 },
   commentItem: { flexDirection: 'row', gap: 10, marginBottom: 16 },
   commentContent: { flex: 1 },
   commentHeader: { flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 4 },
-  commentUser: { ...typography.bodyBold, fontSize: 14, color: colors.foreground },
-  commentTime: { ...typography.body, fontSize: 12, color: colors.mutedForeground },
-  commentBody: { ...typography.body, fontSize: 14, color: colors.foreground, lineHeight: 20 },
-  inputRow: { flexDirection: 'row', gap: 8, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderColor: colors.border },
+  commentUser: { ...typography.bodyBold, fontSize: 14, color: c.foreground },
+  commentTime: { ...typography.body, fontSize: 12, color: c.mutedForeground },
+  commentBody: { ...typography.body, fontSize: 14, color: c.foreground, lineHeight: 20 },
+  inputRow: { flexDirection: 'row', gap: 8, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderColor: c.border },
   input: {
     flex: 1,
     borderRadius: 12,
     padding: 12,
     fontSize: 14,
     maxHeight: 80,
-    backgroundColor: colors.inputBackground,
-    color: colors.foreground,
+    backgroundColor: c.inputBackground,
+    color: c.foreground,
     ...typography.body,
   },
   sendButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 12,
     paddingHorizontal: 16,
     justifyContent: 'center',
   },
   sendButtonDisabled: { opacity: 0.4 },
-  sendButtonText: { ...typography.bodyBold, color: colors.primaryForeground, fontSize: 14 },
+  sendButtonText: { ...typography.bodyBold, color: c.primaryForeground, fontSize: 14 },
 });

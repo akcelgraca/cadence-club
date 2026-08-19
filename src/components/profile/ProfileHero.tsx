@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Avatar } from '../common/Avatar';
 import { FollowButton } from '../social/FollowButton';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { Profile } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
 
@@ -16,6 +18,8 @@ import { useTranslation } from 'react-i18next';
 const PERFORATION_DOTS = 34;
 
 function Perforation() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   return (
     <View style={styles.perforation} pointerEvents="none">
       {Array.from({ length: PERFORATION_DOTS }).map((_, i) => (
@@ -33,6 +37,8 @@ interface BibStatProps {
 }
 
 function BibStat({ value, label, highlight, onPress }: BibStatProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const content = (
     <View style={styles.bibStat}>
       <Text style={[styles.bibValue, highlight && styles.bibValueHighlight]} numberOfLines={1}>
@@ -65,6 +71,8 @@ export function ProfileHero({
   profile, streakDays, activityCount, followerCount, followingCount,
   isOwnProfile = false, isFollowing = false,
 }: ProfileHeroProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const displayName = (() => {
     const parts = profile.full_name?.split(' ') || [];
@@ -94,21 +102,21 @@ export function ProfileHero({
               onPress={() => router.push('/saved')}
               accessibilityLabel={t('profile_saved_posts')}
             >
-              <Ionicons name="bookmark-outline" size={17} color={colors.foreground} />
+              <Ionicons name="bookmark-outline" size={17} color={c.foreground} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionBtn}
               onPress={() => router.push('/profile/edit')}
               accessibilityLabel={t('profile_edit_action')}
             >
-              <Ionicons name="pencil-outline" size={17} color={colors.foreground} />
+              <Ionicons name="pencil-outline" size={17} color={c.foreground} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionBtn}
               onPress={() => router.push('/profile/settings')}
               accessibilityLabel={t('profile_settings_action')}
             >
-              <Ionicons name="settings-outline" size={17} color={colors.foreground} />
+              <Ionicons name="settings-outline" size={17} color={c.foreground} />
             </TouchableOpacity>
           </View>
         )}
@@ -137,7 +145,7 @@ export function ProfileHero({
               } as any)
             }
           >
-            <Ionicons name="chatbubble-outline" size={17} color={colors.primary} />
+            <Ionicons name="chatbubble-outline" size={17} color={c.primary} />
           </TouchableOpacity>
         </View>
       )}
@@ -168,8 +176,8 @@ export function ProfileHero({
   );
 }
 
-const styles = StyleSheet.create({
-  container: { backgroundColor: colors.card, paddingTop: 12 },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  container: { backgroundColor: c.card, paddingTop: 12 },
 
   // Identidade
   identityRow: {
@@ -182,7 +190,7 @@ const styles = StyleSheet.create({
     padding: 2,
     borderRadius: 999,
     borderWidth: 1.5,
-    borderColor: colors.primary,
+    borderColor: c.primary,
   },
   identityText: { flex: 1, minWidth: 0 },
   name: {
@@ -190,13 +198,13 @@ const styles = StyleSheet.create({
     fontSize: 27,
     lineHeight: 29,
     letterSpacing: 0.5,
-    color: colors.foreground,
+    color: c.foreground,
     textTransform: 'uppercase',
   },
   handle: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 1,
   },
   actions: { flexDirection: 'row', gap: 2 },
@@ -209,7 +217,7 @@ const styles = StyleSheet.create({
     ...typography.body,
     fontSize: 13,
     lineHeight: 18,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     paddingHorizontal: 20,
     paddingTop: 8,
   },
@@ -225,7 +233,7 @@ const styles = StyleSheet.create({
   messageBtn: {
     width: 42, height: 42, borderRadius: 21,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: withAlpha(colors.primary, 0.35),
+    borderWidth: 1, borderColor: withAlpha(c.primary, 0.35),
   },
 
   // Dorsal
@@ -239,7 +247,7 @@ const styles = StyleSheet.create({
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: withAlpha(colors.foreground, 0.18),
+    backgroundColor: withAlpha(c.foreground, 0.18),
   },
   bibRow: {
     flexDirection: 'row',
@@ -252,15 +260,15 @@ const styles = StyleSheet.create({
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 30,
     lineHeight: 32,
-    color: colors.foreground,
+    color: c.foreground,
   },
-  bibValueHighlight: { color: colors.primary },
+  bibValueHighlight: { color: c.primary },
   bibLabel: {
     fontFamily: 'Barlow_500Medium',
     fontSize: 9,
     letterSpacing: 0.9,
     lineHeight: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textTransform: 'uppercase',
     textAlign: 'center',
     marginTop: 2,
@@ -269,6 +277,6 @@ const styles = StyleSheet.create({
     width: StyleSheet.hairlineWidth,
     alignSelf: 'stretch',
     marginVertical: 6,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
   },
 });

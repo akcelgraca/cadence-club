@@ -1,4 +1,6 @@
+import { useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useColors } from '../../../hooks/useColors';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,7 +10,7 @@ import { supabase } from '../../../services/supabase';
 import { Avatar } from '../../../components/common/Avatar';
 import { FollowButton } from '../../../components/social/FollowButton';
 import { useAuthStore } from '../../../store/authStore';
-import { colors, typography } from '../../../lib/theme';
+import { typography, type Colors } from '../../../lib/theme';
 import { useTranslation } from 'react-i18next';
 
 interface FollowItem {
@@ -23,6 +25,8 @@ interface FollowItem {
 }
 
 export default function FollowListScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { id, type } = useLocalSearchParams<{ id: string; type: 'followers' | 'following' }>();
   const isFollowers = type === 'followers';
@@ -84,11 +88,11 @@ export default function FollowListScreen() {
       <Stack.Screen options={{ title, headerShown: true }} />
       {isLoading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={c.primary} />
         </View>
       ) : isError ? (
         <View style={styles.center}>
-          <Ionicons name="alert-circle-outline" size={48} color={colors.destructive} />
+          <Ionicons name="alert-circle-outline" size={48} color={c.destructive} />
           <Text style={styles.errorText}>{t('error_loading')}</Text>
         </View>
       ) : (
@@ -110,22 +114,22 @@ export default function FollowListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   list: { padding: 16 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, gap: 12 },
-  errorText: { ...typography.body, fontSize: 16, color: colors.destructive },
-  emptyText: { ...typography.body, fontSize: 14, color: colors.mutedForeground },
+  errorText: { ...typography.body, fontSize: 16, color: c.destructive },
+  emptyText: { ...typography.body, fontSize: 14, color: c.mutedForeground },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
     marginBottom: 8,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 12,
     gap: 12,
   },
   info: { flex: 1 },
-  name: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
-  username: { ...typography.body, fontSize: 13, color: colors.mutedForeground, marginTop: 1 },
+  name: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
+  username: { ...typography.body, fontSize: 13, color: c.mutedForeground, marginTop: 1 },
 });

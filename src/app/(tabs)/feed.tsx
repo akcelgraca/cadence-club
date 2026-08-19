@@ -1,4 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   Animated,
   Pressable,
@@ -17,7 +18,7 @@ import { useUnreadCount } from '../../hooks/useNotifications';
 import { FeedTab } from '../../components/social/FeedTab';
 import { ClubsTab } from '../../components/social/ClubsTab';
 import { MessagesTab } from '../../components/social/MessagesTab';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 
 const TABS = [
   { key: 'feed', label: 'Feed' },
@@ -34,6 +35,8 @@ const HEADER_ICON: Record<TabKey, keyof typeof Ionicons.glyphMap> = {
 };
 
 export default function SocialScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const scrollRef = useRef<ScrollView>(null);
@@ -94,7 +97,7 @@ export default function SocialScreen() {
           style={styles.headerAction}
           accessibilityRole="button"
         >
-          <Ionicons name={HEADER_ICON[TABS[activeIndex].key]} size={22} color={colors.foreground} />
+          <Ionicons name={HEADER_ICON[TABS[activeIndex].key]} size={22} color={c.foreground} />
           {activeIndex === 0 && unreadCount > 0 && (
             <View style={styles.notifBadge}>
               <Text style={styles.notifBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
@@ -172,8 +175,8 @@ export default function SocialScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -185,7 +188,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 28,
-    color: colors.foreground,
+    color: c.foreground,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
     minWidth: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: colors.destructive,
+    backgroundColor: c.destructive,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 3,
@@ -206,7 +209,7 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   tabItem: {
     flex: 1,
@@ -219,21 +222,21 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontFamily: 'Barlow_500Medium',
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
-  tabLabelActive: { color: colors.foreground, fontFamily: 'Barlow_600SemiBold' },
+  tabLabelActive: { color: c.foreground, fontFamily: 'Barlow_600SemiBold' },
   indicator: {
     position: 'absolute',
     bottom: 0,
     height: 2,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 1,
   },
   badge: {
     minWidth: 17,
     height: 17,
     borderRadius: 9,
-    backgroundColor: colors.destructive,
+    backgroundColor: c.destructive,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,

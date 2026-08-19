@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View,
   Text,
@@ -20,7 +21,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -58,6 +59,8 @@ function Slide({
   index: number;
   scrollX: Animated.Value;
 }) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const inputRange = [
     (index - 1) * SCREEN_WIDTH,
@@ -101,6 +104,8 @@ function PaginationDots({
   count: number;
   activeIndex: number;
 }) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   return (
     <View style={styles.dotsContainer}>
       {Array.from({ length: count }).map((_, i) => {
@@ -112,7 +117,7 @@ function PaginationDots({
               styles.dot,
               {
                 width: isActive ? 24 : 8,
-                backgroundColor: isActive ? colors.primary : colors.mutedForeground,
+                backgroundColor: isActive ? c.primary : c.mutedForeground,
               },
             ]}
           />
@@ -126,6 +131,8 @@ function PaginationDots({
 // Main Welcome / Login Screen
 // ============================================================
 export default function LoginScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -245,7 +252,7 @@ export default function LoginScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('email_label')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -255,7 +262,7 @@ export default function LoginScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('password_label')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -319,10 +326,10 @@ export default function LoginScreen() {
 // ============================================================
 const CAROUSEL_HEIGHT = 420;
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -331,7 +338,7 @@ const styles = StyleSheet.create({
   // -- Carousel --
   carouselSection: {
     height: CAROUSEL_HEIGHT,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     paddingTop: 0,
     paddingBottom: 0,
   },
@@ -344,7 +351,7 @@ const styles = StyleSheet.create({
   logoText: {
     ...typography.headline,
     fontSize: 22,
-    color: colors.primary,
+    color: c.primary,
     letterSpacing: -0.5,
   },
   carouselWrapper: {
@@ -371,7 +378,7 @@ const styles = StyleSheet.create({
   slideTitle: {
     ...typography.headline,
     fontSize: 23,
-    color: colors.foreground,
+    color: c.foreground,
     textAlign: 'center',
     lineHeight: 28,
     marginBottom: 10,
@@ -379,7 +386,7 @@ const styles = StyleSheet.create({
   slideDescription: {
     ...typography.body,
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textAlign: 'center',
     lineHeight: 19,
     paddingHorizontal: 12,
@@ -407,22 +414,22 @@ const styles = StyleSheet.create({
   formTitle: {
     ...typography.headline,
     fontSize: 22,
-    color: colors.foreground,
+    color: c.foreground,
     marginBottom: 20,
   },
   input: {
     ...typography.body,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: 14,
     padding: 16,
     fontSize: 16,
-    color: colors.foreground,
-    backgroundColor: colors.inputBackground,
+    color: c.foreground,
+    backgroundColor: c.inputBackground,
     marginBottom: 12,
   },
   button: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 14,
     padding: 17,
     alignItems: 'center',
@@ -431,13 +438,13 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.5 },
   buttonText: {
     ...typography.bodyBold,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
     fontSize: 17,
     letterSpacing: 0.2,
   },
   switchText: {
     ...typography.bodyMedium,
-    color: colors.primary,
+    color: c.primary,
     textAlign: 'center',
     marginTop: 18,
     fontSize: 14,
@@ -453,18 +460,18 @@ const styles = StyleSheet.create({
   separatorLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
   },
   separatorText: {
     ...typography.bodyMedium,
     marginHorizontal: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     fontSize: 13,
   },
   socialButton: {
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: 14,
     padding: 15,
     alignItems: 'center',
@@ -472,7 +479,7 @@ const styles = StyleSheet.create({
   },
   socialButtonText: {
     ...typography.bodyBold,
-    color: colors.foreground,
+    color: c.foreground,
     fontSize: 16,
   },
   appleButton: {

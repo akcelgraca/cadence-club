@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { formatDistance } from '../../utils/formatDistance';
 import { formatDuration } from '../../utils/dateHelpers';
 import { useSettingsStore } from '../../store/settingsStore';
 import type { ProfileStats } from '../../lib/types';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 import { useTranslation } from 'react-i18next';
 
 interface StatsGridProps {
@@ -13,13 +15,15 @@ interface StatsGridProps {
 }
 
 export function StatsGrid({ data, isLoading, isError }: StatsGridProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   if (isLoading) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>{t('total')}</Text>
-        <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 20 }} />
+        <ActivityIndicator size="small" color={c.primary} style={{ marginTop: 20 }} />
       </View>
     );
   }
@@ -67,15 +71,15 @@ export function StatsGrid({ data, isLoading, isError }: StatsGridProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 16,
     padding: 16,
   },
-  title: { ...typography.headline, fontSize: 18, marginBottom: 12, color: colors.foreground },
+  title: { ...typography.headline, fontSize: 18, marginBottom: 12, color: c.foreground },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -85,7 +89,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: 'center',
   },
-  statValue: { ...typography.statNumber, fontSize: 20, color: colors.primary },
-  statLabel: { ...typography.mono, fontSize: 12, color: colors.mutedForeground, marginTop: 2, textTransform: 'uppercase' },
-  emptyText: { ...typography.body, fontSize: 14, color: colors.mutedForeground, textAlign: 'center', paddingVertical: 16 },
+  statValue: { ...typography.statNumber, fontSize: 20, color: c.primary },
+  statLabel: { ...typography.mono, fontSize: 12, color: c.mutedForeground, marginTop: 2, textTransform: 'uppercase' },
+  emptyText: { ...typography.body, fontSize: 14, color: c.mutedForeground, textAlign: 'center', paddingVertical: 16 },
 });

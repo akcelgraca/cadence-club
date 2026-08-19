@@ -1,7 +1,8 @@
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { useState } from 'react';
+import { useColors } from '../../hooks/useColors';
+import { useState, useMemo } from 'react';
 import { followUser, unfollowUser } from '../../services/social';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 import { useTranslation } from 'react-i18next';
 
 interface FollowButtonProps {
@@ -12,6 +13,8 @@ interface FollowButtonProps {
 }
 
 export function FollowButton({ userId, initialFollowing, fullWidth }: FollowButtonProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [following, setFollowing] = useState(initialFollowing);
   const [loading, setLoading] = useState(false);
@@ -50,12 +53,12 @@ export function FollowButton({ userId, initialFollowing, fullWidth }: FollowButt
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   button: { paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8 },
   buttonFullWidth: { flex: 1, alignItems: 'center', borderRadius: 22, paddingVertical: 11 },
-  buttonFollow: { backgroundColor: colors.primary },
-  buttonFollowing: { backgroundColor: colors.inputBackground, borderWidth: 1, borderColor: colors.border },
+  buttonFollow: { backgroundColor: c.primary },
+  buttonFollowing: { backgroundColor: c.inputBackground, borderWidth: 1, borderColor: c.border },
   text: { ...typography.bodyBold, fontSize: 14 },
-  textFollow: { color: colors.primaryForeground },
-  textFollowing: { color: colors.foreground },
+  textFollow: { color: c.primaryForeground },
+  textFollowing: { color: c.foreground },
 });

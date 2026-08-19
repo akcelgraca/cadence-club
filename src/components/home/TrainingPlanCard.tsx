@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import type { TrainingPlanDay } from '../../lib/types';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 import { formatDuration } from '../../utils/dateHelpers';
 import { getActivityByKey } from '../../lib/constants';
 import { ActivityIcon } from '../common/ActivityIcon';
@@ -37,6 +38,8 @@ interface TrainingPlanCardProps {
 }
 
 export function TrainingPlanCard({ plan, isLoading }: TrainingPlanCardProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [selectedDay, setSelectedDay] = useState<TrainingPlanDay | null>(null);
 
@@ -46,7 +49,7 @@ export function TrainingPlanCard({ plan, isLoading }: TrainingPlanCardProps) {
         <View style={styles.header}>
           <Text style={styles.title}>{t('training_plan_title')}</Text>
         </View>
-        <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 12 }} />
+        <ActivityIndicator size="small" color={c.primary} style={{ marginTop: 12 }} />
       </View>
     );
   }
@@ -107,7 +110,7 @@ export function TrainingPlanCard({ plan, isLoading }: TrainingPlanCardProps) {
                   {DAY_LABELS[i]}
                 </Text>
                 {item.is_completed ? (
-                  <Ionicons name="checkmark" size={11} color={colors.primary} />
+                  <Ionicons name="checkmark" size={11} color={c.primary} />
                 ) : isToday ? (
                   <View style={styles.pulse} />
                 ) : isRest ? (
@@ -148,12 +151,12 @@ export function TrainingPlanCard({ plan, isLoading }: TrainingPlanCardProps) {
             {/* Activity type */}
             {selectedDay?.activity_type === 'rest' ? (
               <View style={styles.activityRow}>
-                <Ionicons name={REST_CONFIG.icon} size={28} color={colors.primary} />
+                <Ionicons name={REST_CONFIG.icon} size={28} color={c.primary} />
                 <Text style={styles.activityLabel}>{t(REST_CONFIG.labelKey)}</Text>
               </View>
             ) : selectedActivity ? (
               <View style={styles.activityRow}>
-                <ActivityIcon activityKey={selectedActivity.key} size={28} tintColor={colors.primary} />
+                <ActivityIcon activityKey={selectedActivity.key} size={28} tintColor={c.primary} />
                 <Text style={styles.activityLabel}>{t(selectedActivity.i18n_key as any)}</Text>
               </View>
             ) : null}
@@ -168,14 +171,14 @@ export function TrainingPlanCard({ plan, isLoading }: TrainingPlanCardProps) {
               <View style={styles.metricsGrid}>
                 {selectedDay.target_distance != null && (
                   <View style={styles.metricItem}>
-                    <Ionicons name="flag" size={16} color={colors.mutedForeground} />
+                    <Ionicons name="flag" size={16} color={c.mutedForeground} />
                     <Text style={styles.metricValue}>{selectedDay.target_distance} km</Text>
                     <Text style={styles.metricLabel}>{t('distance')}</Text>
                   </View>
                 )}
                 {selectedDay.target_duration != null && (
                   <View style={styles.metricItem}>
-                    <Ionicons name="time-outline" size={16} color={colors.mutedForeground} />
+                    <Ionicons name="time-outline" size={16} color={c.mutedForeground} />
                     <Text style={styles.metricValue}>{formatDuration(selectedDay.target_duration)}</Text>
                     <Text style={styles.metricLabel}>{t('duration')}</Text>
                   </View>
@@ -184,7 +187,7 @@ export function TrainingPlanCard({ plan, isLoading }: TrainingPlanCardProps) {
                     minutos para treinos parados */}
                 {selectedDay.is_completed && (
                   <View style={styles.metricItem}>
-                    <Ionicons name="checkmark-circle" size={16} color={colors.success} />
+                    <Ionicons name="checkmark-circle" size={16} color={c.success} />
                     <Text style={[styles.metricValue, styles.metricDone]}>
                       {selectedDay.target_distance != null
                         ? `${((selectedDay.actual_distance ?? 0) / 1000).toFixed(2)} km`
@@ -206,7 +209,7 @@ export function TrainingPlanCard({ plan, isLoading }: TrainingPlanCardProps) {
             {/* Completed badge */}
             {selectedDay?.is_completed && (
               <View style={styles.completedBadge}>
-                <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+                <Ionicons name="checkmark-circle" size={18} color={c.success} />
                 <Text style={styles.completedText}>{t('training_completed')}</Text>
               </View>
             )}
@@ -225,9 +228,9 @@ export function TrainingPlanCard({ plan, isLoading }: TrainingPlanCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -241,13 +244,13 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
     textTransform: 'uppercase',
   },
   count: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   pillsRow: { flexDirection: 'row', gap: 6 },
   pill: {
@@ -259,18 +262,18 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   pillToday: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '1a',
+    borderColor: c.primary,
+    backgroundColor: c.primary + '1a',
   },
   pillDone: {
-    borderColor: colors.border,
-    backgroundColor: colors.card,
+    borderColor: c.border,
+    backgroundColor: c.card,
   },
   pillPending: {
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   pillRest: {
-    borderColor: colors.border,
+    borderColor: c.border,
     opacity: 0.5,
   },
   pillDay: {
@@ -278,37 +281,37 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textTransform: 'uppercase',
   },
-  pillDayToday: { color: colors.primary },
-  pillDayMuted: { color: colors.mutedForeground },
+  pillDayToday: { color: c.primary },
+  pillDayMuted: { color: c.mutedForeground },
   pulse: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   emptyDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
   },
   restDot: {
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.mutedForeground,
+    backgroundColor: c.mutedForeground,
     opacity: 0.4,
   },
   // Modal styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlayDark,
+    backgroundColor: c.overlayDark,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
   },
   modalContent: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 20,
     padding: 32,
     alignItems: 'center',
@@ -326,11 +329,11 @@ const styles = StyleSheet.create({
   modalDayName: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 24,
-    color: colors.primary,
+    color: c.primary,
     textTransform: 'uppercase',
   },
   todayBadge: {
-    backgroundColor: colors.primary + '1a',
+    backgroundColor: c.primary + '1a',
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -338,7 +341,7 @@ const styles = StyleSheet.create({
   todayBadgeText: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 12,
-    color: colors.primary,
+    color: c.primary,
     textTransform: 'uppercase',
   },
   activityRow: {
@@ -350,12 +353,12 @@ const styles = StyleSheet.create({
   activityLabel: {
     ...typography.bodyBold,
     fontSize: 16,
-    color: colors.foreground,
+    color: c.foreground,
   },
   planLabel: {
     ...typography.body,
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginBottom: 20,
   },
   metricsGrid: {
@@ -367,7 +370,7 @@ const styles = StyleSheet.create({
   },
   metricItem: {
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     borderRadius: 12,
     padding: 12,
     minWidth: 80,
@@ -375,23 +378,23 @@ const styles = StyleSheet.create({
   metricValue: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 16,
-    color: colors.foreground,
+    color: c.foreground,
     marginTop: 4,
   },
   metricDone: {
-    color: colors.success,
+    color: c.success,
   },
   metricLabel: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 10,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textTransform: 'uppercase',
     marginTop: 2,
   },
   restMessage: {
     ...typography.body,
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -404,11 +407,11 @@ const styles = StyleSheet.create({
   completedText: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 14,
-    color: colors.success,
+    color: c.success,
     textTransform: 'uppercase',
   },
   modalCloseButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 12,
     paddingHorizontal: 24,
     paddingVertical: 10,
@@ -416,6 +419,6 @@ const styles = StyleSheet.create({
   },
   modalCloseText: {
     ...typography.bodyBold,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
   },
 });

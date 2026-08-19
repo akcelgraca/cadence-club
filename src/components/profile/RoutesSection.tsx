@@ -1,4 +1,6 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { router } from 'expo-router';
 import { formatDistance } from '../../utils/formatDistance';
 import { formatDuration, formatRelativeTime } from '../../utils/dateHelpers';
@@ -8,7 +10,7 @@ import type { Activity } from '../../lib/types';
 import { ActivityIcon } from '../common/ActivityIcon';
 import { getActivityByKey } from '../../lib/constants';
 import { useTranslation } from 'react-i18next';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 
 interface RoutesSectionProps {
   activities: Activity[] | undefined;
@@ -16,13 +18,15 @@ interface RoutesSectionProps {
 }
 
 export function RoutesSection({ activities, isLoading }: RoutesSectionProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   if (isLoading) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>{t('tab_routes')}</Text>
-        <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 16 }} />
+        <ActivityIndicator size="small" color={c.primary} style={{ marginTop: 16 }} />
       </View>
     );
   }
@@ -55,7 +59,7 @@ export function RoutesSection({ activities, isLoading }: RoutesSectionProps) {
           </View>
           <View style={styles.routeInfo}>
             <View style={styles.routeTypeRow}>
-              <ActivityIcon activityKey={activity.type} size={14} tintColor={colors.foreground} />
+              <ActivityIcon activityKey={activity.type} size={14} tintColor={c.foreground} />
               <Text style={styles.routeType}>
                 {t(getActivityByKey(activity.type)?.i18n_key as any ?? 'activity_walk')}
               </Text>
@@ -71,19 +75,19 @@ export function RoutesSection({ activities, isLoading }: RoutesSectionProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 16,
     padding: 16,
   },
-  title: { ...typography.headline, fontSize: 18, marginBottom: 12, color: colors.foreground },
-  emptyText: { ...typography.body, fontSize: 14, color: colors.mutedForeground, textAlign: 'center', paddingVertical: 16 },
+  title: { ...typography.headline, fontSize: 18, marginBottom: 12, color: c.foreground },
+  emptyText: { ...typography.body, fontSize: 14, color: c.mutedForeground, textAlign: 'center', paddingVertical: 16 },
   routeCard: {
     flexDirection: 'row',
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
@@ -96,8 +100,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   routeInfo: { flex: 1, justifyContent: 'center' },
-  routeType: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
+  routeType: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
   routeTypeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
-  routeStats: { ...typography.body, fontSize: 13, color: colors.mutedForeground, marginTop: 2 },
-  routeDate: { ...typography.body, fontSize: 12, color: colors.mutedForeground, marginTop: 2 },
+  routeStats: { ...typography.body, fontSize: 13, color: c.mutedForeground, marginTop: 2 },
+  routeDate: { ...typography.body, fontSize: 12, color: c.mutedForeground, marginTop: 2 },
 });

@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert,
   Animated, useWindowDimensions,
@@ -30,7 +31,7 @@ import { HealthMetrics } from '../../components/profile/HealthMetrics';
 import { ActivityIcon } from '../../components/common/ActivityIcon';
 import { getActivityByKey } from '../../lib/constants';
 import type { Activity } from '../../lib/types';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 
 const TABS = [
   { key: 'resumo', label: 'Resumo' },
@@ -41,6 +42,8 @@ const TABS = [
 const RECENT_LIMIT = 6;
 
 export default function ProfileScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { profile, signOut } = useAuthStore();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
@@ -134,7 +137,7 @@ export default function ProfileScreen() {
         activeOpacity={0.7}
       >
         <View style={styles.activityIconWrap}>
-          <ActivityIcon activityKey={activity.type} size={18} tintColor={colors.primary} />
+          <ActivityIcon activityKey={activity.type} size={18} tintColor={c.primary} />
         </View>
         <View style={styles.activityInfo}>
           <Text style={styles.activityType} numberOfLines={1}>
@@ -144,7 +147,7 @@ export default function ProfileScreen() {
             {formatDistance(activity.distance, unitSystem)} · {formatDuration(activity.duration)} · {formatRelativeTime(activity.created_at)}
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
+        <Ionicons name="chevron-forward" size={16} color={c.mutedForeground} />
       </TouchableOpacity>
     );
   };
@@ -217,7 +220,7 @@ export default function ProfileScreen() {
               isOwnProfile
             />
             <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-              <Ionicons name="log-out-outline" size={17} color={colors.destructive} />
+              <Ionicons name="log-out-outline" size={17} color={c.destructive} />
               <Text style={styles.logoutText}>{t('profile_sign_out')}</Text>
             </TouchableOpacity>
           </ScrollView>
@@ -234,7 +237,7 @@ export default function ProfileScreen() {
                   onPress={() => router.push('/(tabs)/history')}
                 >
                   <Text style={styles.viewAllText}>{t('home_view_history')}</Text>
-                  <Ionicons name="chevron-forward" size={12} color={colors.primary} />
+                  <Ionicons name="chevron-forward" size={12} color={c.primary} />
                 </TouchableOpacity>
               </View>
 
@@ -242,7 +245,7 @@ export default function ProfileScreen() {
                 recent.map(renderActivityRow)
               ) : (
                 <View style={styles.emptyBlock}>
-                  <Ionicons name="pulse-outline" size={36} color={colors.mutedForeground} />
+                  <Ionicons name="pulse-outline" size={36} color={c.mutedForeground} />
                   <Text style={styles.emptyTitle}>{t('profile_no_activities')}</Text>
                   <Text style={styles.emptyText}>{t('profile_record_first')}</Text>
                   <TouchableOpacity
@@ -283,17 +286,17 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   pager: { flex: 1 },
   pageContent: { paddingBottom: 32 },
 
   // Abas
   tabs: {
     flexDirection: 'row',
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
     position: 'relative',
   },
   tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
@@ -301,20 +304,20 @@ const styles = StyleSheet.create({
     fontFamily: 'Barlow_500Medium',
     fontSize: 13,
     letterSpacing: 0.3,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
-  tabTextActive: { fontFamily: 'Barlow_600SemiBold', color: colors.foreground },
+  tabTextActive: { fontFamily: 'Barlow_600SemiBold', color: c.foreground },
   tabIndicator: {
     position: 'absolute',
     bottom: 0,
     height: 2,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 1,
   },
 
   // Secções
   sectionCard: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 16,
@@ -326,9 +329,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 12,
   },
-  sectionCardTitle: { ...typography.headline, fontSize: 18, color: colors.foreground },
+  sectionCardTitle: { ...typography.headline, fontSize: 18, color: c.foreground },
   viewAll: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  viewAllText: { fontFamily: 'Barlow_600SemiBold', fontSize: 12, color: colors.primary },
+  viewAllText: { fontFamily: 'Barlow_600SemiBold', fontSize: 12, color: c.primary },
 
   streakWrapper: { marginHorizontal: 16, marginTop: 16 },
 
@@ -339,32 +342,32 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 11,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
+    borderTopColor: c.border,
   },
   activityIconWrap: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: withAlpha(colors.primary, 0.1),
+    backgroundColor: withAlpha(c.primary, 0.1),
     alignItems: 'center', justifyContent: 'center',
   },
   activityInfo: { flex: 1, minWidth: 0 },
-  activityType: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
+  activityType: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
   activityMeta: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 2,
   },
 
   // Estado vazio
   emptyBlock: { alignItems: 'center', paddingVertical: 28, gap: 8 },
-  emptyTitle: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
-  emptyText: { ...typography.body, fontSize: 13, color: colors.mutedForeground, textAlign: 'center' },
+  emptyTitle: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
+  emptyText: { ...typography.body, fontSize: 13, color: c.mutedForeground, textAlign: 'center' },
   emptyBtn: {
     marginTop: 8,
     paddingHorizontal: 18, paddingVertical: 10,
-    borderRadius: 20, backgroundColor: colors.primary,
+    borderRadius: 20, backgroundColor: c.primary,
   },
-  emptyBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: colors.primaryForeground },
+  emptyBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: c.primaryForeground },
 
   // Sair
   logoutButton: {
@@ -377,7 +380,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: withAlpha(colors.destructive, 0.35),
+    borderColor: withAlpha(c.destructive, 0.35),
   },
-  logoutText: { fontFamily: 'Barlow_600SemiBold', fontSize: 14, color: colors.destructive },
+  logoutText: { fontFamily: 'Barlow_600SemiBold', fontSize: 14, color: c.destructive },
 });

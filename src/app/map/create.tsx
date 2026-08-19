@@ -1,11 +1,12 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 import { fetchRouteById, createRoute, updateRoute } from '../../services/routes';
 import { MapViewWrapper } from '../../components/map/MapViewWrapper';
 import { RoutePolyline } from '../../components/map/RoutePolyline';
@@ -15,6 +16,8 @@ import type { ActivityType, RouteDifficulty, SurfaceType } from '../../lib/types
 import { goBackOr } from '../../lib/navigation';
 
 export default function CreateRouteScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { routeId, path: pathParam, distance: distParam, duration: durParam } = useLocalSearchParams<{
     routeId?: string;
@@ -135,7 +138,7 @@ export default function CreateRouteScreen() {
         value={name}
         onChangeText={setName}
         placeholder={t('route_create_name_placeholder')}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
       />
 
       <Text style={styles.label}>{t('route_create_description_label')}</Text>
@@ -144,7 +147,7 @@ export default function CreateRouteScreen() {
         value={description}
         onChangeText={setDescription}
         placeholder={t('route_create_description_placeholder')}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
         multiline
         numberOfLines={3}
       />
@@ -155,7 +158,7 @@ export default function CreateRouteScreen() {
         value={city}
         onChangeText={setCity}
         placeholder={t('route_create_city_placeholder')}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
       />
 
       <Text style={styles.label}>{t('activity_detail_screen')}</Text>
@@ -169,7 +172,7 @@ export default function CreateRouteScreen() {
             <Ionicons
               name={act.icon as any}
               size={14}
-              color={activityType === act.key ? colors.primaryForeground : colors.foreground}
+              color={activityType === act.key ? c.primaryForeground : c.foreground}
             />
             <Text style={[styles.chipText, activityType === act.key && styles.chipTextSelected]}>
               {t(act.i18n_key as any)}
@@ -209,14 +212,14 @@ export default function CreateRouteScreen() {
       </View>
 
       <TouchableOpacity style={styles.publicToggle} onPress={() => setIsPublic(!isPublic)}>
-        <Ionicons name={isPublic ? 'globe' : 'lock-closed'} size={18} color={colors.foreground} />
+        <Ionicons name={isPublic ? 'globe' : 'lock-closed'} size={18} color={c.foreground} />
         <Text style={styles.publicText}>{isPublic ? t('route_create_public') : t('route_create_private')}</Text>
       </TouchableOpacity>
 
       {/* Stats */}
       {(distance > 0 || duration > 0) && (
         <View style={styles.statsPreview}>
-          <Ionicons name="analytics" size={16} color={colors.primary} />
+          <Ionicons name="analytics" size={16} color={c.primary} />
           <Text style={styles.statsText}>
             {(distance / 1000).toFixed(1)} km
             {duration > 0 && ` · ${Math.round(duration / 60)} min`}
@@ -230,7 +233,7 @@ export default function CreateRouteScreen() {
         disabled={saving}
       >
         {saving ? (
-          <ActivityIndicator size="small" color={colors.primaryForeground} />
+          <ActivityIndicator size="small" color={c.primaryForeground} />
         ) : (
           <Text style={styles.saveButtonText}>
             {isEditing ? t('route_create_update') : t('route_create_save')}
@@ -241,19 +244,19 @@ export default function CreateRouteScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   content: { padding: 20 },
   mapContainer: { height: 220, borderRadius: 16, overflow: 'hidden', marginBottom: 20 },
-  sectionTitle: { ...typography.headline, fontSize: 24, color: colors.foreground, marginBottom: 16 },
-  label: { ...typography.bodyMedium, fontSize: 14, color: colors.mutedForeground, marginTop: 14, marginBottom: 6 },
+  sectionTitle: { ...typography.headline, fontSize: 24, color: c.foreground, marginBottom: 16 },
+  label: { ...typography.bodyMedium, fontSize: 14, color: c.mutedForeground, marginTop: 14, marginBottom: 6 },
   input: {
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderRadius: 10,
     padding: 12,
     fontSize: 16,
     fontFamily: 'Barlow_400Regular',
-    color: colors.foreground,
+    color: c.foreground,
   },
   textArea: { height: 80, textAlignVertical: 'top' },
   chipRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
@@ -264,34 +267,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
   },
-  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { ...typography.body, fontSize: 13, color: colors.foreground },
-  chipTextSelected: { color: colors.primaryForeground, fontFamily: 'Barlow_600SemiBold' },
+  chipSelected: { backgroundColor: c.primary, borderColor: c.primary },
+  chipText: { ...typography.body, fontSize: 13, color: c.foreground },
+  chipTextSelected: { color: c.primaryForeground, fontFamily: 'Barlow_600SemiBold' },
   publicToggle: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     marginTop: 18,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderRadius: 10,
     padding: 14,
   },
-  publicText: { ...typography.body, fontSize: 15, color: colors.foreground },
+  publicText: { ...typography.body, fontSize: 15, color: c.foreground },
   statsPreview: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     marginTop: 18,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderRadius: 10,
     padding: 14,
   },
-  statsText: { ...typography.statNumber, fontSize: 18, color: colors.primary },
+  statsText: { ...typography.statNumber, fontSize: 18, color: c.primary },
   saveButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 16,
     padding: 18,
     alignItems: 'center',
@@ -299,5 +302,5 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   saveButtonDisabled: { opacity: 0.5 },
-  saveButtonText: { ...typography.bodyBold, fontSize: 18, color: colors.primaryForeground },
+  saveButtonText: { ...typography.bodyBold, fontSize: 18, color: c.primaryForeground },
 });

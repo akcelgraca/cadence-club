@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, StyleSheet, ScrollView, ActivityIndicator, Image,
   TouchableOpacity, Alert, useWindowDimensions,
@@ -25,7 +26,7 @@ import { CommentThread } from '../../components/social/CommentThread';
 import { ActivityMap } from '../../components/activity/ActivityMap';
 import { ElevationProfile } from '../../components/activity/ElevationProfile';
 import { ActivityIcon } from '../../components/common/ActivityIcon';
-import { colors, typography, withAlpha, zoneColors } from '../../lib/theme';
+import { typography, withAlpha, zoneColors, type Colors } from '../../lib/theme';
 import { goBackOr } from '../../lib/navigation';
 
 const MOOD_IMAGES: Record<number, any> = {
@@ -37,6 +38,8 @@ const MOOD_IMAGES: Record<number, any> = {
 };
 
 export default function ActivityDetailScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const perfil = useAuthStore((s) => s.profile);
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -74,7 +77,7 @@ export default function ActivityDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
@@ -151,7 +154,7 @@ export default function ActivityDetailScreen() {
           options={{
             headerRight: () => (
               <TouchableOpacity onPress={handleOwnerMenu} hitSlop={12} accessibilityLabel={t('activity_manage')}>
-                <Ionicons name="ellipsis-horizontal" size={20} color={colors.foreground} />
+                <Ionicons name="ellipsis-horizontal" size={20} color={c.foreground} />
               </TouchableOpacity>
             ),
           }}
@@ -172,7 +175,7 @@ export default function ActivityDetailScreen() {
           </View>
         </View>
         <Text style={styles.typeIcon}>
-          <ActivityIcon activityKey={activity.type} size={32} tintColor={colors.primary} />
+          <ActivityIcon activityKey={activity.type} size={32} tintColor={c.primary} />
         </Text>
       </View>
 
@@ -237,7 +240,7 @@ export default function ActivityDetailScreen() {
           <Ionicons
             name={paceComparison.percentDiff > 0 ? 'trending-up' : 'trending-down'}
             size={15}
-            color={paceComparison.percentDiff > 0 ? colors.primary : colors.mutedForeground}
+            color={paceComparison.percentDiff > 0 ? c.primary : c.mutedForeground}
           />
           <Text style={styles.comparisonText}>
             <Text style={paceComparison.percentDiff > 0 ? styles.comparisonStrong : undefined}>
@@ -353,15 +356,15 @@ export default function ActivityDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   content: { padding: 16 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
-  errorText: { ...typography.body, fontSize: 16, color: colors.destructive },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: c.background },
+  errorText: { ...typography.body, fontSize: 16, color: c.destructive },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   userRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  userName: { ...typography.bodyBold, fontSize: 16, color: colors.foreground },
-  date: { ...typography.body, fontSize: 13, color: colors.mutedForeground, marginTop: 2 },
+  userName: { ...typography.bodyBold, fontSize: 16, color: c.foreground },
+  date: { ...typography.body, fontSize: 13, color: c.mutedForeground, marginTop: 2 },
   typeIcon: { fontSize: 32 },
   metricsGrid: {
     flexDirection: 'row',
@@ -369,7 +372,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   metricItem: {
     width: '50%',
@@ -381,13 +384,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingBottom: 12,
   },
   zoneDot: { width: 10, height: 10, borderRadius: 5 },
-  zoneText: { ...typography.bodyMedium, fontSize: 14, color: colors.mutedForeground },
-  metricValue: { ...typography.statNumber, fontSize: 28, color: colors.foreground, letterSpacing: 0.3 },
+  zoneText: { ...typography.bodyMedium, fontSize: 14, color: c.mutedForeground },
+  metricValue: { ...typography.statNumber, fontSize: 28, color: c.foreground, letterSpacing: 0.3 },
   metricLabel: {
     fontFamily: 'Barlow_500Medium',
     fontSize: 10,
     letterSpacing: 1.2,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 2,
     textTransform: 'uppercase',
   },
@@ -398,30 +401,30 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
     borderRadius: 12,
-    backgroundColor: withAlpha(colors.primary, 0.07),
+    backgroundColor: withAlpha(c.primary, 0.07),
   },
   comparisonText: {
     ...typography.body,
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     flex: 1,
     lineHeight: 18,
   },
-  comparisonStrong: { fontFamily: 'Barlow_600SemiBold', color: colors.foreground },
+  comparisonStrong: { fontFamily: 'Barlow_600SemiBold', color: c.foreground },
 
   splitsSection: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
   },
-  splitsTitle: { ...typography.headline, fontSize: 18, color: colors.foreground, marginBottom: 12 },
+  splitsTitle: { ...typography.headline, fontSize: 18, color: c.foreground, marginBottom: 12 },
 
   moodSection: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-  moodLabel: { ...typography.body, fontSize: 14, color: colors.mutedForeground },
+  moodLabel: { ...typography.body, fontSize: 14, color: c.mutedForeground },
   moodImage: { width: 32, height: 32, borderRadius: 16, tintColor: '#FFFFFF' },
-  title: { ...typography.bodyBold, fontSize: 20, marginBottom: 8, color: colors.foreground },
-  description: { ...typography.body, fontSize: 15, color: colors.mutedForeground, marginBottom: 16, lineHeight: 22 },
+  title: { ...typography.bodyBold, fontSize: 20, marginBottom: 8, color: c.foreground },
+  description: { ...typography.body, fontSize: 15, color: c.mutedForeground, marginBottom: 16, lineHeight: 22 },
   activityPhoto: { width: '100%', aspectRatio: 4 / 5, borderRadius: 12, marginBottom: 16 },
   gallery: { borderRadius: 12, overflow: 'hidden', marginBottom: 16 },
   /** Cartão gerado: PNG transparente, precisa de fundo escuro. */
@@ -436,5 +439,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.55)',
   },
   galleryDotActive: { backgroundColor: '#FFFFFF', width: 16 },
-  socialRow: { paddingVertical: 12, borderTopWidth: 1, borderColor: colors.border },
+  socialRow: { paddingVertical: 12, borderTopWidth: 1, borderColor: c.border },
 });

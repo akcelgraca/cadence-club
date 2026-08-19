@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View,
   Text,
@@ -20,10 +21,12 @@ import { CountryCodePicker } from '../../components/ui/CountryCodePicker';
 import QuestionnaireForm from '../../components/questionnaire/QuestionnaireForm';
 import DateWheelPicker from '../../components/common/DateWheelPicker';
 import type { ActivityGoal, QuestionnairePreferences } from '../../lib/types';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 import { goBackOr } from '../../lib/navigation';
 
 export default function RegisterScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [step, setStep] = useState<'form' | 'goal' | 'questionnaire'>('form');
 
@@ -173,7 +176,7 @@ export default function RegisterScreen() {
               onPress={() => goBackOr('/(auth)')}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-              <Ionicons name="arrow-back" size={24} color={colors.foreground} />
+              <Ionicons name="arrow-back" size={24} color={c.foreground} />
             </TouchableOpacity>
 
             <Text style={styles.title}>{t('signup_title')}</Text>
@@ -184,14 +187,14 @@ export default function RegisterScreen() {
               <TextInput
                 style={[styles.input, styles.halfInput]}
                 placeholder={t('register_first_name')}
-                placeholderTextColor={colors.mutedForeground}
+                placeholderTextColor={c.mutedForeground}
                 value={firstName}
                 onChangeText={setFirstName}
               />
               <TextInput
                 style={[styles.input, styles.halfInput]}
                 placeholder={t('register_last_name')}
-                placeholderTextColor={colors.mutedForeground}
+                placeholderTextColor={c.mutedForeground}
                 value={lastName}
                 onChangeText={setLastName}
               />
@@ -200,7 +203,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('register_username')}
-              placeholderTextColor={colors.mutedForeground}
+              placeholderTextColor={c.mutedForeground}
               value={username}
               onChangeText={setUsername}
               autoCapitalize="none"
@@ -209,7 +212,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('register_email')}
-              placeholderTextColor={colors.mutedForeground}
+              placeholderTextColor={c.mutedForeground}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -219,7 +222,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('register_password')}
-              placeholderTextColor={colors.mutedForeground}
+              placeholderTextColor={c.mutedForeground}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -247,7 +250,7 @@ export default function RegisterScreen() {
                     })()
                   : 'Selecionar...'}
               </Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
+              <Ionicons name="chevron-forward" size={18} color={c.mutedForeground} />
             </TouchableOpacity>
             <DateWheelPicker
               visible={showDatePicker}
@@ -259,7 +262,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('register_country')}
-              placeholderTextColor={colors.mutedForeground}
+              placeholderTextColor={c.mutedForeground}
               value={country}
               onChangeText={setCountry}
             />
@@ -267,7 +270,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               placeholder="Cidade"
-              placeholderTextColor={colors.mutedForeground}
+              placeholderTextColor={c.mutedForeground}
               value={city}
               onChangeText={setCity}
             />
@@ -292,7 +295,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={[styles.input, styles.halfInput]}
                 placeholder={t('register_weight')}
-                placeholderTextColor={colors.mutedForeground}
+                placeholderTextColor={c.mutedForeground}
                 value={weightKg}
                 onChangeText={setWeightKg}
                 keyboardType="decimal-pad"
@@ -300,7 +303,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={[styles.input, styles.halfInput]}
                 placeholder={t('register_height')}
-                placeholderTextColor={colors.mutedForeground}
+                placeholderTextColor={c.mutedForeground}
                 value={heightCm}
                 onChangeText={setHeightCm}
                 keyboardType="decimal-pad"
@@ -339,7 +342,7 @@ export default function RegisterScreen() {
           onPress={() => setStep('form')}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.foreground} />
+          <Ionicons name="arrow-back" size={24} color={c.foreground} />
         </TouchableOpacity>
 
         <Text style={styles.title}>{t('onboarding_goal_title')}</Text>
@@ -355,7 +358,7 @@ export default function RegisterScreen() {
               <Ionicons
                 name={(g.icon as any) ?? 'flag'}
                 size={32}
-                color={goal === g.key ? colors.primary : colors.foreground}
+                color={goal === g.key ? c.primary : c.foreground}
               />
               <Text style={styles.goalLabel}>{t(g.i18n_key as any)}</Text>
             </TouchableOpacity>
@@ -366,7 +369,7 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('register_weekly_target')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={weeklyKmTarget}
             onChangeText={setWeeklyKmTarget}
             keyboardType="numeric"
@@ -413,10 +416,10 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
   },
   container: {
     flex: 1,
@@ -433,13 +436,13 @@ const styles = StyleSheet.create({
   title: {
     ...typography.headline,
     fontSize: 28,
-    color: colors.foreground,
+    color: c.foreground,
     marginBottom: 8,
   },
   subtitle: {
     ...typography.body,
     fontSize: 15,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginBottom: 24,
     lineHeight: 21,
   },
@@ -453,14 +456,14 @@ const styles = StyleSheet.create({
     padding: 15,
     fontSize: 15,
     marginBottom: 12,
-    backgroundColor: colors.inputBackground,
-    color: colors.foreground,
+    backgroundColor: c.inputBackground,
+    color: c.foreground,
   },
   halfInput: {
     flex: 1,
   },
   button: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -469,12 +472,12 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.6 },
   buttonText: {
     ...typography.bodyBold,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
     fontSize: 16,
   },
   switchText: {
     ...typography.bodyMedium,
-    color: colors.primary,
+    color: c.primary,
     textAlign: 'center',
     marginTop: 18,
     fontSize: 14,
@@ -488,21 +491,21 @@ const styles = StyleSheet.create({
   goalCard: {
     width: '47%',
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
   },
   goalCardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.inputBackground,
+    borderColor: c.primary,
+    backgroundColor: c.inputBackground,
   },
   goalLabel: {
     ...typography.bodyBold,
     fontSize: 14,
     textAlign: 'center',
-    color: colors.foreground,
+    color: c.foreground,
     marginTop: 8,
   },
   skipLink: {
@@ -512,12 +515,12 @@ const styles = StyleSheet.create({
   skipText: {
     ...typography.body,
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   sectionLabel: {
     ...typography.bodyBold,
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginBottom: 8,
     textTransform: 'uppercase',
   },
@@ -531,19 +534,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
   },
   chipActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '20',
+    borderColor: c.primary,
+    backgroundColor: c.primary + '20',
   },
   chipText: {
     ...typography.body,
     fontSize: 13,
-    color: colors.foreground,
+    color: c.foreground,
   },
   chipTextActive: {
-    color: colors.primary,
+    color: c.primary,
   },
   metricsRow: {
     flexDirection: 'row',
@@ -555,16 +558,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 12,
     padding: 15,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     marginBottom: 12,
   },
   dateRowText: {
     ...typography.body,
     fontSize: 15,
-    color: colors.foreground,
+    color: c.foreground,
     flex: 1,
   },
   dateRowPlaceholder: {
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
 });

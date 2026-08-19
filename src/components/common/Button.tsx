@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { colors, typography } from '../../lib/theme';
+import { useColors } from '../../hooks/useColors';
+import { typography, type Colors } from '../../lib/theme';
 
 interface ButtonProps {
   title: string;
@@ -20,13 +22,15 @@ export function Button({
   disabled = false,
   fullWidth = false,
 }: ButtonProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const isDisabled = disabled || loading;
 
   const loaderColor =
-    variant === 'primary' ? colors.primaryForeground :
-    variant === 'danger' ? colors.destructiveForeground :
-    variant === 'ghost' ? colors.primary :
-    colors.foreground;
+    variant === 'primary' ? c.primaryForeground :
+    variant === 'danger' ? c.destructiveForeground :
+    variant === 'ghost' ? c.primary :
+    c.foreground;
 
   return (
     <TouchableOpacity
@@ -52,11 +56,11 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   base: { alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
-  primary: { backgroundColor: colors.primary },
-  secondary: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.border },
-  danger: { backgroundColor: colors.destructive },
+  primary: { backgroundColor: c.primary },
+  secondary: { backgroundColor: 'transparent', borderWidth: 1, borderColor: c.border },
+  danger: { backgroundColor: c.destructive },
   ghost: { backgroundColor: 'transparent' },
   size_sm: { paddingHorizontal: 12, paddingVertical: 8 },
   size_md: { paddingHorizontal: 16, paddingVertical: 12 },
@@ -64,10 +68,10 @@ const styles = StyleSheet.create({
   fullWidth: { width: '100%' },
   disabled: { opacity: 0.5 },
   text: { ...typography.bodyBold },
-  text_primary: { color: colors.primaryForeground, fontSize: 16 },
-  text_secondary: { color: colors.foreground, fontSize: 16 },
-  text_danger: { color: colors.destructiveForeground, fontSize: 16 },
-  text_ghost: { color: colors.mutedForeground, fontSize: 16 },
+  text_primary: { color: c.primaryForeground, fontSize: 16 },
+  text_secondary: { color: c.foreground, fontSize: 16 },
+  text_danger: { color: c.destructiveForeground, fontSize: 16 },
+  text_ghost: { color: c.mutedForeground, fontSize: 16 },
   text_sm: { fontSize: 13 },
   text_md: { fontSize: 16 },
   text_lg: { fontSize: 18 },

@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +9,7 @@ import { ActivityIcon } from '../../components/common/ActivityIcon';
 import { formatDuration, formatDate } from '../../utils/dateHelpers';
 import { formatPace } from '../../utils/formatPace';
 import { useSettingsStore } from '../../store/settingsStore';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { useTranslation } from 'react-i18next';
 import { track } from '../../lib/analytics';
 
@@ -19,6 +20,8 @@ import { track } from '../../lib/analytics';
  * média da comunidade como referência, não como competição.
  */
 export default function SegmentScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
@@ -38,7 +41,7 @@ export default function SegmentScreen() {
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
@@ -68,7 +71,7 @@ export default function SegmentScreen() {
       {/* Identidade do troço */}
       <View style={styles.header}>
         <View style={styles.iconWrap}>
-          <ActivityIcon activityKey={segment.activity_type} size={22} tintColor={colors.primary} />
+          <ActivityIcon activityKey={segment.activity_type} size={22} tintColor={c.primary} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.name}>{segment.name}</Text>
@@ -90,7 +93,7 @@ export default function SegmentScreen() {
 
         {segment.my_attempts === 0 ? (
           <View style={styles.empty}>
-            <Ionicons name="footsteps-outline" size={32} color={colors.mutedForeground} />
+            <Ionicons name="footsteps-outline" size={32} color={c.mutedForeground} />
             <Text style={styles.emptyTitle}>{t('segment_never_run')}</Text>
             <Text style={styles.emptySub}>
               {t('segment_never_run_body')}
@@ -169,7 +172,7 @@ export default function SegmentScreen() {
                 <Ionicons
                   name={vsCommunity > 0 ? 'trending-up' : 'trending-down'}
                   size={14}
-                  color={vsCommunity > 0 ? colors.primary : colors.mutedForeground}
+                  color={vsCommunity > 0 ? c.primary : c.mutedForeground}
                 />
                 <Text style={[styles.communityDiffText, vsCommunity > 0 && styles.communityDiffFaster]}>
                   {Math.abs(vsCommunity).toFixed(0)}% {vsCommunity > 0 ? t('activity_faster') : t('activity_slower')}
@@ -193,110 +196,110 @@ export default function SegmentScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   content: { padding: 16, paddingBottom: 40 },
   center: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.background, padding: 32,
+    backgroundColor: c.background, padding: 32,
   },
-  errorText: { ...typography.body, fontSize: 15, color: colors.mutedForeground },
+  errorText: { ...typography.body, fontSize: 15, color: c.mutedForeground },
 
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
   iconWrap: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: withAlpha(colors.primary, 0.12),
+    backgroundColor: withAlpha(c.primary, 0.12),
     alignItems: 'center', justifyContent: 'center',
   },
   name: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 24,
-    color: colors.foreground,
+    color: c.foreground,
     textTransform: 'uppercase',
   },
   meta: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 2,
   },
   description: {
-    ...typography.body, fontSize: 14, color: colors.mutedForeground,
+    ...typography.body, fontSize: 14, color: c.mutedForeground,
     lineHeight: 20, marginBottom: 16,
   },
 
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 16,
     padding: 16,
     marginTop: 16,
   },
-  cardTitle: { ...typography.headline, fontSize: 17, color: colors.foreground, marginBottom: 14 },
+  cardTitle: { ...typography.headline, fontSize: 17, color: c.foreground, marginBottom: 14 },
 
   statsRow: { flexDirection: 'row', alignItems: 'center' },
   stat: { flex: 1, alignItems: 'center' },
   statDivider: {
-    width: StyleSheet.hairlineWidth, height: 30, backgroundColor: colors.border,
+    width: StyleSheet.hairlineWidth, height: 30, backgroundColor: c.border,
   },
   statValue: {
-    fontFamily: 'BarlowCondensed_900Black', fontSize: 24, color: colors.foreground,
+    fontFamily: 'BarlowCondensed_900Black', fontSize: 24, color: c.foreground,
   },
   statLabel: {
     fontFamily: 'Barlow_500Medium', fontSize: 9, letterSpacing: 0.8,
-    color: colors.mutedForeground, textTransform: 'uppercase', marginTop: 1,
+    color: c.mutedForeground, textTransform: 'uppercase', marginTop: 1,
   },
 
   history: {
     marginTop: 18, paddingTop: 14, gap: 8,
-    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border,
   },
   effortRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   effortDate: {
     width: 74,
-    fontFamily: 'DMMono_400Regular', fontSize: 11, color: colors.mutedForeground,
+    fontFamily: 'DMMono_400Regular', fontSize: 11, color: c.mutedForeground,
   },
   effortBarTrack: {
     flex: 1, height: 8, borderRadius: 4,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
     overflow: 'hidden',
   },
-  effortBar: { height: 8, borderRadius: 4, backgroundColor: withAlpha(colors.primary, 0.4) },
-  effortBarBest: { backgroundColor: colors.primary },
+  effortBar: { height: 8, borderRadius: 4, backgroundColor: withAlpha(c.primary, 0.4) },
+  effortBarBest: { backgroundColor: c.primary },
   effortTime: {
     width: 58, textAlign: 'right',
-    fontFamily: 'DMMono_400Regular', fontSize: 12, color: colors.foreground,
+    fontFamily: 'DMMono_400Regular', fontSize: 12, color: c.foreground,
   },
-  effortTimeBest: { color: colors.primary, fontFamily: 'DMMono_500Medium' },
+  effortTimeBest: { color: c.primary, fontFamily: 'DMMono_500Medium' },
 
   empty: { alignItems: 'center', paddingVertical: 20, gap: 8 },
-  emptyTitle: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
+  emptyTitle: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
   emptySub: {
-    ...typography.body, fontSize: 13, color: colors.mutedForeground,
+    ...typography.body, fontSize: 13, color: c.mutedForeground,
     textAlign: 'center', lineHeight: 18,
   },
 
   communityRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   communityValue: {
-    fontFamily: 'BarlowCondensed_900Black', fontSize: 26, color: colors.foreground,
+    fontFamily: 'BarlowCondensed_900Black', fontSize: 26, color: c.foreground,
   },
   communityLabel: {
-    ...typography.body, fontSize: 12, color: colors.mutedForeground, marginTop: 1,
+    ...typography.body, fontSize: 12, color: c.mutedForeground, marginTop: 1,
   },
   communityDiff: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   communityDiffText: {
-    fontFamily: 'Barlow_600SemiBold', fontSize: 12, color: colors.mutedForeground,
+    fontFamily: 'Barlow_600SemiBold', fontSize: 12, color: c.mutedForeground,
   },
-  communityDiffFaster: { color: colors.primary },
+  communityDiffFaster: { color: c.primary },
   communityNote: {
     ...typography.body, fontSize: 11, lineHeight: 15,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 14, paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: withAlpha(colors.foreground, 0.08),
+    borderTopColor: withAlpha(c.foreground, 0.08),
   },
 
   paceNote: {
-    ...typography.body, fontSize: 12, color: colors.mutedForeground,
+    ...typography.body, fontSize: 12, color: c.mutedForeground,
     textAlign: 'center', marginTop: 20,
   },
 });

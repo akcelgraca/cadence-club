@@ -1,10 +1,12 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { Ionicons } from '@expo/vector-icons';
 import { formatPace } from '../../utils/formatPace';
 import { formatDistance } from '../../utils/formatDistance';
 import { formatDuration } from '../../utils/dateHelpers';
 import { useSettingsStore } from '../../store/settingsStore';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { ProfileStats } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
 
@@ -20,6 +22,8 @@ interface HealthMetricsProps {
 }
 
 export function HealthMetrics({ stats }: HealthMetricsProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
 
@@ -59,7 +63,7 @@ export function HealthMetrics({ stats }: HealthMetricsProps) {
         {rows.map((item) => (
           <View key={item.label} style={styles.row}>
             <View style={styles.iconGroup}>
-              <Ionicons name={item.icon} size={15} color={colors.mutedForeground} />
+              <Ionicons name={item.icon} size={15} color={c.mutedForeground} />
               <Text style={styles.label}>{item.label}</Text>
             </View>
             <Text style={styles.value}>{item.value}</Text>
@@ -73,28 +77,28 @@ export function HealthMetrics({ stats }: HealthMetricsProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 16,
     padding: 16,
   },
-  sectionTitle: { ...typography.headline, fontSize: 18, marginBottom: 12, color: colors.foreground },
+  sectionTitle: { ...typography.headline, fontSize: 18, marginBottom: 12, color: c.foreground },
   list: { gap: 14 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   iconGroup: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  label: { fontFamily: 'Barlow_500Medium', fontSize: 14, color: colors.mutedForeground },
-  value: { fontFamily: 'DMMono_400Regular', fontSize: 14, color: colors.foreground },
+  label: { fontFamily: 'Barlow_500Medium', fontSize: 14, color: c.mutedForeground },
+  value: { fontFamily: 'DMMono_400Regular', fontSize: 14, color: c.foreground },
   note: {
     ...typography.body,
     fontSize: 11,
     lineHeight: 15,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 14,
     paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: withAlpha(colors.foreground, 0.08),
+    borderTopColor: withAlpha(c.foreground, 0.08),
   },
 });

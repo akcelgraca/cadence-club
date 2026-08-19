@@ -1,10 +1,12 @@
+import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { getActivitySegments, percentFaster } from '../../services/segments';
 import { formatDuration } from '../../utils/dateHelpers';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { ActivitySegment } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
 
@@ -16,6 +18,8 @@ import { useTranslation } from 'react-i18next';
  */
 
 function Comparison({ label, value, diff }: { label: string; value: string; diff: number | null }) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const faster = diff != null && diff > 0;
   return (
@@ -32,6 +36,8 @@ function Comparison({ label, value, diff }: { label: string; value: string; diff
 }
 
 function SegmentRow({ segment }: { segment: ActivitySegment }) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const vsBest = percentFaster(segment.duration, segment.my_best);
   const vsCommunity = percentFaster(segment.duration, segment.community_avg);
@@ -55,7 +61,7 @@ function SegmentRow({ segment }: { segment: ActivitySegment }) {
           <Text style={styles.time}>{formatDuration(segment.duration)}</Text>
           {isPersonalBest && segment.my_attempts > 1 && (
             <View style={styles.pbPill}>
-              <Ionicons name="trophy" size={9} color={colors.primary} />
+              <Ionicons name="trophy" size={9} color={c.primary} />
               <Text style={styles.pbText}>{t('segment_record')}</Text>
             </View>
           )}
@@ -83,6 +89,8 @@ function SegmentRow({ segment }: { segment: ActivitySegment }) {
 }
 
 export function ActivitySegments({ activityId }: { activityId: string }) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { data: segments = [] } = useQuery({
     queryKey: ['activitySegments', activityId],
     queryFn: () => getActivitySegments(activityId),
@@ -103,28 +111,28 @@ export function ActivitySegments({ activityId }: { activityId: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
   },
-  title: { ...typography.headline, fontSize: 18, color: colors.foreground, marginBottom: 4 },
-  count: { fontFamily: 'DMMono_400Regular', fontSize: 14, color: colors.mutedForeground },
+  title: { ...typography.headline, fontSize: 18, color: c.foreground, marginBottom: 4 },
+  count: { fontFamily: 'DMMono_400Regular', fontSize: 14, color: c.mutedForeground },
 
   row: {
     paddingVertical: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
+    borderTopColor: c.border,
   },
   rowHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   nameWrap: { flex: 1, minWidth: 0 },
-  name: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
+  name: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
   meta: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 2,
   },
   timeWrap: { alignItems: 'flex-end', gap: 4 },
@@ -132,17 +140,17 @@ const styles = StyleSheet.create({
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 22,
     lineHeight: 24,
-    color: colors.foreground,
+    color: c.foreground,
   },
   pbPill: {
     flexDirection: 'row', alignItems: 'center', gap: 3,
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8,
-    backgroundColor: withAlpha(colors.primary, 0.12),
+    backgroundColor: withAlpha(c.primary, 0.12),
   },
   pbText: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 9,
-    color: colors.primary,
+    color: c.primary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
@@ -153,20 +161,20 @@ const styles = StyleSheet.create({
     fontFamily: 'Barlow_500Medium',
     fontSize: 10,
     letterSpacing: 0.5,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textTransform: 'uppercase',
   },
   compareValue: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 13,
-    color: colors.foreground,
+    color: c.foreground,
     marginTop: 2,
   },
   compareDiff: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 11,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 1,
   },
-  compareDiffFaster: { color: colors.primary },
+  compareDiffFaster: { color: c.primary },
 });

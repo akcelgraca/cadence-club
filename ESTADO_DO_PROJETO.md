@@ -185,6 +185,65 @@ a meio da transição para a mesma instância renderizar sem hooks nenhuns —
 «rendered fewer hooks than expected», que é crash. A config passa a ser
 fotografada num `useRef`, e a saída passou para um efeito.
 
+### 3.11c Modo escuro (19 ago) ✅
+
+**O que impedia não era o `useColors()`.** Ele devolvia `lightColors` e trocá-lo
+é uma linha. O que impedia eram **93 ficheiros e ~1600 usos** de um `colors`
+estático — uma cópia do `lightColors` — a maioria (1183) dentro de
+`StyleSheet.create`, que é avaliado **uma vez**, quando o módulo carrega. Nenhum
+deles reagiria a uma mudança de tema.
+
+O que foi feito:
+
+- **`darkColors`** em `lib/theme.ts`. Não é o claro invertido: o fundo é
+  `#101211` (preto puro faz o conteúdo flutuar e mostra o *smearing* do scroll
+  em OLED) e o verde da marca sobe de `#7BA823` para `#9ED42F`, com o
+  `primaryForeground` a inverter para escuro. Contrastes verificados: o texto
+  dá 16,2:1 e o verde 10,7:1 contra o fundo — AA em tudo o que é texto.
+- **`resolveTheme(preferência, sistema)`** — função pura, testada. A preferência
+  explícita ganha; em `'system'` segue o telemóvel; enquanto o sistema não
+  responde (`null`, `'unspecified'`) fica claro, para não escurecer por um
+  instante no arranque.
+- **`useColors()`** lê o `settings.theme` (o seletor já existia no ecrã de
+  Definições, guardava, e ninguém o lia) e o `useColorScheme()`.
+- **93 ficheiros migrados** para `makeStyles(c)` + `useMemo`, por codemod, com o
+  `tsc` como rede — apanhou os quatro casos que não eram mecânicos (o
+  `recordStyles` partilhado por 8 vistas, o `ICON_MAP` de módulo do
+  `RouteMarker`, o `ErrorBoundary` que é classe e não pode ter hooks, e um
+  import falhado).
+- **O `colors` estático foi apagado.** Era o caminho mais curto e prendia quem o
+  usasse ao tema claro.
+- ✅ Testes de guarda (`theme.test.ts`): as duas paletas têm as mesmas chaves,
+  não são a mesma paleta duas vezes, e nenhum ficheiro importa uma paleta fixa.
+
+Duas correções que vieram no mesmo pacote:
+
+- `app.json` tinha `userInterfaceStyle: "light"`, o que faz o `useColorScheme()`
+  responder sempre "claro". Passou a `"automatic"` — sem isto a preferência
+  'sistema' nunca escureceria, e o motivo não estaria à vista no código.
+- `loadSettings()` só era chamado ao abrir o ecrã de Definições. A app arrancava
+  sempre em claro e só mudava depois de lá passar. Passou para o `_layout`.
+
+**Encontrado e corrigido na primeira passagem visual:** com o tema escuro
+escolhido na app e o telemóvel em claro, apareciam réstias brancas nos cantos
+arredondados de cima do ecrã de escolher rota. É um `Modal` com
+`presentationStyle="pageSheet"`, e a máscara arredondada da folha deixa à vista
+o fundo que o iOS desenha por baixo — que continuava claro, porque o sistema não
+sabia da escolha feita dentro da app. `Appearance.setColorScheme()` no
+`_layout` passa a preferência ao nível nativo, o que arruma também o teclado, os
+alertas e as barras de scroll.
+
+**Falta o resto da passagem visual.** O `tsc` garante que compila e os testes que a
+paleta está coerente; nenhum dos dois vê um cinzento que ficou ilegível. Vale a
+pena percorrer os ecrãs em escuro — sobretudo mapa, gravação e feed, que são os
+que mais misturam cor de marca com fotografia.
+
+**Encontrado de caminho, e por decidir:** no tema **claro**, o verde da marca dá
+**2,69:1** contra o fundo, e o branco sobre o verde dá **2,81:1** — ambos abaixo
+do mínimo AA (4,5:1 para texto, 3:1 para elementos). O modo escuro não tem esse
+problema porque o verde subiu. Corrigir no claro é mexer na cor da marca, e isso
+não é decisão técnica.
+
 ### 3.12 Infraestrutura de subscrição
 - Migração `042_subscriptions.sql` cria a canalização (tabelas + `has_entitlement()` no servidor)
 - `usePremium()` com a lista de funcionalidades premium num sítio só

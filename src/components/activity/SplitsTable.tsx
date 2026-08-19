@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { computeSplits, type SplitPoint } from '../../utils/splits';
 import { formatPace } from '../../utils/formatPace';
 import { useSettingsStore } from '../../store/settingsStore';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -21,6 +22,8 @@ interface SplitsTableProps {
 }
 
 export function SplitsTable({ points, maxRows }: SplitsTableProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   const unitLabel = unitSystem === 'imperial' ? 'mi' : 'km';
@@ -83,13 +86,13 @@ export function SplitsTable({ points, maxRows }: SplitsTableProps) {
                   styles.bar,
                   {
                     width: `${barWidth(split.pace) * 100}%`,
-                    backgroundColor: isFastest ? colors.primary : withAlpha(colors.primary, 0.35),
+                    backgroundColor: isFastest ? c.primary : withAlpha(c.primary, 0.35),
                   },
                   split.isPartial && styles.barPartial,
                 ]}
               />
               {isFastest && (
-                <Ionicons name="flash" size={11} color={colors.primary} style={styles.fastestIcon} />
+                <Ionicons name="flash" size={11} color={c.primary} style={styles.fastestIcon} />
               )}
             </View>
 
@@ -109,7 +112,7 @@ export function SplitsTable({ points, maxRows }: SplitsTableProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: { gap: 2 },
 
   headerRow: {
@@ -118,13 +121,13 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     marginBottom: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   headerCell: {
     fontFamily: 'Barlow_500Medium',
     fontSize: 9,
     letterSpacing: 1,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textTransform: 'uppercase',
   },
 
@@ -139,22 +142,22 @@ const styles = StyleSheet.create({
     width: 34,
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 15,
-    color: colors.foreground,
+    color: c.foreground,
   },
   pace: {
     width: 78,
     fontFamily: 'DMMono_400Regular',
     fontSize: 13,
-    color: colors.foreground,
+    color: c.foreground,
   },
   elev: {
     width: 44,
     textAlign: 'right',
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
-  textFastest: { color: colors.primary },
+  textFastest: { color: c.primary },
 
   bar: { height: 8, borderRadius: 4, minWidth: 4 },
   barPartial: { opacity: 0.5 },
@@ -163,7 +166,7 @@ const styles = StyleSheet.create({
   more: {
     ...typography.body,
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textAlign: 'center',
     paddingTop: 10,
   },

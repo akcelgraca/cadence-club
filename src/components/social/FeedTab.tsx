@@ -1,4 +1,5 @@
 import { useCallback, useState, useEffect, useMemo, useRef } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   ActivityIndicator, ScrollView, Animated,
@@ -16,7 +17,7 @@ import { FollowButton } from './FollowButton';
 import { useFeedStore } from '../../store/feedStore';
 import { useAuthStore } from '../../store/authStore';
 import { SocialPostCard } from './SocialPostCard';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { ACTIVITY_CATEGORIES } from '../../lib/constants';
 import type { Activity, ActivityCategory } from '../../lib/types';
 import { ActivityIcon } from '../common/ActivityIcon';
@@ -37,6 +38,8 @@ const FILTER_OPTIONS: { key: ActivityCategory | 'all'; label: string }[] = [
 // ─── skeleton card ───────────────────────────────────────────────────────────
 
 function SkeletonCard() {
+  const c = useColors();
+  const skeletonStyles = useMemo(() => makeSkeletonStyles(c), [c]);
   const shimmer = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -81,23 +84,25 @@ function SkeletonCard() {
   );
 }
 
-const skeletonStyles = StyleSheet.create({
-  card: { backgroundColor: colors.background },
+const makeSkeletonStyles = (c: Colors) => StyleSheet.create({
+  card: { backgroundColor: c.background },
   authorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14 },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.border },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: c.border },
   authorLines: { flex: 1, gap: 4 },
-  line: { backgroundColor: colors.border, borderRadius: 4 },
-  map: { width: '100%', aspectRatio: 3 / 2, backgroundColor: colors.border },
+  line: { backgroundColor: c.border, borderRadius: 4 },
+  map: { width: '100%', aspectRatio: 3 / 2, backgroundColor: c.border },
   statsRow: { flexDirection: 'row', paddingVertical: 4 },
   statBox: { flex: 1, alignItems: 'center', paddingVertical: 12, gap: 4 },
   actions: { flexDirection: 'row', gap: 8, padding: 10 },
-  actionCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.border },
-  hairline: { height: 8, backgroundColor: withAlpha(colors.foreground, 0.04) },
+  actionCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: c.border },
+  hairline: { height: 8, backgroundColor: withAlpha(c.foreground, 0.04) },
 });
 
 // ─── filter chips ─────────────────────────────────────────────────────────────
 
 function FilterBar() {
+  const c = useColors();
+  const filterStyles = useMemo(() => makeFilterStyles(c), [c]);
   const { t } = useTranslation();
   const { profile } = useAuthStore();
   const filter = useFeedStore((s) => s.filter);
@@ -119,7 +124,7 @@ function FilterBar() {
           <Ionicons
             name={filter.following ? 'people' : 'people-outline'}
             size={13}
-            color={filter.following ? colors.primaryForeground : colors.mutedForeground}
+            color={filter.following ? c.primaryForeground : c.mutedForeground}
           />
           <Text style={[filterStyles.chipText, filter.following && filterStyles.chipTextActive]}>
             {t('feed_followed')}
@@ -141,10 +146,10 @@ function FilterBar() {
             onPress={() => setFilter({ category: opt.key })}
           >
             {opt.key === 'all'
-              ? <Ionicons name="apps" size={13} color={isActive ? colors.primaryForeground : colors.mutedForeground} />
+              ? <Ionicons name="apps" size={13} color={isActive ? c.primaryForeground : c.mutedForeground} />
               : sampleKey
-                ? <ActivityIcon activityKey={sampleKey} size={13} tintColor={isActive ? colors.primaryForeground : colors.mutedForeground} />
-                : <Ionicons name="ellipse-outline" size={13} color={isActive ? colors.primaryForeground : colors.mutedForeground} />
+                ? <ActivityIcon activityKey={sampleKey} size={13} tintColor={isActive ? c.primaryForeground : c.mutedForeground} />
+                : <Ionicons name="ellipse-outline" size={13} color={isActive ? c.primaryForeground : c.mutedForeground} />
             }
             <Text style={[filterStyles.chipText, isActive && filterStyles.chipTextActive]}>
               {t(opt.label as any)}
@@ -156,10 +161,10 @@ function FilterBar() {
   );
 }
 
-const filterStyles = StyleSheet.create({
+const makeFilterStyles = (c: Colors) => StyleSheet.create({
   container: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   row: {
     flexDirection: 'row',
@@ -175,15 +180,15 @@ const filterStyles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
-  chipActive: { backgroundColor: colors.primary },
-  chipText: { ...typography.bodyMedium, fontSize: 12, color: colors.mutedForeground },
-  chipTextActive: { color: colors.primaryForeground },
+  chipActive: { backgroundColor: c.primary },
+  chipText: { ...typography.bodyMedium, fontSize: 12, color: c.mutedForeground },
+  chipTextActive: { color: c.primaryForeground },
   vertDivider: {
     width: StyleSheet.hairlineWidth,
     height: 20,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
     marginHorizontal: 2,
   },
 });
@@ -192,6 +197,8 @@ const filterStyles = StyleSheet.create({
 // Abre /search — pesquisa de pessoas (seguir), rotas (guardar) e cidades.
 
 function SearchBar() {
+  const c = useColors();
+  const searchStyles = useMemo(() => makeSearchStyles(c), [c]);
   const { t } = useTranslation();
   return (
     <TouchableOpacity
@@ -200,31 +207,33 @@ function SearchBar() {
       activeOpacity={0.7}
       accessibilityRole="search"
     >
-      <Ionicons name="search" size={14} color={colors.mutedForeground} />
+      <Ionicons name="search" size={14} color={c.mutedForeground} />
       <Text style={searchStyles.placeholder}>{t('feed_search_placeholder')}</Text>
     </TouchableOpacity>
   );
 }
 
-const searchStyles = StyleSheet.create({
+const makeSearchStyles = (c: Colors) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     margin: 12,
     marginBottom: 4,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
     borderRadius: 10,
     paddingHorizontal: 12,
     height: 38,
   },
-  placeholder: { flex: 1, ...typography.body, fontSize: 13, color: colors.mutedForeground },
+  placeholder: { flex: 1, ...typography.body, fontSize: 13, color: c.mutedForeground },
 });
 
 // ─── empty state ─────────────────────────────────────────────────────────────
 
 /** Sugestões de pessoas para seguir — evita o feed em branco para contas novas. */
 function SuggestedPeople() {
+  const c = useColors();
+  const emptyStyles = useMemo(() => makeEmptyStyles(c), [c]);
   const { t } = useTranslation();
   const { data: people = [], isLoading } = useQuery({
     queryKey: ['suggestedProfiles'],
@@ -253,6 +262,8 @@ function SuggestedPeople() {
 }
 
 function EmptyFeed({ following }: { following: boolean }) {
+  const c = useColors();
+  const emptyStyles = useMemo(() => makeEmptyStyles(c), [c]);
   const { t } = useTranslation();
   const { data: discover = [] } = useQuery({
     queryKey: ['discoverActivities'],
@@ -263,7 +274,7 @@ function EmptyFeed({ following }: { following: boolean }) {
     <View>
       <View style={emptyStyles.container}>
         <View style={emptyStyles.iconWrap}>
-          <Ionicons name={following ? 'people-outline' : 'compass-outline'} size={40} color={colors.primary} />
+          <Ionicons name={following ? 'people-outline' : 'compass-outline'} size={40} color={c.primary} />
         </View>
         <Text style={emptyStyles.title}>
           {following ? t('feed_empty_following_title') : t('feed_empty_new_title')}
@@ -289,19 +300,19 @@ function EmptyFeed({ following }: { following: boolean }) {
   );
 }
 
-const emptyStyles = StyleSheet.create({
+const makeEmptyStyles = (c: Colors) => StyleSheet.create({
   container: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, paddingVertical: 32 },
   sectionTitle: {
     ...typography.headline,
     fontSize: 15,
-    color: colors.foreground,
+    color: c.foreground,
     paddingHorizontal: 16,
     paddingTop: 18,
     paddingBottom: 10,
   },
   suggestSection: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
+    borderTopColor: c.border,
   },
   peopleRow: { gap: 10, paddingHorizontal: 16, paddingBottom: 18 },
   personCard: {
@@ -310,57 +321,62 @@ const emptyStyles = StyleSheet.create({
     gap: 6,
     padding: 12,
     borderRadius: 14,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  personName: { ...typography.bodyBold, fontSize: 13, color: colors.foreground, textAlign: 'center' },
-  personCity: { ...typography.body, fontSize: 11, color: colors.mutedForeground, marginTop: -4 },
+  personName: { ...typography.bodyBold, fontSize: 13, color: c.foreground, textAlign: 'center' },
+  personCity: { ...typography.body, fontSize: 11, color: c.mutedForeground, marginTop: -4 },
   iconWrap: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: withAlpha(colors.primary, 0.1),
+    backgroundColor: withAlpha(c.primary, 0.1),
     alignItems: 'center', justifyContent: 'center',
     marginBottom: 20,
   },
-  title: { ...typography.bodyBold, fontSize: 18, color: colors.foreground, textAlign: 'center', marginBottom: 8 },
-  sub: { ...typography.body, fontSize: 14, color: colors.mutedForeground, textAlign: 'center', lineHeight: 20 },
+  title: { ...typography.bodyBold, fontSize: 18, color: c.foreground, textAlign: 'center', marginBottom: 8 },
+  sub: { ...typography.body, fontSize: 14, color: c.mutedForeground, textAlign: 'center', lineHeight: 20 },
 });
 
 // ─── new-activity banner ─────────────────────────────────────────────────────
 
 function NewActivitiesBanner({ onPress }: { onPress: () => void }) {
+  const c = useColors();
+  const bannerStyles = useMemo(() => makeBannerStyles(c), [c]);
   const { t } = useTranslation();
   return (
     <TouchableOpacity style={bannerStyles.banner} onPress={onPress} activeOpacity={0.85}>
-      <Ionicons name="arrow-up-circle" size={16} color={colors.primaryForeground} />
+      <Ionicons name="arrow-up-circle" size={16} color={c.primaryForeground} />
       <Text style={bannerStyles.text}>{t('feed_new_activities')}</Text>
     </TouchableOpacity>
   );
 }
 
-const bannerStyles = StyleSheet.create({
+const makeBannerStyles = (c: Colors) => StyleSheet.create({
   banner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
     alignSelf: 'center',
     marginVertical: 8,
-    shadowColor: colors.primary,
+    shadowColor: c.primary,
     shadowOpacity: 0.35,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 3 },
     elevation: 4,
   },
-  text: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: colors.primaryForeground },
+  text: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: c.primaryForeground },
 });
 
 // ─── main component ──────────────────────────────────────────────────────────
 
 export function FeedTab() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
+  const emptyStyles = useMemo(() => makeEmptyStyles(c), [c]);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const filter = useFeedStore((s) => s.filter);
@@ -426,7 +442,7 @@ export function FeedTab() {
 
   const renderFooter = useCallback(() =>
     hasNextPage
-      ? <View style={styles.footerLoader}><ActivityIndicator size="small" color={colors.primary} /></View>
+      ? <View style={styles.footerLoader}><ActivityIndicator size="small" color={c.primary} /></View>
       : allItems.length > 0
         ? <View style={styles.endOfFeed}><Text style={styles.endOfFeedText}>{t('feed_all_caught_up')}</Text></View>
         : null,
@@ -435,7 +451,7 @@ export function FeedTab() {
   // ── loading state: skeletons ──
   if (isLoading) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flex: 1, backgroundColor: c.background }}>
         <SearchBar />
         <FilterBar />
         {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
@@ -448,9 +464,9 @@ export function FeedTab() {
     return (
       <View style={styles.center}>
         <View style={emptyStyles.iconWrap}>
-          <Ionicons name="alert-circle-outline" size={40} color={colors.destructive} />
+          <Ionicons name="alert-circle-outline" size={40} color={c.destructive} />
         </View>
-        <Text style={[emptyStyles.title, { color: colors.destructive }]}>{t('error_loading')}</Text>
+        <Text style={[emptyStyles.title, { color: c.destructive }]}>{t('error_loading')}</Text>
         <Text style={emptyStyles.sub}>{t('error_check_connection')}</Text>
         <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
           <Text style={styles.retryBtnText}>{t('retry')}</Text>
@@ -460,7 +476,7 @@ export function FeedTab() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: c.background }}>
       <FlatList
         ref={listRef}
         data={filteredItems}
@@ -490,18 +506,18 @@ export function FeedTab() {
 
 // ─── styles ──────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
   bannerOverlay: { position: 'absolute', top: 8, left: 0, right: 0, alignItems: 'center' },
   footerLoader: { paddingVertical: 20, alignItems: 'center' },
   endOfFeed: { paddingVertical: 28, alignItems: 'center' },
-  endOfFeedText: { ...typography.body, fontSize: 12, color: colors.mutedForeground, letterSpacing: 2 },
+  endOfFeedText: { ...typography.body, fontSize: 12, color: c.mutedForeground, letterSpacing: 2 },
   retryBtn: {
     marginTop: 16,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 12,
     paddingHorizontal: 24,
     paddingVertical: 12,
   },
-  retryBtnText: { ...typography.bodyBold, fontSize: 14, color: colors.primaryForeground },
+  retryBtnText: { ...typography.bodyBold, fontSize: 14, color: c.primaryForeground },
 });

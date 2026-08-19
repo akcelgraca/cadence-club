@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, LayoutChangeEvent,
 } from 'react-native';
@@ -7,7 +8,7 @@ import Animated, {
   useSharedValue, useAnimatedStyle, withTiming, withSpring, runOnJS,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -67,6 +68,8 @@ function Cell({
   item, index, displayIndex, cellWidth, cellHeight,
   isDragging, onDragStart, onDragMove, onDragEnd, onRemove,
 }: CellProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const dragX = useSharedValue(0);
   const dragY = useSharedValue(0);
@@ -144,6 +147,8 @@ function Cell({
 export function PhotoGrid({
   photos, onReorder, onRemove, onAdd, maxPhotos, loading,
 }: PhotoGridProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [containerWidth, setContainerWidth] = useState(0);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -242,10 +247,10 @@ export function PhotoGrid({
             activeOpacity={0.8}
           >
             {loading ? (
-              <ActivityIndicator color={colors.primary} />
+              <ActivityIndicator color={c.primary} />
             ) : (
               <>
-                <Ionicons name="camera-outline" size={24} color={colors.mutedForeground} />
+                <Ionicons name="camera-outline" size={24} color={c.mutedForeground} />
                 <Text style={styles.addText}>
                   {photos.length === 0 ? t('photos_add') : t('photos_more')}
                 </Text>
@@ -264,14 +269,14 @@ export function PhotoGrid({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   grid: { position: 'relative', width: '100%' },
 
   cell: {
     position: 'absolute',
     borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     shadowColor: '#000',
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
@@ -284,7 +289,7 @@ const styles = StyleSheet.create({
     bottom: 6, left: 6,
     paddingHorizontal: 7, paddingVertical: 2,
     borderRadius: 8,
-    backgroundColor: withAlpha(colors.foreground, 0.65),
+    backgroundColor: withAlpha(c.foreground, 0.65),
   },
   autoBadgeText: {
     fontFamily: 'Barlow_600SemiBold',
@@ -299,12 +304,12 @@ const styles = StyleSheet.create({
     bottom: 6, left: 6,
     paddingHorizontal: 7, paddingVertical: 2,
     borderRadius: 8,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   coverBadgeText: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 9,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -321,16 +326,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  addText: { ...typography.body, fontSize: 12, color: colors.mutedForeground },
+  addText: { ...typography.body, fontSize: 12, color: c.mutedForeground },
 
   hint: {
     ...typography.body,
     fontSize: 11,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 10,
     lineHeight: 15,
   },
