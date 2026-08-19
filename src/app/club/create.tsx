@@ -13,6 +13,7 @@ import { ActivityIcon } from '../../components/common/ActivityIcon';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { ActivityCategory } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../../lib/navigation';
 
 export default function CreateClubScreen() {
   const { t } = useTranslation();
@@ -49,7 +50,7 @@ export default function CreateClubScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity onPress={() => goBackOr('/(tabs)/social')} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={styles.title}>{t('club_create_title')}</Text>

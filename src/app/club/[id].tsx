@@ -23,6 +23,7 @@ import { ACTIVITY_CATEGORIES } from '../../lib/constants';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { ClubMember, ClubJoinRequest, Activity } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../../lib/navigation';
 
 type ClubTab = 'posts' | 'events' | 'members';
 
@@ -222,7 +223,7 @@ export default function ClubDetailScreen() {
         {
           text: t('delete'), style: 'destructive',
           onPress: async () => {
-            try { await deleteClub(club.id); router.back(); }
+            try { await deleteClub(club.id); goBackOr('/(tabs)/social'); }
             catch { Alert.alert(t('club_delete_error')); }
           },
         },
@@ -243,7 +244,7 @@ export default function ClubDetailScreen() {
     return (
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+          <TouchableOpacity onPress={() => goBackOr('/(tabs)/social')} hitSlop={12}>
             <Ionicons name="chevron-back" size={24} color={colors.foreground} />
           </TouchableOpacity>
         </View>
@@ -256,7 +257,7 @@ export default function ClubDetailScreen() {
     return (
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+          <TouchableOpacity onPress={() => goBackOr('/(tabs)/social')} hitSlop={12}>
             <Ionicons name="chevron-back" size={24} color={colors.foreground} />
           </TouchableOpacity>
         </View>
@@ -304,7 +305,7 @@ export default function ClubDetailScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity onPress={() => goBackOr('/(tabs)/social')} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{club.name}</Text>

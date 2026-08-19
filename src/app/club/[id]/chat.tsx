@@ -18,6 +18,7 @@ import { colors, typography, withAlpha } from '../../../lib/theme';
 import { formatRelativeTime } from '../../../utils/dateHelpers';
 import type { ClubMessage } from '../../../lib/types';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../../../lib/navigation';
 
 export default function ClubChatScreen() {
   const { t } = useTranslation();
@@ -132,7 +133,7 @@ export default function ClubChatScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => goBackOr(`/club/${id}`)} hitSlop={12} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
         <TouchableOpacity

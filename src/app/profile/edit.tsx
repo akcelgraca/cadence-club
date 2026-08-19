@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect, type ReactNode } from 'react';
+import { goBackOr } from '../../lib/navigation';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Switch,
   ActivityIndicator, KeyboardAvoidingView, Platform,
@@ -216,7 +217,7 @@ export default function EditProfileScreen() {
       // full_name is auto-computed by authStore.updateProfile
       await updateProfile(updates as any);
       leavingAfterSave.current = true;
-      router.back();
+      goBackOr('/(tabs)/profile');
     } catch (err: any) {
       Alert.alert(t('edit_profile_save_error_title'), err.message || t('edit_profile_save_error_body'));
     } finally {

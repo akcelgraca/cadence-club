@@ -15,6 +15,7 @@ import { computeSplits } from '../../../utils/splits';
 import { formatDistance } from '../../../utils/formatDistance';
 import { colors, typography, withAlpha } from '../../../lib/theme';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../../../lib/navigation';
 
 /**
  * Cria um troço a partir de um pedaço desta atividade.
@@ -110,7 +111,7 @@ export default function NewSegmentScreen() {
             ? t('segment_new_no_gps')
             : t('segment_new_not_yours')}
         </Text>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => goBackOr(`/activity/${id}`)}>
           <Text style={styles.backBtnText}>{t('route_creator_back')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -120,7 +121,7 @@ export default function NewSegmentScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity onPress={() => goBackOr(`/activity/${id}`)} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('activity_create_segment')}</Text>

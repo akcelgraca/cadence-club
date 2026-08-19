@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
-import { router } from 'expo-router';
+
 import { useFocusEffect } from 'expo-router/react-navigation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { SocialPostCard } from '../components/social/SocialPostCard';
 import { colors, typography, withAlpha } from '../lib/theme';
 import type { Activity } from '../lib/types';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../lib/navigation';
 
 export default function SavedPostsScreen() {
   const { t } = useTranslation();
@@ -50,7 +51,7 @@ export default function SavedPostsScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity onPress={() => goBackOr('/(tabs)')} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('saved_title')}</Text>

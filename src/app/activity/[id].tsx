@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { goBackOr } from '../../lib/navigation';
 import {
   View, Text, StyleSheet, ScrollView, ActivityIndicator, Image,
   TouchableOpacity, Alert, useWindowDimensions,
@@ -112,7 +113,7 @@ export default function ActivityDetailScreen() {
             text: t('delete'),
             style: 'destructive',
             onPress: async () => {
-              try { await deleteActivity(id); router.back(); }
+              try { await deleteActivity(id); goBackOr('/(tabs)/history'); }
               catch { Alert.alert(t('activity_delete_error')); }
             },
           },

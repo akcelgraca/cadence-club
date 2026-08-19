@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
-import { router } from 'expo-router';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../store/authStore';
 import { useCreateEquipment } from '../../../hooks/useEquipment';
@@ -8,6 +8,7 @@ import { EQUIPMENT_TYPES } from '../../../lib/constants';
 import { useTranslation } from 'react-i18next';
 import { colors, typography } from '../../../lib/theme';
 import type { EquipmentType } from '../../../lib/types';
+import { goBackOr } from '../../../lib/navigation';
 
 export default function AddEquipmentScreen() {
   const { t } = useTranslation();
@@ -38,7 +39,7 @@ export default function AddEquipmentScreen() {
         notes: notes.trim() || undefined,
         initial_distance: initialDistance ? parseFloat(initialDistance) : 0,
       });
-      router.back();
+      goBackOr('/profile/equipment');
     } catch (err: any) {
       Alert.alert(err.message || t('error_generic'));
     }

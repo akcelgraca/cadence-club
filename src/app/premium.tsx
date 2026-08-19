@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
-import { router } from 'expo-router';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
@@ -14,6 +14,7 @@ import {
   getPlans, isAvailable, purchase, refreshEntitlement, restore, type Plan,
 } from '../services/purchases';
 import { track } from '../lib/analytics';
+import { goBackOr } from '../lib/navigation';
 
 /**
  * Paywall.
@@ -100,7 +101,7 @@ export default function PremiumScreen() {
       Alert.alert(
         t('premium_thanks_title'),
         ativo ? t('premium_thanks_body') : t('premium_pending_body'),
-        [{ text: t('ok'), onPress: () => router.back() }],
+        [{ text: t('ok'), onPress: () => goBackOr('/(tabs)/profile') }],
       );
     } finally {
       setAComprar(false);
@@ -130,7 +131,7 @@ export default function PremiumScreen() {
   return (
     <SafeAreaView style={s.container} edges={['top']}>
       <View style={s.topBar}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity onPress={() => goBackOr('/(tabs)/profile')} hitSlop={12}>
           <Ionicons name="close" size={26} color={colors.foreground} />
         </TouchableOpacity>
       </View>

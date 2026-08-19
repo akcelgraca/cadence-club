@@ -21,6 +21,7 @@ import QuestionnaireForm from '../../components/questionnaire/QuestionnaireForm'
 import DateWheelPicker from '../../components/common/DateWheelPicker';
 import type { ActivityGoal, QuestionnairePreferences } from '../../lib/types';
 import { colors, typography } from '../../lib/theme';
+import { goBackOr } from '../../lib/navigation';
 
 export default function RegisterScreen() {
   const { t } = useTranslation();
@@ -169,7 +170,7 @@ export default function RegisterScreen() {
             {/* Header */}
             <TouchableOpacity
               style={styles.backButton}
-              onPress={() => router.back()}
+              onPress={() => goBackOr('/(auth)')}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
               <Ionicons name="arrow-back" size={24} color={colors.foreground} />
@@ -315,7 +316,7 @@ export default function RegisterScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() => goBackOr('/(auth)')}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
               <Text style={styles.switchText}>

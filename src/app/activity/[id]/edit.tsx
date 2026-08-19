@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image,
   Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Modal, FlatList,
 } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +21,7 @@ import { ACTIVITY_CATEGORIES, getActivityByKey } from '../../../lib/constants';
 import { MOOD_IMAGES, SURFACE_TYPES } from '../../../components/record/shared';
 import { colors, typography, withAlpha } from '../../../lib/theme';
 import type { ActivityType, SurfaceType } from '../../../lib/types';
+import { goBackOr } from '../../../lib/navigation';
 
 export default function EditActivityScreen() {
   const { t } = useTranslation();
@@ -176,7 +177,7 @@ export default function EditActivityScreen() {
       queryClient.invalidateQueries({ queryKey: ['profileStats'] });
       queryClient.invalidateQueries({ queryKey: ['monthlyStats'] });
 
-      router.back();
+      goBackOr(`/activity/${id}`);
     } catch (e: any) {
       Alert.alert(e?.message ?? t('activity_edit_save_error'));
     } finally {
@@ -198,7 +199,7 @@ export default function EditActivityScreen() {
         <Text style={styles.errorText}>
           {activity ? t('activity_edit_not_yours') : t('activity_not_found')}
         </Text>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => goBackOr(`/activity/${id}`)}>
           <Text style={styles.backBtnText}>{t('route_creator_back')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -210,7 +211,7 @@ export default function EditActivityScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity onPress={() => goBackOr(`/activity/${id}`)} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('activity_edit_title')}</Text>

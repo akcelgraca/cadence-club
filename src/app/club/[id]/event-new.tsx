@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
   Alert, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { createClubEvent } from '../../../services/events';
@@ -11,6 +11,7 @@ import { ActivityIcon } from '../../../components/common/ActivityIcon';
 import { ACTIVITY_CATEGORIES } from '../../../lib/constants';
 import { colors, typography, withAlpha } from '../../../lib/theme';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../../../lib/navigation';
 
 /** Índice 0 = domingo, como o Date.getDay(). */
 const WEEKDAY_KEYS = [
@@ -93,7 +94,7 @@ export default function NewClubEventScreen() {
         distance: Number.isFinite(km) && km > 0 ? km * 1000 : undefined,
         starts_at: startsAt.toISOString(),
       });
-      router.back();
+      goBackOr(`/club/${id}`);
     } catch (e: any) {
       Alert.alert(e?.message ?? t('event_new_error'));
     } finally {
@@ -104,7 +105,7 @@ export default function NewClubEventScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity onPress={() => goBackOr(`/club/${id}`)} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('event_new_title')}</Text>

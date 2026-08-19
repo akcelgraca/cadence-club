@@ -12,6 +12,7 @@ import { Avatar } from '../../components/common/Avatar';
 import { colors, typography, withAlpha } from '../../lib/theme';
 import type { Profile } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../../lib/navigation';
 
 export default function NewMessageScreen() {
   const { t } = useTranslation();
@@ -54,7 +55,7 @@ export default function NewMessageScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity onPress={() => goBackOr('/(tabs)/social')} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={styles.title}>{t('messages_new_title')}</Text>

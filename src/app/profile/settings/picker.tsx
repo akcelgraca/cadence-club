@@ -7,6 +7,7 @@ import { typography } from '../../../lib/theme';
 import { ActivityIcon } from '../../../components/common/ActivityIcon';
 import { getActivityImage } from '../../../lib/activityImages';
 import { getFocoImage } from '../../../lib/focoImages';
+import { goBackOr } from '../../../lib/navigation';
 
 // ============================================================
 // Module-level config — set before router.push() and consumed on mount
@@ -49,18 +50,56 @@ export function setPickerConfig(config: PickerConfig) {
 export default function PickerScreen() {
   const c = useColors();
 
-  if (!_config) {
-    // Nothing to show — dismiss
-    router.back();
-    return null;
-  }
-
-  const { options, sections, selectedKey, onSelect, multiSelect, selectedKeys, onMultiSelect } = _config;
+  /**
+   * Fotografia do `_config` na primeira renderização.
+   *
+   * O `_config` é estado de módulo e é limpo mal se escolhe uma opção — antes
+   * de o ecrã sair, não depois. Ler dele no corpo da renderização fazia a mesma
+   * instância passar de "com hooks" a "sem hooks" a meio da transição de saída,
+   * que é como se chega ao «rendered fewer hooks than expected». Com a
+   * fotografia, o ecrã continua desenhado enquanto sai.
+   */
+  const configRef = useRef(_config);
+  const config = configRef.current;
 
   // Local multi-select state
-  const [multiSelected, setMultiSelected] = useState<string[]>(selectedKeys ?? []);
+  const [multiSelected, setMultiSelected] = useState<string[]>(config?.selectedKeys ?? []);
   const multiSelectedRef = useRef(multiSelected);
   multiSelectedRef.current = multiSelected;
+
+  /**
+   * Sem config não há nada para mostrar, e é preciso sair.
+   *
+   * Acontece a sério: um reload do Metro (ou um deep link) reconstrói a pilha a
+   * partir do URL, e o estado de módulo — que só é preenchido pelo ecrã que faz
+   * o `push` — desapareceu. Nesse caso o picker é o único ecrã da pilha.
+   *
+   * Duas coisas tinham de mudar. A saída passa para um efeito, porque durante a
+   * renderização o expo-router apenas enfileira a ação e despacha-a mais tarde.
+   * E o `back()` fica dependente do `canGoBack()`: sem nada para onde voltar, o
+   * GO_BACK não era tratado por navegador nenhum, o ecrã ficava em branco (o
+   * `return null` aqui em baixo) e não havia forma de sair sem matar a app.
+   */
+  useEffect(() => {
+    if (config) return;
+    goBackOr('/profile/settings');
+  }, [config]);
+
+  // On unmount (back press), commit multi-select and clear config.
+  // Lê do `_config` de propósito, e não da fotografia: a seleção única limpa-o
+  // antes de sair, e é assim que este efeito sabe que não deve disparar.
+  useEffect(() => {
+    return () => {
+      if (_config?.multiSelect && _config.onMultiSelect) {
+        _config.onMultiSelect(multiSelectedRef.current);
+      }
+      _config = null;
+    };
+  }, []);
+
+  if (!config) return null;
+
+  const { options, sections, selectedKey, onSelect, multiSelect } = config;
 
   const handleSelect = (key: string) => {
     if (multiSelect) {
@@ -72,18 +111,8 @@ export default function PickerScreen() {
     // Single-select: consume before navigating back so re-renders don't re-fire
     _config = null;
     onSelect(key);
-    router.back();
+    goBackOr('/profile/settings');
   };
-
-  // On unmount (back press), commit multi-select and clear config
-  useEffect(() => {
-    return () => {
-      if (_config?.multiSelect && _config.onMultiSelect) {
-        _config.onMultiSelect(multiSelectedRef.current);
-      }
-      _config = null;
-    };
-  }, []);
 
   const isItemSelected = (key: string) => {
     if (multiSelect) return multiSelected.includes(key);
@@ -127,7 +156,7 @@ export default function PickerScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>
-      <Stack.Screen options={{ title: _config.title }} />
+      <Stack.Screen options={{ title: config.title }} />
       <ScrollView style={styles.scrollContainer}>
         {sections
           ? sections.map((section) => (

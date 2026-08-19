@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
-import { router } from 'expo-router';
+
 import { useFocusEffect } from 'expo-router/react-navigation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ import {
 import { colors, typography, withAlpha } from '../lib/theme';
 import type { Challenge } from '../lib/types';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../lib/navigation';
 
 function daysLeft(endDate: string): number {
   const end = new Date(`${endDate}T23:59:59`);
@@ -111,7 +112,7 @@ export default function ChallengesScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity onPress={() => goBackOr('/(tabs)')} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('challenges_title')}</Text>

@@ -15,6 +15,7 @@ import { colors, typography, withAlpha } from '../lib/theme';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import type { Profile } from '../lib/types';
+import { goBackOr } from '../lib/navigation';
 
 type SearchTab = 'users' | 'routes' | 'cities';
 type SearchResult = Profile | NearbyRouteResult;
@@ -198,7 +199,7 @@ export default function SearchScreen() {
             </TouchableOpacity>
           )}
         </View>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => goBackOr('/(tabs)')}>
           <Text style={styles.cancelText}>{t('cancel')}</Text>
         </TouchableOpacity>
       </View>

@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { View, Alert } from 'react-native';
-import { router } from 'expo-router';
+
 import { useAuthStore } from '../../store/authStore';
 import { useColors } from '../../hooks/useColors';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import QuestionnaireForm from '../../components/questionnaire/QuestionnaireForm';
 import type { QuestionnairePreferences } from '../../lib/types';
+import { goBackOr } from '../../lib/navigation';
 
 export default function QuestionnaireScreen() {
   const c = useColors();
@@ -39,7 +40,7 @@ export default function QuestionnaireScreen() {
         has_completed_questionnaire: true,
       });
       Alert.alert('', t('questionnaire_saved'));
-      router.back();
+      goBackOr('/(tabs)/profile');
     } catch {
       Alert.alert(t('onboarding_error_title'), t('error_generic'));
     } finally {

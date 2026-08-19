@@ -12,6 +12,7 @@ import { EventCard } from '../components/social/EventCard';
 import { useAuthStore } from '../store/authStore';
 import { colors, typography, withAlpha } from '../lib/theme';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../lib/navigation';
 
 type EventsTab = 'mine' | 'discover';
 
@@ -51,7 +52,7 @@ export default function EventsScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity onPress={() => goBackOr('/(tabs)')} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('club_tab_events')}</Text>

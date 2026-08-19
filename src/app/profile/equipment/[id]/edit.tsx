@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { getEquipment } from '../../../../services/equipment';
@@ -10,6 +10,7 @@ import { EQUIPMENT_TYPES } from '../../../../lib/constants';
 import { useTranslation } from 'react-i18next';
 import { colors, typography } from '../../../../lib/theme';
 import type { EquipmentType, Equipment } from '../../../../lib/types';
+import { goBackOr } from '../../../../lib/navigation';
 
 export default function EditEquipmentScreen() {
   const { t } = useTranslation();
@@ -65,7 +66,7 @@ export default function EditEquipmentScreen() {
           is_retired: isRetired,
         },
       });
-      router.back();
+      goBackOr('/profile/equipment');
     } catch (err: any) {
       Alert.alert(err.message || t('error_generic'));
     }
@@ -83,7 +84,7 @@ export default function EditEquipmentScreen() {
           onPress: async () => {
             try {
               await deleteMutation.mutateAsync(id!);
-              router.back();
+              goBackOr('/profile/equipment');
             } catch (err: any) {
               Alert.alert(err.message || t('error_generic'));
             }

@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,7 @@ import { RoutePolyline } from '../../components/map/RoutePolyline';
 import { RouteMarker } from '../../components/map/RouteMarker';
 import { ACTIVITY_CATEGORIES } from '../../lib/constants';
 import type { ActivityType, RouteDifficulty, SurfaceType } from '../../lib/types';
+import { goBackOr } from '../../lib/navigation';
 
 export default function CreateRouteScreen() {
   const { t } = useTranslation();
@@ -101,7 +102,7 @@ export default function CreateRouteScreen() {
       }
 
       Alert.alert('Guardado', t('route_create_saved'), [
-        { text: 'OK', onPress: () => router.back() },
+        { text: 'OK', onPress: () => goBackOr('/(tabs)/routes') },
       ]);
     } catch (err: any) {
       Alert.alert(err?.message ?? t('route_create_error'));
