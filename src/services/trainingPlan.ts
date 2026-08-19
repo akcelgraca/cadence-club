@@ -1,12 +1,13 @@
 import { supabase } from './supabase';
 import type { TrainingPlanDay, ActivityGoal, QuestionnairePreferences } from '../lib/types';
 import { SESSION_DURATIONS, getActivityByKey } from '../lib/constants';
+import { startOfWeekISODate } from '../utils/dateHelpers';
 
 // ============================================================
 // Fetch the current week's training plan for a user
 // ============================================================
 export async function getWeeklyPlan(userId: string): Promise<TrainingPlanDay[]> {
-  const weekStart = getWeekStartDate();
+  const weekStart = startOfWeekISODate();
 
   const { data, error } = await supabase
     .from('training_plans')
@@ -46,7 +47,7 @@ export async function generateAndSavePlan(
   preferences?: QuestionnairePreferences | null,
   weeklyKmTarget?: number | null,
 ): Promise<TrainingPlanDay[]> {
-  const weekStart = getWeekStartDate();
+  const weekStart = startOfWeekISODate();
 
   // Check if plan already exists for this week
   const { data: existing } = await supabase
@@ -120,16 +121,7 @@ export function generateWeeklyPlan(goal: ActivityGoal | null, weeklyKmTarget?: n
   }
 }
 
-function getWeekStartDate(): string {
-  const now = new Date();
-  const day = now.getDay();
-  // Monday = 0 for our system
-  const diff = day === 0 ? -6 : 1 - day;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + diff);
-  monday.setHours(0, 0, 0, 0);
-  return monday.toISOString().split('T')[0];
-}
+
 
 // ============================================================
 // Personalized plan generator based on questionnaire preferences

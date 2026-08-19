@@ -41,3 +41,28 @@ export function formatDate(dateString: string): string {
     year: 'numeric',
   });
 }
+
+/**
+ * Segunda-feira da semana de `date`, à meia-noite local.
+ *
+ * A semana começa à segunda porque é assim que o plano de treino a conta
+ * (`training_plans.week_start`). Estava definido em dois sítios; ficar num só
+ * evita que o resumo da semana e o plano discordem sobre onde ela começa.
+ */
+export function startOfWeek(date: Date = new Date()): Date {
+  const dia = date.getDay();
+  // getDay(): 0 = domingo. Domingo pertence à semana que começou há 6 dias.
+  const recuo = dia === 0 ? -6 : 1 - dia;
+  const segunda = new Date(date);
+  segunda.setDate(date.getDate() + recuo);
+  segunda.setHours(0, 0, 0, 0);
+  return segunda;
+}
+
+/** A mesma segunda-feira, em "YYYY-MM-DD" local. */
+export function startOfWeekISODate(date: Date = new Date()): string {
+  const d = startOfWeek(date);
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mes}-${dia}`;
+}
