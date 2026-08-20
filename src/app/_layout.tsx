@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { usePendingSync } from '../hooks/usePendingSync';
 import { useActivityStore } from '../store/activityStore';
@@ -6,7 +6,7 @@ import { Stack, router, usePathname } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
-import { ActivityIndicator, View, StatusBar, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, View, StatusBar, Text, StyleSheet, TouchableOpacity, Appearance } from 'react-native';
 import { CustomHeader } from '../components/common/CustomHeader';
 import { useFonts } from 'expo-font';
 import { supabase } from '../services/supabase';
@@ -23,11 +23,12 @@ import { DMMono_400Regular } from '@expo-google-fonts/dm-mono';
 import Mapbox from '@rnmapbox/maps';
 import { configureGoogleSignIn } from '../services/auth';
 import { useAuthStore } from '../store/authStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import { useColors } from '../hooks/useColors';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { MAPBOX_ACCESS_TOKEN } from '../lib/constants';
-import { colors } from '../lib/theme';
+import { type Colors } from '../lib/theme';
 import { PostHogProvider } from 'posthog-react-native';
 import { posthog, track } from '../lib/analytics';
 import { I18nextProvider, useTranslation } from 'react-i18next';
@@ -66,6 +67,7 @@ try {
 }
 
 function AuthGate({ children }: { children: React.ReactNode }) {
+  const c = useColors();
   const { isLoading } = useAuthStore();
   const [fontsLoaded] = useFonts({
     Barlow_400Regular,
@@ -78,8 +80,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (isLoading || !fontsLoaded) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: c.background }}>
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
@@ -89,6 +91,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
 function AppStack() {
   const c = useColors();
+  const offlineStyles = useMemo(() => makeOfflineStyles(c), [c]);
   const { t } = useTranslation();
   const { isConnected } = useNetworkStatus();
   const { pendingCount, syncing } = usePendingSync();
@@ -105,7 +108,7 @@ function AppStack() {
     // gesture-handler funcionarem (sem ele, no Android não chega nada).
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.background }}>
       <StatusBar
-        barStyle={c.background === '#FAFAFA' ? 'dark-content' : 'light-content'}
+        barStyle={c.scheme === 'dark' ? 'light-content' : 'dark-content'}
         backgroundColor={c.background}
       />
       {!isConnected && (
@@ -131,7 +134,7 @@ function AppStack() {
           foi enviado — senão parece que se perdeu. */}
       {pendingCount > 0 && (
         <View style={offlineStyles.pendingBanner}>
-          {syncing && <ActivityIndicator size="small" color={colors.primaryForeground} />}
+          {syncing && <ActivityIndicator size="small" color={c.primaryForeground} />}
           <Text style={offlineStyles.bannerText}>
             {syncing
               ? 'A enviar atividades guardadas...'
@@ -263,9 +266,9 @@ function AppStack() {
   );
 }
 
-const offlineStyles = StyleSheet.create({
+const makeOfflineStyles = (c: Colors) => StyleSheet.create({
   banner: {
-    backgroundColor: colors.warning,
+    backgroundColor: c.warning,
     paddingVertical: 8,
     paddingHorizontal: 16,
     alignItems: 'center',
@@ -275,24 +278,25 @@ const offlineStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
   resumeBanner: {
     alignItems: 'center',
-    backgroundColor: colors.foreground,
+    backgroundColor: c.foreground,
     paddingVertical: 9,
     paddingHorizontal: 16,
   },
   bannerText: {
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
     fontFamily: 'Barlow_500Medium',
     fontSize: 13,
   },
 });
 
 export default function RootLayout() {
+  const preferenciaDeTema = useSettingsStore((st) => st.settings.theme);
   const initialize = useAuthStore((s) => s.initialize);
 
   useEffect(() => {
@@ -302,6 +306,34 @@ export default function RootLayout() {
   useEffect(() => {
     configureGoogleSignIn();
   }, []);
+
+  // As definições guardadas — entre elas o tema — só eram lidas ao abrir o
+  // ecrã de Definições. Sem isto, a app arrancava sempre em claro e só mudava
+  // de tema depois de lá passar uma vez.
+  useEffect(() => {
+    useSettingsStore.getState().loadSettings();
+  }, []);
+
+  /**
+   * Dizer ao sistema qual é o tema, e não só à nossa paleta.
+   *
+   * Há partes do ecrã que não são nossas para pintar: o fundo das folhas
+   * modais (`presentationStyle="pageSheet"`), o teclado, os alertas, as barras
+   * de scroll. Quem escolhia 'escuro' na app com o telemóvel em claro ficava
+   * com o conteúdo escuro dentro de uma folha que o iOS continuava a desenhar
+   * clara — e via-se uma réstia branca nos cantos arredondados de cima, que é
+   * onde a máscara da folha deixa o fundo do sistema à mostra. O ecrã de
+   * escolher rota, que é uma pageSheet, era o caso mais visível.
+   *
+   * `'unspecified'` devolve o controlo ao telemóvel — é assim que esta versão
+   * do React Native diz "sem preferência" (o `null` da documentação não passa
+   * no tipo).
+   */
+  useEffect(() => {
+    Appearance.setColorScheme(
+      preferenciaDeTema === 'system' ? 'unspecified' : preferenciaDeTema,
+    );
+  }, [preferenciaDeTema]);
 
   useEffect(() => {
     const handleDeepLink = async (url: string) => {

@@ -13,6 +13,7 @@ function workout(overrides: Partial<ExternalWorkout> = {}): ExternalWorkout {
     duration: 1800,
     elevationGain: 40,
     avgHeartRate: 148,
+    maxHeartRate: 172,
     sourceApp: 'Apple Watch',
     ...overrides,
   };

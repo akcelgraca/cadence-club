@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,12 +7,14 @@ import { Avatar } from '../common/Avatar';
 import { ActivityIcon } from '../common/ActivityIcon';
 import { joinClub, leaveClub, requestToJoinClub, cancelJoinRequest } from '../../services/clubs';
 import { ACTIVITY_CATEGORIES } from '../../lib/constants';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { Club } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
 
 /** Linha de clube usada na aba Clubes e no ecrã de descoberta. */
 export function ClubCard({ club, onAction }: { club: Club; onAction: (club: Club) => void }) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const catDef = ACTIVITY_CATEGORIES.find((c) => c.key === club.category);
@@ -106,7 +109,7 @@ export function ClubCard({ club, onAction }: { club: Club; onAction: (club: Club
         <View style={styles.cardNameRow}>
           <Text style={styles.cardName} numberOfLines={1}>{club.name}</Text>
           {club.is_private && (
-            <Ionicons name="lock-closed" size={11} color={colors.mutedForeground} />
+            <Ionicons name="lock-closed" size={11} color={c.mutedForeground} />
           )}
         </View>
         {club.description && (
@@ -115,18 +118,18 @@ export function ClubCard({ club, onAction }: { club: Club; onAction: (club: Club
         <View style={styles.cardMeta}>
           {catDef && (
             <View style={styles.metaChip}>
-              <ActivityIcon activityKey={catDef.activities[0]?.key ?? ''} size={10} tintColor={colors.primary} />
+              <ActivityIcon activityKey={catDef.activities[0]?.key ?? ''} size={10} tintColor={c.primary} />
               <Text style={styles.metaChipText}>{catDef.key}</Text>
             </View>
           )}
           {club.city && (
             <View style={styles.metaItem}>
-              <Ionicons name="location-outline" size={10} color={colors.mutedForeground} />
+              <Ionicons name="location-outline" size={10} color={c.mutedForeground} />
               <Text style={styles.metaText}>{club.city}</Text>
             </View>
           )}
           <View style={styles.metaItem}>
-            <Ionicons name="people-outline" size={10} color={colors.mutedForeground} />
+            <Ionicons name="people-outline" size={10} color={c.mutedForeground} />
             <Text style={styles.metaText}>{club.member_count}</Text>
           </View>
         </View>
@@ -140,7 +143,7 @@ export function ClubCard({ club, onAction }: { club: Club; onAction: (club: Club
         hitSlop={8}
       >
         {busy
-          ? <ActivityIndicator size="small" color={club.is_member || pendingRequest ? colors.primary : colors.primaryForeground} />
+          ? <ActivityIndicator size="small" color={club.is_member || pendingRequest ? c.primary : c.primaryForeground} />
           : <Text style={[styles.actionBtnText, (club.is_member || pendingRequest) && styles.actionBtnTextMember]}>
               {actionLabel}
             </Text>
@@ -150,48 +153,48 @@ export function ClubCard({ club, onAction }: { club: Club; onAction: (club: Club
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   cardAvatar: { position: 'relative' },
   avatarFallback: {
     width: 52, height: 52, borderRadius: 14,
-    backgroundColor: withAlpha(colors.primary, 0.15),
+    backgroundColor: withAlpha(c.primary, 0.15),
     alignItems: 'center', justifyContent: 'center',
   },
   avatarLetter: {
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 22,
-    color: colors.primary,
+    color: c.primary,
   },
   adminBadge: {
     position: 'absolute',
     bottom: -3, right: -3,
     width: 16, height: 16, borderRadius: 8,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: colors.card,
+    borderWidth: 1.5, borderColor: c.card,
   },
   cardInfo: { flex: 1, minWidth: 0 },
   cardNameRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 2 },
   cardName: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 15,
-    color: colors.foreground,
+    color: c.foreground,
     flexShrink: 1,
   },
   cardDesc: {
     ...typography.body,
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginBottom: 4,
   },
   cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
@@ -199,7 +202,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: withAlpha(colors.primary, 0.1),
+    backgroundColor: withAlpha(c.primary, 0.1),
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 10,
@@ -207,29 +210,29 @@ const styles = StyleSheet.create({
   metaChipText: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 10,
-    color: colors.primary,
+    color: c.primary,
     textTransform: 'capitalize',
   },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  metaText: { ...typography.body, fontSize: 11, color: colors.mutedForeground },
+  metaText: { ...typography.body, fontSize: 11, color: c.mutedForeground },
 
   actionBtn: {
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     minWidth: 64,
     alignItems: 'center',
   },
   actionBtnMember: {
-    backgroundColor: withAlpha(colors.primary, 0.12),
+    backgroundColor: withAlpha(c.primary, 0.12),
     borderWidth: 1,
-    borderColor: withAlpha(colors.primary, 0.3),
+    borderColor: withAlpha(c.primary, 0.3),
   },
   actionBtnText: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 12,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
   },
-  actionBtnTextMember: { color: colors.primary },
+  actionBtnTextMember: { color: c.primary },
 });

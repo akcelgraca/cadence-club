@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { formatDistance } from '../../utils/formatDistance';
 import { formatDuration } from '../../utils/dateHelpers';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +27,8 @@ export function RouteDetailSheet({
   onDelete,
   isOwner = false,
 }: RouteDetailSheetProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   const { t } = useTranslation();
 
@@ -67,7 +71,7 @@ export function RouteDetailSheet({
             {/* Activity type tag */}
             <View style={styles.tagRow}>
               <View style={styles.tag}>
-                <Ionicons name="footsteps" size={12} color={colors.primary} />
+                <Ionicons name="footsteps" size={12} color={c.primary} />
                 <Text style={styles.tagText}>
                   {(() => {
                     const def = getActivityByKey(route.activity_type);
@@ -76,11 +80,11 @@ export function RouteDetailSheet({
                 </Text>
               </View>
               <View style={styles.tag}>
-                <Ionicons name="speedometer" size={12} color={colors.primary} />
+                <Ionicons name="speedometer" size={12} color={c.primary} />
                 <Text style={styles.tagText}>{DIFFICULTY_LABELS[route.difficulty] ?? route.difficulty}</Text>
               </View>
               <View style={styles.tag}>
-                <Ionicons name="earth" size={12} color={colors.primary} />
+                <Ionicons name="earth" size={12} color={c.primary} />
                 <Text style={styles.tagText}>{SURFACE_LABELS[route.surface_type] ?? route.surface_type}</Text>
               </View>
             </View>
@@ -123,7 +127,7 @@ export function RouteDetailSheet({
                 onFollow(route);
               }}
             >
-              <Ionicons name="navigate" size={18} color={colors.primaryForeground} />
+              <Ionicons name="navigate" size={18} color={c.primaryForeground} />
               <Text style={styles.followButtonText}>{t('route_follow')}</Text>
             </TouchableOpacity>
 
@@ -135,7 +139,7 @@ export function RouteDetailSheet({
                   onDelete(route);
                 }}
               >
-                <Ionicons name="trash" size={18} color={colors.destructive} />
+                <Ionicons name="trash" size={18} color={c.destructive} />
               </TouchableOpacity>
             )}
           </View>
@@ -145,7 +149,7 @@ export function RouteDetailSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -154,7 +158,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sheet: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '60%',
@@ -165,7 +169,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
     borderRadius: 2,
     alignSelf: 'center',
     marginTop: 10,
@@ -177,12 +181,12 @@ const styles = StyleSheet.create({
   routeName: {
     ...typography.headline,
     fontSize: 24,
-    color: colors.foreground,
+    color: c.foreground,
   },
   routeCity: {
     ...typography.body,
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 2,
   },
   tagRow: {
@@ -194,7 +198,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
@@ -202,13 +206,13 @@ const styles = StyleSheet.create({
   tagText: {
     ...typography.body,
     fontSize: 12,
-    color: colors.foreground,
+    color: c.foreground,
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 16,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderRadius: 12,
     padding: 12,
   },
@@ -218,26 +222,26 @@ const styles = StyleSheet.create({
   statValue: {
     ...typography.statNumber,
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
   },
   statLabel: {
     ...typography.mono,
     fontSize: 10,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 2,
     textTransform: 'uppercase',
   },
   description: {
     ...typography.body,
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     lineHeight: 20,
     marginBottom: 12,
   },
   distanceHint: {
     ...typography.body,
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textAlign: 'center',
   },
   actions: {
@@ -251,17 +255,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 16,
     padding: 14,
   },
   followButtonText: {
     ...typography.bodyBold,
     fontSize: 16,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
   },
   deleteButton: {
-    backgroundColor: withAlpha(colors.destructive, 0.15),
+    backgroundColor: withAlpha(c.destructive, 0.15),
     borderRadius: 16,
     padding: 14,
     justifyContent: 'center',

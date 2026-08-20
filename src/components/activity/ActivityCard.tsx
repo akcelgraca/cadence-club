@@ -1,4 +1,6 @@
+import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import type { Activity } from '../../lib/types';
@@ -8,13 +10,15 @@ import { formatPace } from '../../utils/formatPace';
 import { useSettingsStore } from '../../store/settingsStore';
 import { formatRelativeTime } from '../../utils/dateHelpers';
 import { Avatar } from '../common/Avatar';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 
 interface ActivityCardProps {
   activity: Activity;
 }
 
 export function ActivityCard({ activity }: ActivityCardProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
 
@@ -36,7 +40,7 @@ export function ActivityCard({ activity }: ActivityCardProps) {
             <Text style={styles.timeAgo}>{formatRelativeTime(activity.created_at)}</Text>
           </View>
         </View>
-        <ActivityIcon activityKey={activity.type} size={24} tintColor={colors.primary} />
+        <ActivityIcon activityKey={activity.type} size={24} tintColor={c.primary} />
       </View>
 
       <View style={styles.statsRow}>
@@ -63,22 +67,22 @@ export function ActivityCard({ activity }: ActivityCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   userRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  userName: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
-  timeAgo: { ...typography.body, fontSize: 12, color: colors.mutedForeground, marginTop: 1 },
+  userName: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
+  timeAgo: { ...typography.body, fontSize: 12, color: c.mutedForeground, marginTop: 1 },
   typeIcon: { fontSize: 24 },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, backgroundColor: colors.inputBackground, borderRadius: 12, marginBottom: 12 },
+  statsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, backgroundColor: c.inputBackground, borderRadius: 12, marginBottom: 12 },
   stat: { alignItems: 'center' },
-  statValue: { ...typography.statNumber, fontSize: 18, color: colors.foreground },
-  statLabel: { ...typography.mono, fontSize: 12, color: colors.mutedForeground, marginTop: 2, textTransform: 'uppercase' },
+  statValue: { ...typography.statNumber, fontSize: 18, color: c.foreground },
+  statLabel: { ...typography.mono, fontSize: 12, color: c.mutedForeground, marginTop: 2, textTransform: 'uppercase' },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  footerText: { ...typography.body, fontSize: 13, color: colors.mutedForeground },
+  footerText: { ...typography.body, fontSize: 13, color: c.mutedForeground },
 });

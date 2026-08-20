@@ -1,12 +1,15 @@
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useColors } from '../../hooks/useColors';
+import { useEffect, useState, useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useActivityStore } from '../../store/activityStore';
-import { colors } from '../../lib/theme';
-import { styles } from './recordStyles';
+import { type Colors } from '../../lib/theme';
+import { makeStyles } from './recordStyles';
 
 export function NonDistanceRecordingView() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const pause = useActivityStore((s) => s.pause);
   const elapsedTime = useActivityStore((s) => s.elapsedTime);
@@ -50,7 +53,7 @@ export function NonDistanceRecordingView() {
       {/* Pause button — at the bottom */}
       <View style={styles.nonDistanceBottom}>
         <TouchableOpacity style={styles.pauseButton} onPress={pause} activeOpacity={0.7}>
-          <Ionicons name="pause" size={18} color={colors.foreground} />
+          <Ionicons name="pause" size={18} color={c.foreground} />
           <Text style={styles.pauseButtonText}>{t('activity_pause_button')}</Text>
         </TouchableOpacity>
       </View>

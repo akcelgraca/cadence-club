@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   TextInput, ActivityIndicator, RefreshControl,
@@ -10,7 +11,7 @@ import { Avatar } from '../common/Avatar';
 import { getConversations } from '../../services/messages';
 import { getMyClubChats } from '../../services/clubs';
 import { useSocialStore } from '../../store/socialStore';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { formatRelativeTime } from '../../utils/dateHelpers';
 import type { Conversation, ClubChat } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +22,8 @@ type ChatRow =
   | { kind: 'club'; id: string; sortAt: number; unread: number; club: ClubChat };
 
 export function MessagesTab() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [rows, setRows] = useState<ChatRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,7 +127,7 @@ export function MessagesTab() {
           <View style={styles.rowTop}>
             <View style={styles.titleRow}>
               {item.kind === 'club' && (
-                <Ionicons name="people" size={13} color={colors.mutedForeground} />
+                <Ionicons name="people" size={13} color={c.mutedForeground} />
               )}
               <Text style={[styles.name, isUnread && styles.nameBold]} numberOfLines={1}>
                 {title}
@@ -150,24 +153,24 @@ export function MessagesTab() {
   };
 
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
+    return <View style={styles.center}><ActivityIndicator color={c.primary} /></View>;
   }
 
   return (
     <View style={styles.root}>
       {/* Search */}
       <View style={styles.searchBox}>
-        <Ionicons name="search" size={14} color={colors.mutedForeground} />
+        <Ionicons name="search" size={14} color={c.mutedForeground} />
         <TextInput
           style={styles.searchInput}
           placeholder={t('messages_search_placeholder')}
-          placeholderTextColor={colors.mutedForeground}
+          placeholderTextColor={c.mutedForeground}
           value={search}
           onChangeText={setSearch}
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
-            <Ionicons name="close-circle" size={14} color={colors.mutedForeground} />
+            <Ionicons name="close-circle" size={14} color={c.mutedForeground} />
           </TouchableOpacity>
         )}
       </View>
@@ -178,7 +181,7 @@ export function MessagesTab() {
         renderItem={renderItem}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Ionicons name="chatbubble-ellipses-outline" size={48} color={colors.mutedForeground} />
+            <Ionicons name="chatbubble-ellipses-outline" size={48} color={c.mutedForeground} />
             <Text style={styles.emptyTitle}>
               {search.trim() ? t('messages_no_results') : t('messages_no_chats')}
             </Text>
@@ -195,7 +198,7 @@ export function MessagesTab() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => { setRefreshing(true); load(); }}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       />
@@ -205,8 +208,8 @@ export function MessagesTab() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  root: { flex: 1, backgroundColor: c.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   searchBox: {
@@ -218,13 +221,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 38,
     borderRadius: 10,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
   searchInput: {
     flex: 1,
     ...typography.body,
     fontSize: 14,
-    color: colors.foreground,
+    color: c.foreground,
   },
 
   row: {
@@ -233,26 +236,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   avatarWrap: { position: 'relative' },
   clubAvatar: {
     width: 50, height: 50, borderRadius: 16,
-    backgroundColor: withAlpha(colors.primary, 0.15),
+    backgroundColor: withAlpha(c.primary, 0.15),
     alignItems: 'center', justifyContent: 'center',
   },
   clubAvatarLetter: {
-    fontFamily: 'BarlowCondensed_700Bold', fontSize: 22, color: colors.primary,
+    fontFamily: 'BarlowCondensed_700Bold', fontSize: 22, color: c.primary,
   },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 },
   unreadDot: {
     position: 'absolute',
     top: 0, right: 0,
     width: 12, height: 12, borderRadius: 6,
-    backgroundColor: colors.primary,
-    borderWidth: 2, borderColor: colors.card,
+    backgroundColor: c.primary,
+    borderWidth: 2, borderColor: c.card,
   },
   rowContent: { flex: 1, minWidth: 0 },
   rowTop: {
@@ -261,22 +264,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 3,
   },
-  name: { ...typography.body, fontSize: 15, color: colors.foreground, flexShrink: 1 },
+  name: { ...typography.body, fontSize: 15, color: c.foreground, flexShrink: 1 },
   nameBold: { fontFamily: 'Barlow_600SemiBold' },
-  time: { ...typography.body, fontSize: 12, color: colors.mutedForeground, marginLeft: 8 },
+  time: { ...typography.body, fontSize: 12, color: c.mutedForeground, marginLeft: 8 },
   rowBottom: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  preview: { ...typography.body, fontSize: 13, color: colors.mutedForeground, flex: 1 },
-  previewBold: { fontFamily: 'Barlow_500Medium', color: colors.foreground },
+  preview: { ...typography.body, fontSize: 13, color: c.mutedForeground, flex: 1 },
+  previewBold: { fontFamily: 'Barlow_500Medium', color: c.foreground },
   unreadBadge: {
     minWidth: 18, height: 18, borderRadius: 9,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: 4,
   },
   unreadBadgeText: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 10,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
   },
 
   empty: {
@@ -286,9 +289,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     gap: 10,
   },
-  emptyTitle: { ...typography.bodyBold, fontSize: 17, color: colors.foreground },
+  emptyTitle: { ...typography.bodyBold, fontSize: 17, color: c.foreground },
   emptyBody: {
     ...typography.body, fontSize: 14,
-    color: colors.mutedForeground, textAlign: 'center', lineHeight: 20,
+    color: c.mutedForeground, textAlign: 'center', lineHeight: 20,
   },
 });

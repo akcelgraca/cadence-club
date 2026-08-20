@@ -98,6 +98,25 @@ export function routeSummary(points: TrackPoint[]): number[][] {
  * Devolve null quando o traçado não dá um treino: sem pontos, ou sem tempos
  * (um GPX de rota planeada tem coordenadas mas não tem relógio).
  */
+/**
+ * Média e máximo do batimento ao longo do trilho.
+ *
+ * Só conta os pontos que o trazem: um ficheiro em que metade dos pontos tem
+ * batimento e a outra metade não continua a dar uma média válida — a dos que
+ * têm. Tratar os que faltam como zero puxava a média para baixo.
+ */
+export function resumoBatimento(pontos: TrackPoint[]): { avg: number | null; max: number | null } {
+  const bpms = pontos
+    .map((p) => p.heartRate)
+    .filter((h): h is number => h !== null && h >= 30 && h <= 240);
+
+  if (bpms.length === 0) return { avg: null, max: null };
+  return {
+    avg: Math.round(bpms.reduce((s, b) => s + b, 0) / bpms.length),
+    max: Math.max(...bpms),
+  };
+}
+
 export function trackToWorkout(
   track: ParsedTrack,
   externalId: string,
@@ -113,6 +132,7 @@ export function trackToWorkout(
   // A distância declarada pelo dispositivo ganha à calculada: quem gravou
   // tinha mais informação do que coordenadas (roda, passada, filtros).
   const distancia = track.declaredDistance ?? totalDistance(track.points);
+  const batimento = resumoBatimento(track.points);
 
   return {
     externalId,
@@ -125,9 +145,8 @@ export function trackToWorkout(
     distance: distancia,
     duration: duracao,
     elevationGain: elevationGain(track.points),
-    // Nem GPX nem TCX trazem frequência cardíaca num sítio que valha a pena
-    // ler nesta fase; o TCX tem-na por ponto, fica para quando houver coluna.
-    avgHeartRate: null,
+    avgHeartRate: batimento.avg,
+    maxHeartRate: batimento.max,
     // Um ficheiro não foi gravado por nós, mesmo que tenha saído desta app —
     // se o utilizador o exportou e reimportou, a defesa do id externo trata
     // do caso, e a da sobreposição temporal apanha o resto.

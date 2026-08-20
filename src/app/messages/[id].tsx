@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
@@ -13,12 +14,15 @@ import {
 } from '../../services/messages';
 import { useAuthStore } from '../../store/authStore';
 import { Avatar } from '../../components/common/Avatar';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { formatRelativeTime } from '../../utils/dateHelpers';
 import type { DirectMessage } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../../lib/navigation';
 
 export default function ChatScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { id, userId, name, avatarUrl } = useLocalSearchParams<{
     id: string;
@@ -130,8 +134,8 @@ export default function ChatScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+        <TouchableOpacity onPress={() => goBackOr('/(tabs)/social')} hitSlop={12} style={styles.backBtn}>
+          <Ionicons name="chevron-back" size={24} color={c.foreground} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -156,7 +160,7 @@ export default function ChatScreen() {
         keyboardVerticalOffset={0}
       >
         {loading ? (
-          <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>
+          <View style={styles.center}><ActivityIndicator color={c.primary} /></View>
         ) : (
           <FlatList
             data={messages}
@@ -185,7 +189,7 @@ export default function ChatScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('messages_placeholder')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={text}
             onChangeText={setText}
             multiline
@@ -198,8 +202,8 @@ export default function ChatScreen() {
             disabled={!text.trim() || sending}
           >
             {sending
-              ? <ActivityIndicator size="small" color={colors.primaryForeground} />
-              : <Ionicons name="send" size={16} color={colors.primaryForeground} />
+              ? <ActivityIndicator size="small" color={c.primaryForeground} />
+              : <Ionicons name="send" size={16} color={c.primaryForeground} />
             }
           </TouchableOpacity>
         </View>
@@ -210,8 +214,8 @@ export default function ChatScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   header: {
@@ -220,8 +224,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.card,
+    borderBottomColor: c.border,
+    backgroundColor: c.card,
   },
   backBtn: { padding: 2 },
   headerUser: {
@@ -234,12 +238,12 @@ const styles = StyleSheet.create({
   headerName: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 15,
-    color: colors.foreground,
+    color: c.foreground,
   },
   headerSub: {
     ...typography.body,
     fontSize: 11,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 1,
   },
 
@@ -255,7 +259,7 @@ const styles = StyleSheet.create({
   msgTime: {
     ...typography.body,
     fontSize: 11,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textAlign: 'center',
     marginVertical: 8,
   },
@@ -268,17 +272,17 @@ const styles = StyleSheet.create({
   },
   bubbleMe: {
     alignSelf: 'flex-end',
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderBottomRightRadius: 4,
   },
   bubbleThem: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderBottomLeftRadius: 4,
   },
   bubbleText: { ...typography.body, fontSize: 15, lineHeight: 21 },
-  bubbleTextMe: { color: colors.primaryForeground },
-  bubbleTextThem: { color: colors.foreground },
+  bubbleTextMe: { color: c.primaryForeground },
+  bubbleTextThem: { color: c.foreground },
 
   // Empty chat
   emptyChat: {
@@ -291,12 +295,12 @@ const styles = StyleSheet.create({
   emptyChatName: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 17,
-    color: colors.foreground,
+    color: c.foreground,
   },
   emptyChatSub: {
     ...typography.body,
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
 
   // Input bar
@@ -307,15 +311,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-    backgroundColor: colors.card,
+    borderTopColor: c.border,
+    backgroundColor: c.card,
   },
   input: {
     flex: 1,
     ...typography.body,
     fontSize: 15,
-    color: colors.foreground,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    color: c.foreground,
+    backgroundColor: withAlpha(c.foreground, 0.06),
     borderRadius: 22,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -323,7 +327,7 @@ const styles = StyleSheet.create({
   },
   sendBtn: {
     width: 38, height: 38, borderRadius: 19,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     alignItems: 'center', justifyContent: 'center',
   },
   sendBtnDisabled: { opacity: 0.4 },

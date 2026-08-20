@@ -100,7 +100,7 @@ const ShareActivityCard = forwardRef<View, { data: ShareCardData; width?: number
           <View style={styles.divider} />
           <Stat label={t('share_card_pace')} value={formatPace(data.paceSecPerKm)} unit="/ km" />
           <View style={styles.divider} />
-          <Stat label="TEMPO" value={formatDuration(data.durationSec)} />
+          <Stat label={t('share_card_time')} value={formatDuration(data.durationSec)} />
         </View>
 
         {hasRoute && (

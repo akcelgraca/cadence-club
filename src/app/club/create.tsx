@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, Switch, Alert, ActivityIndicator,
@@ -10,11 +11,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { createClub } from '../../services/clubs';
 import { ACTIVITY_CATEGORIES } from '../../lib/constants';
 import { ActivityIcon } from '../../components/common/ActivityIcon';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { ActivityCategory } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../../lib/navigation';
 
 export default function CreateClubScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -49,8 +53,8 @@ export default function CreateClubScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+        <TouchableOpacity onPress={() => goBackOr('/(tabs)/social')} hitSlop={12}>
+          <Ionicons name="chevron-back" size={24} color={c.foreground} />
         </TouchableOpacity>
         <Text style={styles.title}>{t('club_create_title')}</Text>
         <TouchableOpacity
@@ -59,7 +63,7 @@ export default function CreateClubScreen() {
           hitSlop={12}
         >
           {loading
-            ? <ActivityIndicator size="small" color={colors.primary} />
+            ? <ActivityIndicator size="small" color={c.primary} />
             : <Text style={[styles.saveText, (!name.trim()) && styles.saveTextDisabled]}>{t('create')}</Text>
           }
         </TouchableOpacity>
@@ -90,7 +94,7 @@ export default function CreateClubScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('club_create_name_placeholder')}
-              placeholderTextColor={colors.mutedForeground}
+              placeholderTextColor={c.mutedForeground}
               value={name}
               onChangeText={setName}
               maxLength={60}
@@ -105,7 +109,7 @@ export default function CreateClubScreen() {
             <TextInput
               style={[styles.input, styles.inputMulti]}
               placeholder={t('club_create_description_placeholder')}
-              placeholderTextColor={colors.mutedForeground}
+              placeholderTextColor={c.mutedForeground}
               value={description}
               onChangeText={setDescription}
               multiline
@@ -121,7 +125,7 @@ export default function CreateClubScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('club_create_city_placeholder')}
-              placeholderTextColor={colors.mutedForeground}
+              placeholderTextColor={c.mutedForeground}
               value={city}
               onChangeText={setCity}
               maxLength={50}
@@ -148,7 +152,7 @@ export default function CreateClubScreen() {
                     <ActivityIcon
                       activityKey={sampleKey}
                       size={13}
-                      tintColor={isActive ? colors.primaryForeground : colors.mutedForeground}
+                      tintColor={isActive ? c.primaryForeground : c.mutedForeground}
                     />
                     <Text style={[styles.catText, isActive && styles.catTextActive]}>
                       {cat.key}
@@ -168,9 +172,9 @@ export default function CreateClubScreen() {
             <Switch
               value={isPrivate}
               onValueChange={setIsPrivate}
-              trackColor={{ false: colors.border, true: withAlpha(colors.primary, 0.5) }}
-              thumbColor={isPrivate ? colors.primary : '#f4f3f4'}
-              ios_backgroundColor={colors.inputBackground}
+              trackColor={{ false: c.border, true: withAlpha(c.primary, 0.5) }}
+              thumbColor={isPrivate ? c.primary : '#f4f3f4'}
+              ios_backgroundColor={c.inputBackground}
             />
           </View>
 
@@ -181,7 +185,7 @@ export default function CreateClubScreen() {
             disabled={!name.trim() || loading}
           >
             {loading
-              ? <ActivityIndicator color={colors.primaryForeground} />
+              ? <ActivityIndicator color={c.primaryForeground} />
               : <Text style={styles.createBtnText}>{t('clubs_create')}</Text>
             }
           </TouchableOpacity>
@@ -193,8 +197,8 @@ export default function CreateClubScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
 
   header: {
     flexDirection: 'row',
@@ -203,19 +207,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   title: {
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
   },
   saveText: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 15,
-    color: colors.primary,
+    color: c.primary,
   },
-  saveTextDisabled: { color: colors.mutedForeground },
+  saveTextDisabled: { color: c.mutedForeground },
 
   form: { padding: 16, gap: 4 },
 
@@ -226,37 +230,37 @@ const styles = StyleSheet.create({
   },
   avatarPlaceholder: {
     width: 80, height: 80, borderRadius: 22,
-    backgroundColor: withAlpha(colors.primary, 0.15),
+    backgroundColor: withAlpha(c.primary, 0.15),
     alignItems: 'center', justifyContent: 'center',
   },
   avatarLetter: {
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 36,
-    color: colors.primary,
+    color: c.primary,
   },
   avatarHint: {
     ...typography.body,
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
 
   field: { marginBottom: 16 },
   label: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 13,
-    color: colors.foreground,
+    color: c.foreground,
     marginBottom: 8,
   },
   input: {
     ...typography.body,
     fontSize: 15,
-    color: colors.foreground,
-    backgroundColor: colors.card,
+    color: c.foreground,
+    backgroundColor: c.card,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   inputMulti: {
     minHeight: 90,
@@ -265,7 +269,7 @@ const styles = StyleSheet.create({
   charCount: {
     ...typography.body,
     fontSize: 11,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textAlign: 'right',
     marginTop: 4,
   },
@@ -278,44 +282,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
-  catChipActive: { backgroundColor: colors.primary },
+  catChipActive: { backgroundColor: c.primary },
   catText: {
     fontFamily: 'Barlow_500Medium',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textTransform: 'capitalize',
   },
-  catTextActive: { color: colors.primaryForeground },
+  catTextActive: { color: c.primaryForeground },
 
   toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
     marginBottom: 16,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   toggleInfo: { flex: 1 },
   toggleLabel: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 15,
-    color: colors.foreground,
+    color: c.foreground,
   },
   toggleSub: {
     ...typography.body,
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 2,
   },
 
   createBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 14,
     paddingVertical: 15,
     alignItems: 'center',
@@ -325,6 +329,6 @@ const styles = StyleSheet.create({
   createBtnText: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 16,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
   },
 });

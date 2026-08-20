@@ -498,6 +498,51 @@ export default function SettingsScreen() {
         />
         <Separator styles={styles} />
         <SwitchRow
+          label={t('settings_notif_clubs')}
+          value={settings.notifications.clubs}
+          onValueChange={() =>
+            updateSettings({
+              notifications: {
+                ...settings.notifications,
+                clubs: !settings.notifications.clubs,
+              },
+            })
+          }
+          styles={styles}
+          colors={c}
+        />
+        <Separator styles={styles} />
+        <SwitchRow
+          label={t('settings_notif_messages')}
+          value={settings.notifications.messages}
+          onValueChange={() =>
+            updateSettings({
+              notifications: {
+                ...settings.notifications,
+                messages: !settings.notifications.messages,
+              },
+            })
+          }
+          styles={styles}
+          colors={c}
+        />
+        <Separator styles={styles} />
+        <SwitchRow
+          label={t('settings_notif_events')}
+          value={settings.notifications.events}
+          onValueChange={() =>
+            updateSettings({
+              notifications: {
+                ...settings.notifications,
+                events: !settings.notifications.events,
+              },
+            })
+          }
+          styles={styles}
+          colors={c}
+        />
+        <Separator styles={styles} />
+        <SwitchRow
           label={t('settings_weekly_summaries')}
           value={settings.weeklySummaryNotifications}
           onValueChange={(val) => updateSettings({ weeklySummaryNotifications: val })}

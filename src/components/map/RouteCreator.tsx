@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { useRouteStore } from '../../store/routeStore';
 import { getRoutePath } from '../../services/mapboxDirections';
 import { createRoute } from '../../services/routes';
@@ -19,6 +20,8 @@ interface RouteCreatorProps {
 type Step = 'draw' | 'config' | 'saving';
 
 export function RouteCreator({ onSave, onCancel }: RouteCreatorProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { bottom } = useSafeAreaInsets();
   const { draftWaypoints, addWaypoint, removeWaypoint, clearWaypoints, cancelCreating } = useRouteStore();
   const [step, setStep] = useState<Step>('draw');
@@ -162,7 +165,7 @@ export function RouteCreator({ onSave, onCancel }: RouteCreatorProps) {
             value={name}
             onChangeText={setName}
             placeholder={t('route_creator_placeholder_name')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
           />
 
           <Text style={styles.label}>{t('route_creator_activity_label')}</Text>
@@ -214,7 +217,7 @@ export function RouteCreator({ onSave, onCancel }: RouteCreatorProps) {
             style={styles.publicToggle}
             onPress={() => setIsPublic(!isPublic)}
           >
-            <Ionicons name={isPublic ? 'globe' : 'lock-closed'} size={16} color={colors.foreground} />
+            <Ionicons name={isPublic ? 'globe' : 'lock-closed'} size={16} color={c.foreground} />
             <Text style={styles.publicText}>{isPublic ? t('route_public') : t('route_private')}</Text>
           </TouchableOpacity>
 
@@ -237,7 +240,7 @@ export function RouteCreator({ onSave, onCancel }: RouteCreatorProps) {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator size="small" color={colors.primaryForeground} />
+              <ActivityIndicator size="small" color={c.primaryForeground} />
             ) : (
               <Text style={styles.saveButtonText}>{t('save')}</Text>
             )}
@@ -262,7 +265,7 @@ export function RouteCreator({ onSave, onCancel }: RouteCreatorProps) {
           <Text style={styles.cancelButtonText}>{t('cancel')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.undoButton} onPress={handleUndo}>
-          <Ionicons name="arrow-undo" size={16} color={colors.foreground} />
+          <Ionicons name="arrow-undo" size={16} color={c.foreground} />
           <Text style={styles.undoButtonText}>{t('route_creator_undo')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -271,7 +274,7 @@ export function RouteCreator({ onSave, onCancel }: RouteCreatorProps) {
           disabled={draftWaypoints.length < 2 || loading}
         >
           {loading ? (
-            <ActivityIndicator size="small" color={colors.primaryForeground} />
+            <ActivityIndicator size="small" color={c.primaryForeground} />
           ) : (
             <Text style={styles.getRouteButtonText}>{t('route_creator_get_route')}</Text>
           )}
@@ -281,13 +284,13 @@ export function RouteCreator({ onSave, onCancel }: RouteCreatorProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   panel: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -297,7 +300,7 @@ const styles = StyleSheet.create({
   panelTitle: {
     ...typography.headline,
     fontSize: 20,
-    color: colors.foreground,
+    color: c.foreground,
     marginBottom: 4,
   },
   drawHeader: {
@@ -306,7 +309,7 @@ const styles = StyleSheet.create({
   drawHint: {
     ...typography.body,
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -314,7 +317,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: withAlpha(colors.destructive, 0.15),
+    backgroundColor: withAlpha(c.destructive, 0.15),
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -322,24 +325,24 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     ...typography.bodyBold,
     fontSize: 14,
-    color: colors.destructive,
+    color: c.destructive,
   },
   undoButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
     borderRadius: 12,
     padding: 12,
   },
   undoButtonText: {
     ...typography.bodyBold,
     fontSize: 14,
-    color: colors.foreground,
+    color: c.foreground,
   },
   getRouteButton: {
     flex: 1,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -348,7 +351,7 @@ const styles = StyleSheet.create({
   getRouteButtonText: {
     ...typography.bodyBold,
     fontSize: 14,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
   },
   buttonDisabled: {
     opacity: 0.4,
@@ -358,17 +361,17 @@ const styles = StyleSheet.create({
   label: {
     ...typography.bodyMedium,
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 12,
     marginBottom: 6,
   },
   input: {
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderRadius: 10,
     padding: 12,
     fontSize: 16,
     fontFamily: 'Barlow_400Regular',
-    color: colors.foreground,
+    color: c.foreground,
   },
   chipRow: {
     flexDirection: 'row',
@@ -379,19 +382,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
   },
   chipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: c.primary,
+    borderColor: c.primary,
   },
   chipText: {
     ...typography.body,
     fontSize: 13,
-    color: colors.foreground,
+    color: c.foreground,
   },
   chipTextSelected: {
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
     fontFamily: 'Barlow_600SemiBold',
   },
   publicToggle: {
@@ -399,18 +402,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginTop: 16,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderRadius: 10,
     padding: 12,
   },
   publicText: {
     ...typography.body,
     fontSize: 14,
-    color: colors.foreground,
+    color: c.foreground,
   },
   statsPreview: {
     marginTop: 12,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderRadius: 10,
     padding: 12,
     alignItems: 'center',
@@ -418,11 +421,11 @@ const styles = StyleSheet.create({
   statsText: {
     ...typography.statNumber,
     fontSize: 16,
-    color: colors.primary,
+    color: c.primary,
   },
   backButton: {
     flex: 1,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -430,11 +433,11 @@ const styles = StyleSheet.create({
   backButtonText: {
     ...typography.bodyBold,
     fontSize: 14,
-    color: colors.foreground,
+    color: c.foreground,
   },
   saveButton: {
     flex: 2,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -443,6 +446,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     ...typography.bodyBold,
     fontSize: 14,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
   },
 });

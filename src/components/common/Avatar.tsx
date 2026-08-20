@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { View, Image, Text, StyleSheet } from 'react-native';
-import { colors, typography } from '../../lib/theme';
+import { useColors } from '../../hooks/useColors';
+import { typography, type Colors } from '../../lib/theme';
 
 interface AvatarProps {
   uri?: string | null;
@@ -11,6 +13,8 @@ interface AvatarProps {
 }
 
 export function Avatar({ uri, name, size = 40, radius, borderWidth, borderColor }: AvatarProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const borderRadius = radius ?? size / 2;
 
   const initials = name
@@ -39,7 +43,7 @@ export function Avatar({ uri, name, size = 40, radius, borderWidth, borderColor 
   );
 }
 
-const styles = StyleSheet.create({
-  placeholder: { backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center' },
-  initials: { ...typography.bodyBold, color: colors.primaryForeground },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  placeholder: { backgroundColor: c.primary, justifyContent: 'center', alignItems: 'center' },
+  initials: { ...typography.bodyBold, color: c.primaryForeground },
 });

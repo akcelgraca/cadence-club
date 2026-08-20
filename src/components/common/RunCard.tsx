@@ -1,11 +1,13 @@
+import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { router } from 'expo-router';
 import type { Activity } from '../../lib/types';
 import { formatDistance } from '../../utils/formatDistance';
 import { formatDuration, formatRelativeTime } from '../../utils/dateHelpers';
 import { formatPace } from '../../utils/formatPace';
 import { useSettingsStore } from '../../store/settingsStore';
-import { colors, typography, runTypeColors } from '../../lib/theme';
+import { typography, runTypeColors, type Colors } from '../../lib/theme';
 import { getActivityByKey } from '../../lib/constants';
 import { useTranslation } from 'react-i18next';
 
@@ -21,10 +23,12 @@ interface RunCardProps {
 }
 
 export function RunCard({ run }: RunCardProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   const intensity = deriveIntensity(run);
-  const typeColor = runTypeColors[intensity] ?? colors.mutedForeground;
+  const typeColor = runTypeColors[intensity] ?? c.mutedForeground;
   const activityDef = getActivityByKey(run.type);
   const activityLabel = activityDef ? t(activityDef.i18n_key as any) : run.type;
 
@@ -64,9 +68,9 @@ export function RunCard({ run }: RunCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -81,13 +85,13 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 22,
-    color: colors.foreground,
+    color: c.foreground,
     textTransform: 'uppercase',
   },
   date: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 2,
   },
   badge: {
@@ -105,13 +109,13 @@ const styles = StyleSheet.create({
   statValue: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 22,
-    color: colors.foreground,
+    color: c.foreground,
   },
-  pace: { color: colors.primary },
+  pace: { color: c.primary },
   statLabel: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 10,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 2,
   },
 });

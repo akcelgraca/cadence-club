@@ -1,15 +1,19 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useColors } from '../../../hooks/useColors';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
-import { router } from 'expo-router';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../store/authStore';
 import { useCreateEquipment } from '../../../hooks/useEquipment';
 import { EQUIPMENT_TYPES } from '../../../lib/constants';
 import { useTranslation } from 'react-i18next';
-import { colors, typography } from '../../../lib/theme';
+import { typography, type Colors } from '../../../lib/theme';
 import type { EquipmentType } from '../../../lib/types';
+import { goBackOr } from '../../../lib/navigation';
 
 export default function AddEquipmentScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { profile } = useAuthStore();
   const createMutation = useCreateEquipment();
@@ -38,7 +42,7 @@ export default function AddEquipmentScreen() {
         notes: notes.trim() || undefined,
         initial_distance: initialDistance ? parseFloat(initialDistance) : 0,
       });
-      router.back();
+      goBackOr('/profile/equipment');
     } catch (err: any) {
       Alert.alert(err.message || t('error_generic'));
     }
@@ -52,7 +56,7 @@ export default function AddEquipmentScreen() {
         value={name}
         onChangeText={setName}
         placeholder={t('equipment_name_placeholder')}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
       />
 
       <Text style={styles.label}>{t('equipment_type_label')}</Text>
@@ -63,7 +67,7 @@ export default function AddEquipmentScreen() {
             style={[styles.chip, type === et.key && styles.chipSelected]}
             onPress={() => setType(type === et.key ? null : et.key)}
           >
-            <Ionicons name={(et.icon as any) ?? 'cube'} size={24} color={type === et.key ? colors.primary : colors.foreground} />
+            <Ionicons name={(et.icon as any) ?? 'cube'} size={24} color={type === et.key ? c.primary : c.foreground} />
             <Text style={[styles.chipLabel, type === et.key && styles.chipLabelSelected]}>
               {t(et.i18n_key as any)}
             </Text>
@@ -77,7 +81,7 @@ export default function AddEquipmentScreen() {
         value={brand}
         onChangeText={setBrand}
         placeholder={t('equipment_brand_placeholder')}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
       />
 
       <Text style={styles.label}>{t('equipment_model')}</Text>
@@ -86,7 +90,7 @@ export default function AddEquipmentScreen() {
         value={model}
         onChangeText={setModel}
         placeholder={t('equipment_model_placeholder')}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
       />
 
       <Text style={styles.label}>{t('equipment_initial_distance')}</Text>
@@ -96,7 +100,7 @@ export default function AddEquipmentScreen() {
         onChangeText={setInitialDistance}
         keyboardType="numeric"
         placeholder={t('equipment_distance_placeholder')}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
       />
 
       <Text style={styles.label}>{t('equipment_notes')}</Text>
@@ -107,7 +111,7 @@ export default function AddEquipmentScreen() {
         multiline
         numberOfLines={3}
         placeholder={t('equipment_notes_placeholder')}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
       />
 
       <TouchableOpacity
@@ -123,17 +127,17 @@ export default function AddEquipmentScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   content: { padding: 24 },
-  label: { ...typography.bodyMedium, fontSize: 14, marginBottom: 6, marginTop: 16, color: colors.foreground },
+  label: { ...typography.bodyMedium, fontSize: 14, marginBottom: 6, marginTop: 16, color: c.foreground },
   input: {
     ...typography.body,
     borderRadius: 12,
     padding: 14,
     fontSize: 16,
-    backgroundColor: colors.inputBackground,
-    color: colors.foreground,
+    backgroundColor: c.inputBackground,
+    color: c.foreground,
   },
   textArea: { height: 80, textAlignVertical: 'top' },
   chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
@@ -141,17 +145,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
     gap: 4,
   },
-  chipSelected: { borderColor: colors.primary, backgroundColor: colors.inputBackground },
+  chipSelected: { borderColor: c.primary, backgroundColor: c.inputBackground },
   chipIcon: { fontSize: 16 },
-  chipLabel: { ...typography.bodyMedium, fontSize: 13, color: colors.mutedForeground },
-  chipLabelSelected: { color: colors.primary },
-  saveButton: { backgroundColor: colors.primary, borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 32 },
+  chipLabel: { ...typography.bodyMedium, fontSize: 13, color: c.mutedForeground },
+  chipLabelSelected: { color: c.primary },
+  saveButton: { backgroundColor: c.primary, borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 32 },
   saveButtonDisabled: { opacity: 0.6 },
-  saveButtonText: { ...typography.bodyBold, color: colors.primaryForeground, fontSize: 16 },
+  saveButtonText: { ...typography.bodyBold, color: c.primaryForeground, fontSize: 16 },
 });

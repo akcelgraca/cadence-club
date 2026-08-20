@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useColors } from '../../../hooks/useColors';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image,
   Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Modal, FlatList,
 } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,10 +20,13 @@ import { useAuthStore } from '../../../store/authStore';
 import { ActivityIcon } from '../../../components/common/ActivityIcon';
 import { ACTIVITY_CATEGORIES, getActivityByKey } from '../../../lib/constants';
 import { MOOD_IMAGES, SURFACE_TYPES } from '../../../components/record/shared';
-import { colors, typography, withAlpha } from '../../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../../lib/theme';
 import type { ActivityType, SurfaceType } from '../../../lib/types';
+import { goBackOr } from '../../../lib/navigation';
 
 export default function EditActivityScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const queryClient = useQueryClient();
@@ -176,7 +180,7 @@ export default function EditActivityScreen() {
       queryClient.invalidateQueries({ queryKey: ['profileStats'] });
       queryClient.invalidateQueries({ queryKey: ['monthlyStats'] });
 
-      router.back();
+      goBackOr(`/activity/${id}`);
     } catch (e: any) {
       Alert.alert(e?.message ?? t('activity_edit_save_error'));
     } finally {
@@ -187,7 +191,7 @@ export default function EditActivityScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.center} edges={['top']}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={c.primary} />
       </SafeAreaView>
     );
   }
@@ -198,7 +202,7 @@ export default function EditActivityScreen() {
         <Text style={styles.errorText}>
           {activity ? t('activity_edit_not_yours') : t('activity_not_found')}
         </Text>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => goBackOr(`/activity/${id}`)}>
           <Text style={styles.backBtnText}>{t('route_creator_back')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -210,13 +214,13 @@ export default function EditActivityScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+        <TouchableOpacity onPress={() => goBackOr(`/activity/${id}`)} hitSlop={12}>
+          <Ionicons name="chevron-back" size={24} color={c.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('activity_edit_title')}</Text>
         <TouchableOpacity onPress={handleSave} disabled={saving} hitSlop={12}>
           {saving
-            ? <ActivityIndicator size="small" color={colors.primary} />
+            ? <ActivityIndicator size="small" color={c.primary} />
             : <Text style={styles.saveText}>{t('save')}</Text>}
         </TouchableOpacity>
       </View>
@@ -225,7 +229,7 @@ export default function EditActivityScreen() {
         <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
           {/* Aviso do que não se edita */}
           <View style={styles.notice}>
-            <Ionicons name="lock-closed-outline" size={14} color={colors.mutedForeground} />
+            <Ionicons name="lock-closed-outline" size={14} color={c.mutedForeground} />
             <Text style={styles.noticeText}>
               {t('activity_edit_immutable_hint')}
             </Text>
@@ -234,11 +238,11 @@ export default function EditActivityScreen() {
           {/* Modalidade */}
           <Text style={styles.label}>{t('activity_sport')}</Text>
           <TouchableOpacity style={styles.typeRow} onPress={() => setTypePickerOpen(true)}>
-            <ActivityIcon activityKey={type ?? ''} size={22} tintColor={colors.primary} />
+            <ActivityIcon activityKey={type ?? ''} size={22} tintColor={c.primary} />
             <Text style={styles.typeText}>
               {typeDef ? t(typeDef.i18n_key as any) : t('edit_profile_choose')}
             </Text>
-            <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
+            <Ionicons name="chevron-forward" size={16} color={c.mutedForeground} />
           </TouchableOpacity>
 
           {/* Título */}
@@ -246,7 +250,7 @@ export default function EditActivityScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('activity_title_placeholder')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={title}
             onChangeText={setTitle}
             maxLength={100}
@@ -257,7 +261,7 @@ export default function EditActivityScreen() {
           <TextInput
             style={[styles.input, styles.inputMulti]}
             placeholder={t('activity_desc_placeholder')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -304,7 +308,7 @@ export default function EditActivityScreen() {
                     <Ionicons
                       name={s.icon}
                       size={14}
-                      color={surfaceType === s.key ? colors.primaryForeground : colors.mutedForeground}
+                      color={surfaceType === s.key ? c.primaryForeground : c.mutedForeground}
                     />
                     <Text style={[styles.chipText, surfaceType === s.key && styles.chipTextActive]}>
                       {s.label}
@@ -329,7 +333,7 @@ export default function EditActivityScreen() {
                     <Ionicons
                       name={eq.type === 'shoes' ? 'footsteps-outline' : eq.type === 'bike' ? 'bicycle-outline' : 'hardware-chip-outline'}
                       size={14}
-                      color={equipmentId === eq.id ? colors.primaryForeground : colors.mutedForeground}
+                      color={equipmentId === eq.id ? c.primaryForeground : c.mutedForeground}
                     />
                     <Text style={[styles.chipText, equipmentId === eq.id && styles.chipTextActive]}>
                       {eq.name}
@@ -361,7 +365,7 @@ export default function EditActivityScreen() {
               <Ionicons
                 name={isPublic ? 'globe-outline' : 'lock-closed-outline'}
                 size={18}
-                color={colors.foreground}
+                color={c.foreground}
               />
               <View style={{ flex: 1 }}>
                 <Text style={styles.visibilityLabel}>
@@ -387,7 +391,7 @@ export default function EditActivityScreen() {
             disabled={saving}
           >
             {saving
-              ? <ActivityIndicator color={colors.primaryForeground} />
+              ? <ActivityIndicator color={c.primaryForeground} />
               : <Text style={styles.saveButtonText}>{t('equipment_save_changes')}</Text>}
           </TouchableOpacity>
         </ScrollView>
@@ -404,7 +408,7 @@ export default function EditActivityScreen() {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{t('activity_sport')}</Text>
             <TouchableOpacity onPress={() => setTypePickerOpen(false)}>
-              <Ionicons name="close" size={24} color={colors.foreground} />
+              <Ionicons name="close" size={24} color={c.foreground} />
             </TouchableOpacity>
           </View>
           <FlatList
@@ -422,13 +426,13 @@ export default function EditActivityScreen() {
                     <ActivityIcon
                       activityKey={act.key}
                       size={20}
-                      tintColor={type === act.key ? colors.primary : colors.mutedForeground}
+                      tintColor={type === act.key ? c.primary : c.mutedForeground}
                     />
                     <Text style={[styles.modalItemText, type === act.key && styles.modalItemTextActive]}>
                       {t(act.i18n_key as any)}
                     </Text>
                     {type === act.key && (
-                      <Ionicons name="checkmark" size={18} color={colors.primary} />
+                      <Ionicons name="checkmark" size={18} color={c.primary} />
                     )}
                   </TouchableOpacity>
                 ))}
@@ -442,127 +446,127 @@ export default function EditActivityScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   center: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
-    padding: 32, gap: 14, backgroundColor: colors.background,
+    padding: 32, gap: 14, backgroundColor: c.background,
   },
-  errorText: { ...typography.body, fontSize: 15, color: colors.mutedForeground, textAlign: 'center' },
+  errorText: { ...typography.body, fontSize: 15, color: c.mutedForeground, textAlign: 'center' },
   backBtn: {
     paddingHorizontal: 20, paddingVertical: 10,
-    borderRadius: 20, backgroundColor: colors.primary,
+    borderRadius: 20, backgroundColor: c.primary,
   },
-  backBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: colors.primaryForeground },
+  backBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: c.primaryForeground },
 
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border,
   },
-  headerTitle: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 18, color: colors.foreground },
-  saveText: { fontFamily: 'Barlow_600SemiBold', fontSize: 15, color: colors.primary },
+  headerTitle: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 18, color: c.foreground },
+  saveText: { fontFamily: 'Barlow_600SemiBold', fontSize: 15, color: c.primary },
 
   form: { padding: 16, paddingBottom: 48 },
 
   notice: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     padding: 12, borderRadius: 12,
-    backgroundColor: withAlpha(colors.foreground, 0.04),
+    backgroundColor: withAlpha(c.foreground, 0.04),
   },
-  noticeText: { ...typography.body, fontSize: 12, color: colors.mutedForeground, flex: 1, lineHeight: 16 },
+  noticeText: { ...typography.body, fontSize: 12, color: c.mutedForeground, flex: 1, lineHeight: 16 },
 
   label: {
     fontFamily: 'Barlow_600SemiBold', fontSize: 13,
-    color: colors.foreground, marginTop: 20, marginBottom: 8,
+    color: c.foreground, marginTop: 20, marginBottom: 8,
   },
   input: {
-    ...typography.body, fontSize: 15, color: colors.foreground,
-    backgroundColor: colors.card, borderRadius: 12,
+    ...typography.body, fontSize: 15, color: c.foreground,
+    backgroundColor: c.card, borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 12,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: c.border,
   },
   inputMulti: { minHeight: 90, paddingTop: 12 },
 
   typeRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: colors.card, borderRadius: 12,
+    backgroundColor: c.card, borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 13,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: c.border,
   },
-  typeText: { ...typography.bodyMedium, fontSize: 15, color: colors.foreground, flex: 1 },
+  typeText: { ...typography.bodyMedium, fontSize: 15, color: c.foreground, flex: 1 },
 
-  photoCount: { fontFamily: 'DMMono_400Regular', fontSize: 12, color: colors.mutedForeground },
+  photoCount: { fontFamily: 'DMMono_400Regular', fontSize: 12, color: c.mutedForeground },
 
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
-  chipActive: { backgroundColor: colors.primary },
-  chipText: { ...typography.bodyMedium, fontSize: 12, color: colors.mutedForeground },
-  chipTextActive: { color: colors.primaryForeground },
+  chipActive: { backgroundColor: c.primary },
+  chipText: { ...typography.bodyMedium, fontSize: 12, color: c.mutedForeground },
+  chipTextActive: { color: c.primaryForeground },
 
   moodRow: { flexDirection: 'row', gap: 12 },
   moodButton: {
     width: 52, height: 52, borderRadius: 26,
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: withAlpha(colors.foreground, 0.05),
+    backgroundColor: withAlpha(c.foreground, 0.05),
   },
   moodButtonSelected: {
-    backgroundColor: withAlpha(colors.primary, 0.15),
-    borderWidth: 1.5, borderColor: colors.primary,
+    backgroundColor: withAlpha(c.primary, 0.15),
+    borderWidth: 1.5, borderColor: c.primary,
   },
   moodImage: { width: 30, height: 30 },
 
   visibilityRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     gap: 12, marginTop: 24,
-    backgroundColor: colors.card, borderRadius: 12, padding: 14,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
+    backgroundColor: c.card, borderRadius: 12, padding: 14,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: c.border,
   },
   visibilityInfo: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  visibilityLabel: { ...typography.bodyBold, fontSize: 14, color: colors.foreground },
-  visibilitySub: { ...typography.body, fontSize: 12, color: colors.mutedForeground, marginTop: 1 },
+  visibilityLabel: { ...typography.bodyBold, fontSize: 14, color: c.foreground },
+  visibilitySub: { ...typography.body, fontSize: 12, color: c.mutedForeground, marginTop: 1 },
   toggle: {
     width: 48, height: 28, borderRadius: 14,
-    backgroundColor: withAlpha(colors.foreground, 0.15),
+    backgroundColor: withAlpha(c.foreground, 0.15),
     padding: 3, justifyContent: 'center',
   },
-  toggleActive: { backgroundColor: colors.primary },
+  toggleActive: { backgroundColor: c.primary },
   toggleKnob: {
     width: 22, height: 22, borderRadius: 11,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
   },
   toggleKnobActive: { alignSelf: 'flex-end' },
 
   saveButton: {
-    backgroundColor: colors.primary, borderRadius: 14,
+    backgroundColor: c.primary, borderRadius: 14,
     paddingVertical: 15, alignItems: 'center', marginTop: 28,
   },
   saveButtonDisabled: { opacity: 0.6 },
-  saveButtonText: { fontFamily: 'Barlow_600SemiBold', fontSize: 16, color: colors.primaryForeground },
+  saveButtonText: { fontFamily: 'Barlow_600SemiBold', fontSize: 16, color: c.primaryForeground },
 
   // Seletor de modalidade
-  modal: { flex: 1, backgroundColor: colors.background },
+  modal: { flex: 1, backgroundColor: c.background },
   modalHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border,
   },
-  modalTitle: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 20, color: colors.foreground },
+  modalTitle: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 20, color: c.foreground },
   modalCategory: {
     fontFamily: 'Barlow_600SemiBold', fontSize: 12,
-    color: colors.mutedForeground, textTransform: 'uppercase', letterSpacing: 1,
+    color: c.mutedForeground, textTransform: 'uppercase', letterSpacing: 1,
     paddingHorizontal: 20, paddingTop: 18, paddingBottom: 6,
   },
   modalItem: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingHorizontal: 20, paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border,
   },
-  modalItemActive: { backgroundColor: withAlpha(colors.primary, 0.06) },
-  modalItemText: { ...typography.body, fontSize: 15, color: colors.foreground, flex: 1 },
-  modalItemTextActive: { fontFamily: 'Barlow_600SemiBold', color: colors.primary },
+  modalItemActive: { backgroundColor: withAlpha(c.primary, 0.06) },
+  modalItemText: { ...typography.body, fontSize: 15, color: c.foreground, flex: 1 },
+  modalItemTextActive: { fontFamily: 'Barlow_600SemiBold', color: c.primary },
 });

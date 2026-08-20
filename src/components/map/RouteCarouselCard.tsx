@@ -1,10 +1,12 @@
+import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ActivityIcon } from '../common/ActivityIcon';
 import { formatDistance } from '../../utils/formatDistance';
 import { useSettingsStore } from '../../store/settingsStore';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { NearbyRoute } from '../../lib/types';
 
 const DIFFICULTY_KEY: Record<string, string> = {
@@ -30,6 +32,8 @@ interface RouteCarouselCardProps {
 export function RouteCarouselCard({
   route, width, isActive, isSaved, onToggleSave, onDetails, onFollow,
 }: RouteCarouselCardProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
 
@@ -42,14 +46,14 @@ export function RouteCarouselCard({
       {/* Linha de topo: nome + guardar */}
       <View style={styles.topRow}>
         <View style={styles.iconWrap}>
-          <ActivityIcon activityKey={route.activity_type} size={16} tintColor={colors.primary} />
+          <ActivityIcon activityKey={route.activity_type} size={16} tintColor={c.primary} />
         </View>
         <Text style={styles.name} numberOfLines={1}>{route.name}</Text>
         <TouchableOpacity onPress={onToggleSave} hitSlop={10} style={styles.saveBtn}>
           <Ionicons
             name={isSaved ? 'bookmark' : 'bookmark-outline'}
             size={18}
-            color={isSaved ? colors.primary : colors.mutedForeground}
+            color={isSaved ? c.primary : c.mutedForeground}
           />
         </TouchableOpacity>
       </View>
@@ -85,7 +89,7 @@ export function RouteCarouselCard({
           </View>
         </View>
         <TouchableOpacity style={styles.followBtn} onPress={onFollow}>
-          <Ionicons name="play" size={12} color={colors.primaryForeground} />
+          <Ionicons name="play" size={12} color={c.primaryForeground} />
           <Text style={styles.followText}>{t('follow')}</Text>
         </TouchableOpacity>
       </View>
@@ -93,9 +97,9 @@ export function RouteCarouselCard({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 18,
     padding: 14,
     borderWidth: 1.5,
@@ -106,15 +110,15 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
-  cardActive: { borderColor: colors.primary },
+  cardActive: { borderColor: c.primary },
 
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   iconWrap: {
     width: 30, height: 30, borderRadius: 15,
-    backgroundColor: withAlpha(colors.primary, 0.12),
+    backgroundColor: withAlpha(c.primary, 0.12),
     alignItems: 'center', justifyContent: 'center',
   },
-  name: { ...typography.bodyBold, fontSize: 15, color: colors.foreground, flex: 1 },
+  name: { ...typography.bodyBold, fontSize: 15, color: c.foreground, flex: 1 },
   saveBtn: { padding: 2 },
 
   metrics: { flexDirection: 'row', alignItems: 'center', marginTop: 12 },
@@ -122,19 +126,19 @@ const styles = StyleSheet.create({
   metricDivider: {
     width: StyleSheet.hairlineWidth,
     height: 24,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
   },
   metricValue: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 19,
     lineHeight: 21,
-    color: colors.foreground,
+    color: c.foreground,
   },
   metricLabel: {
     fontFamily: 'Barlow_500Medium',
     fontSize: 9,
     letterSpacing: 0.8,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textTransform: 'uppercase',
   },
 
@@ -144,12 +148,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
   tagText: {
     fontFamily: 'Barlow_500Medium',
     fontSize: 10,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
@@ -160,11 +164,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 16,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   followText: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 12,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
   },
 });

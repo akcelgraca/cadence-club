@@ -1,8 +1,9 @@
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { useState } from 'react';
+import { useColors } from '../../hooks/useColors';
+import { useState, useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { giveKudo, removeKudo } from '../../services/social';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 
 interface BoostButtonProps {
   activityId: string;
@@ -11,6 +12,8 @@ interface BoostButtonProps {
 }
 
 export function BoostButton({ activityId, initialBoosted, initialCount }: BoostButtonProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const [boosted, setBoosted] = useState(initialBoosted);
   const [count, setCount] = useState(initialCount);
 
@@ -38,17 +41,17 @@ export function BoostButton({ activityId, initialBoosted, initialCount }: BoostB
       <Ionicons
         name={boosted ? 'heart' : 'heart-outline'}
         size={20}
-        color={boosted ? colors.primary : colors.mutedForeground}
+        color={boosted ? c.primary : c.mutedForeground}
       />
       <Text style={[styles.count, boosted && styles.countActive]}>{count}</Text>
     </TouchableOpacity>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   button: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   icon: { fontSize: 20 },
   iconActive: {},
-  count: { ...typography.mono, fontSize: 14, color: colors.mutedForeground },
-  countActive: { color: colors.primary },
+  count: { ...typography.mono, fontSize: 14, color: c.mutedForeground },
+  countActive: { color: c.primary },
 });

@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, Alert, Image, ActivityIndicator, TextInput, ScrollView } from 'react-native';
-import { useRef, useState } from 'react';
+import { useColors } from '../../hooks/useColors';
+import { useRef, useState, useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -26,12 +27,14 @@ import { captureTransparentPng } from '../share/captureCard';
 import { detectSegmentEfforts } from '../../services/segments';
 import { getMyPrivacyZones, trimRouteForZones } from '../../services/privacyZones';
 import { queuePendingActivity } from '../../services/pendingSync';
-import { colors } from '../../lib/theme';
+import { type Colors } from '../../lib/theme';
 import { MOOD_IMAGES, SURFACE_TYPES } from './shared';
-import { styles } from './recordStyles';
+import { makeStyles } from './recordStyles';
 import { track } from '../../lib/analytics';
 
 export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boolean }) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const type = useActivityStore((s) => s.type);
   const runType = useActivityStore((s) => s.runType);
@@ -365,7 +368,7 @@ export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boo
       <TextInput
         style={styles.fieldInput}
         placeholder={suggestedTitle}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
         value={title}
         onChangeText={setTitle}
         maxLength={100}
@@ -376,7 +379,7 @@ export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boo
       <TextInput
         style={[styles.fieldInput, styles.fieldTextArea]}
         placeholder={t('activity_desc_placeholder')}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
         value={description}
         onChangeText={setDescription}
         multiline
@@ -419,7 +422,7 @@ export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boo
                 <Ionicons
                   name={s.icon}
                   size={14}
-                  color={surfaceType === s.key ? colors.primaryForeground : colors.mutedForeground}
+                  color={surfaceType === s.key ? c.primaryForeground : c.mutedForeground}
                 />
                 <Text style={[styles.chipText, surfaceType === s.key && styles.chipTextActive]}>
                   {s.label}
@@ -445,7 +448,7 @@ export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boo
                 <Ionicons
                   name={eq.type === 'shoes' ? 'footsteps-outline' : eq.type === 'bike' ? 'bicycle-outline' : 'hardware-chip-outline'}
                   size={14}
-                  color={equipmentId === eq.id ? colors.primaryForeground : colors.mutedForeground}
+                  color={equipmentId === eq.id ? c.primaryForeground : c.mutedForeground}
                 />
                 <Text style={[styles.chipText, equipmentId === eq.id && styles.chipTextActive]}>
                   {eq.name}
@@ -462,7 +465,7 @@ export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boo
           <Ionicons
             name={isPublic ? 'globe-outline' : 'lock-closed-outline'}
             size={18}
-            color={colors.foreground}
+            color={c.foreground}
           />
           <Text style={styles.visibilityLabel}>
             {isPublic ? t('activity_visibility_public') : t('activity_visibility_private')}
@@ -524,7 +527,7 @@ export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boo
       >
         {saving ? (
           <View style={styles.saveButtonRow}>
-            <ActivityIndicator size="small" color={colors.primaryForeground} />
+            <ActivityIndicator size="small" color={c.primaryForeground} />
             <Text style={styles.saveButtonText}>{t('activity_saving')}</Text>
           </View>
         ) : (

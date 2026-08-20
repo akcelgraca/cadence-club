@@ -6,6 +6,7 @@ import {
   routeSummary,
   totalDistance,
   trackToWorkout,
+  resumoBatimento,
 } from './track';
 import type { TrackPoint } from './types';
 
@@ -22,6 +23,7 @@ function ponto(
     lat: metersToLatDegrees(metrosDoInicio),
     lng: 0,
     elevation: opcoes.elevation ?? null,
+    heartRate: null,
     time: opcoes.time ?? null,
   };
 }
@@ -210,5 +212,37 @@ describe('trackToWorkout', () => {
       'file:abc',
     );
     expect(treino).toBeNull();
+  });
+});
+
+describe('resumoBatimento', () => {
+  const ponto = (heartRate: number | null) => ({
+    lat: 38.7223, lng: -9.1393, elevation: null, heartRate,
+    time: '2026-08-18T09:00:00.000Z',
+  });
+
+  it('calcula média e máximo', () => {
+    const { avg, max } = resumoBatimento([ponto(140), ponto(150), ponto(160)]);
+    expect(avg).toBe(150);
+    expect(max).toBe(160);
+  });
+
+  it('ignora os pontos sem batimento em vez de os contar como zero', () => {
+    // Metade dos pontos sem batimento é comum: o sensor perde contacto. Contar
+    // os que faltam como zero puxava a média para baixo.
+    const { avg, max } = resumoBatimento([ponto(150), ponto(null), ponto(170)]);
+    expect(avg).toBe(160);
+    expect(max).toBe(170);
+  });
+
+  it('devolve null quando nenhum ponto traz batimento', () => {
+    expect(resumoBatimento([ponto(null), ponto(null)])).toEqual({ avg: null, max: null });
+    expect(resumoBatimento([])).toEqual({ avg: null, max: null });
+  });
+
+  it('descarta leituras impossíveis', () => {
+    const { avg, max } = resumoBatimento([ponto(150), ponto(500), ponto(2)]);
+    expect(avg).toBe(150);
+    expect(max).toBe(150);
   });
 });

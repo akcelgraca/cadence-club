@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIcon } from '../common/ActivityIcon';
 import { ACTIVITY_CATEGORIES } from '../../lib/constants';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { ActivityCategory } from '../../lib/types';
 
 export type CategoryFilter = ActivityCategory | 'all';
@@ -23,6 +25,8 @@ interface FilterPillsProps {
 }
 
 export function FilterPills({ selected, onSelect, availableCategories }: FilterPillsProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
 
   // Com uma só modalidade não há nada para filtrar
@@ -45,7 +49,7 @@ export function FilterPills({ selected, onSelect, availableCategories }: FilterP
         <Ionicons
           name="apps"
           size={13}
-          color={selected === 'all' ? colors.primaryForeground : colors.mutedForeground}
+          color={selected === 'all' ? c.primaryForeground : c.mutedForeground}
         />
         <Text style={[styles.pillText, selected === 'all' ? styles.pillTextActive : styles.pillTextInactive]}>
           {t('filter_all')}
@@ -65,7 +69,7 @@ export function FilterPills({ selected, onSelect, availableCategories }: FilterP
               <ActivityIcon
                 activityKey={sample}
                 size={13}
-                tintColor={isActive ? colors.primaryForeground : colors.mutedForeground}
+                tintColor={isActive ? c.primaryForeground : c.mutedForeground}
               />
             )}
             <Text style={[styles.pillText, isActive ? styles.pillTextActive : styles.pillTextInactive]}>
@@ -78,7 +82,7 @@ export function FilterPills({ selected, onSelect, availableCategories }: FilterP
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: 8,
@@ -93,9 +97,9 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 20,
   },
-  pillActive: { backgroundColor: colors.primary },
-  pillInactive: { backgroundColor: withAlpha(colors.foreground, 0.06) },
+  pillActive: { backgroundColor: c.primary },
+  pillInactive: { backgroundColor: withAlpha(c.foreground, 0.06) },
   pillText: { ...typography.bodyMedium, fontSize: 12 },
-  pillTextActive: { color: colors.primaryForeground },
-  pillTextInactive: { color: colors.mutedForeground },
+  pillTextActive: { color: c.primaryForeground },
+  pillTextInactive: { color: c.mutedForeground },
 });

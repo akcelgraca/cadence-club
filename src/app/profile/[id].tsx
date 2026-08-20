@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, Animated, useWindowDimensions,
@@ -22,15 +23,17 @@ import { PersonalRecords } from '../../components/profile/PersonalRecords';
 import { BadgeCollection } from '../../components/profile/BadgeCollection';
 import { ActivityIcon } from '../../components/common/ActivityIcon';
 import { getActivityByKey } from '../../lib/constants';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { Activity } from '../../lib/types';
 
 const TABS = [
-  { key: 'atividades', label: 'Atividades' },
-  { key: 'conquistas', label: 'Conquistas' },
+  { key: 'atividades', i18n_key: 'profile_activities' },
+  { key: 'conquistas', i18n_key: 'profile_tab_achievements' },
 ] as const;
 
 export default function UserProfileScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
@@ -93,7 +96,7 @@ export default function UserProfileScreen() {
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
@@ -132,7 +135,7 @@ export default function UserProfileScreen() {
         activeOpacity={0.7}
       >
         <View style={styles.activityIconWrap}>
-          <ActivityIcon activityKey={activity.type} size={18} tintColor={colors.primary} />
+          <ActivityIcon activityKey={activity.type} size={18} tintColor={c.primary} />
         </View>
         <View style={styles.activityInfo}>
           <Text style={styles.activityType} numberOfLines={1}>
@@ -142,7 +145,7 @@ export default function UserProfileScreen() {
             {formatDistance(activity.distance, unitSystem)} · {formatDuration(activity.duration)} · {formatRelativeTime(activity.created_at)}
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
+        <Ionicons name="chevron-forward" size={16} color={c.mutedForeground} />
       </TouchableOpacity>
     );
   };
@@ -181,7 +184,7 @@ export default function UserProfileScreen() {
                 });
               }}
             >
-              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{tab.label}</Text>
+              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{t(tab.i18n_key as any)}</Text>
             </TouchableOpacity>
           );
         })}
@@ -216,7 +219,7 @@ export default function UserProfileScreen() {
                 (activities as Activity[]).map(renderActivityRow)
               ) : (
                 <View style={styles.emptyBlock}>
-                  <Ionicons name="pulse-outline" size={36} color={colors.mutedForeground} />
+                  <Ionicons name="pulse-outline" size={36} color={c.mutedForeground} />
                   <Text style={styles.emptyTitle}>{t('profile_no_activities')}</Text>
                   <Text style={styles.emptyText}>
                     Quando {profile.full_name?.split(' ')[0] ?? 'este atleta'} registar atividades, aparecem aqui.
@@ -249,19 +252,19 @@ export default function UserProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
-  errorText: { ...typography.body, fontSize: 16, color: colors.destructive },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: c.background },
+  errorText: { ...typography.body, fontSize: 16, color: c.destructive },
   pager: { flex: 1 },
   pageContent: { paddingBottom: 40 },
 
   // Abas
   tabs: {
     flexDirection: 'row',
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
     position: 'relative',
   },
   tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
@@ -269,26 +272,26 @@ const styles = StyleSheet.create({
     fontFamily: 'Barlow_500Medium',
     fontSize: 13,
     letterSpacing: 0.3,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
-  tabTextActive: { fontFamily: 'Barlow_600SemiBold', color: colors.foreground },
+  tabTextActive: { fontFamily: 'Barlow_600SemiBold', color: c.foreground },
   tabIndicator: {
     position: 'absolute',
     bottom: 0,
     height: 2,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 1,
   },
 
   // Secções
   sectionCard: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 16,
     padding: 16,
   },
-  sectionCardTitle: { ...typography.headline, fontSize: 18, marginBottom: 12, color: colors.foreground },
+  sectionCardTitle: { ...typography.headline, fontSize: 18, marginBottom: 12, color: c.foreground },
   streakWrapper: { marginHorizontal: 16, marginTop: 16 },
 
   // Atividades
@@ -298,27 +301,27 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 11,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
+    borderTopColor: c.border,
   },
   activityIconWrap: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: withAlpha(colors.primary, 0.1),
+    backgroundColor: withAlpha(c.primary, 0.1),
     alignItems: 'center', justifyContent: 'center',
   },
   activityInfo: { flex: 1, minWidth: 0 },
-  activityType: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
+  activityType: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
   activityMeta: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 2,
   },
 
   // Vazio
   emptyBlock: { alignItems: 'center', paddingVertical: 28, gap: 8 },
-  emptyTitle: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
+  emptyTitle: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
   emptyText: {
-    ...typography.body, fontSize: 13, color: colors.mutedForeground,
+    ...typography.body, fontSize: 13, color: c.mutedForeground,
     textAlign: 'center', lineHeight: 18,
   },
 });

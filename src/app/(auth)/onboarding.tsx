@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { localeTag } from '../../utils/dateHelpers';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,12 +12,14 @@ import { CountryCodePicker } from '../../components/ui/CountryCodePicker';
 import QuestionnaireForm from '../../components/questionnaire/QuestionnaireForm';
 import DateWheelPicker from '../../components/common/DateWheelPicker';
 import type { ActivityGoal, QuestionnairePreferences } from '../../lib/types';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 
 const STEPS = ['welcome', 'goal', 'questionnaire', 'profile'] as const;
 type Step = (typeof STEPS)[number];
 
 export default function OnboardingScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [step, setStep] = useState<Step>('welcome');
   const [goal, setGoal] = useState<ActivityGoal | null>(null);
@@ -80,8 +84,8 @@ export default function OnboardingScreen() {
     return (
       <SafeAreaView style={styles.outerContainer} edges={['top', 'bottom']}>
         <View style={styles.innerContainer}>
-          <Ionicons name="barbell" size={64} color={colors.primary} style={styles.emoji} />
-          <Text style={[styles.title, { color: colors.primary }]}>{t('onboarding_welcome_title')}</Text>
+          <Ionicons name="barbell" size={64} color={c.primary} style={styles.emoji} />
+          <Text style={[styles.title, { color: c.primary }]}>{t('onboarding_welcome_title')}</Text>
           <Text style={styles.subtitle}>{t('onboarding_welcome_subtitle')}</Text>
           <TouchableOpacity style={styles.button} onPress={() => setStep('goal')}>
             <Text style={styles.buttonText}>{t('onboarding_continue')}</Text>
@@ -111,7 +115,7 @@ export default function OnboardingScreen() {
                   style={[styles.goalCard, goal === g.key && styles.goalCardSelected]}
                   onPress={() => setGoal(g.key)}
                 >
-                  <Ionicons name={(g.icon as any) ?? 'flag'} size={32} color={goal === g.key ? colors.primary : colors.foreground} />
+                  <Ionicons name={(g.icon as any) ?? 'flag'} size={32} color={goal === g.key ? c.primary : c.foreground} />
                   <Text style={styles.goalLabel}>{t(g.i18n_key as any)}</Text>
                 </TouchableOpacity>
               ))}
@@ -121,7 +125,7 @@ export default function OnboardingScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('register_weekly_target')}
-                placeholderTextColor={colors.mutedForeground}
+                placeholderTextColor={c.mutedForeground}
                 value={weeklyKmTarget}
                 onChangeText={setWeeklyKmTarget}
                 keyboardType="numeric"
@@ -169,14 +173,14 @@ export default function OnboardingScreen() {
 
   // Profile creation step
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer} style={{ flex: 1, backgroundColor: colors.background }}>
+    <ScrollView contentContainerStyle={styles.scrollContainer} style={{ flex: 1, backgroundColor: c.background }}>
       <Text style={styles.title}>{t('onboarding_profile_title')}</Text>
       <Text style={styles.subtitle}>{t('onboarding_profile_subtitle')}</Text>
 
       <TextInput
         style={styles.input}
         placeholder={t('edit_username') + ' *'}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
@@ -185,7 +189,7 @@ export default function OnboardingScreen() {
       <TextInput
         style={styles.input}
         placeholder={t('edit_name') + ' *'}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
         value={fullName}
         onChangeText={setFullName}
       />
@@ -193,7 +197,7 @@ export default function OnboardingScreen() {
       <TextInput
         style={styles.input}
         placeholder={t('onboarding_first_name')}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
         value={firstName}
         onChangeText={setFirstName}
       />
@@ -201,7 +205,7 @@ export default function OnboardingScreen() {
       <TextInput
         style={styles.input}
         placeholder={t('onboarding_last_name')}
-        placeholderTextColor={colors.mutedForeground}
+        placeholderTextColor={c.mutedForeground}
         value={lastName}
         onChangeText={setLastName}
       />
@@ -221,14 +225,12 @@ export default function OnboardingScreen() {
       >
         <Text style={[styles.dateRowText, !birthDate && styles.dateRowPlaceholder]}>
           {birthDate
-            ? (() => {
-                const [y, m, d] = birthDate.split('-');
-                const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                return `${d} ${months[parseInt(m, 10) - 1] ?? m} ${y}`;
-              })()
+            ? new Date(birthDate).toLocaleDateString(localeTag(), {
+                day: 'numeric', month: 'short', year: 'numeric',
+              })
             : t('onboarding_birth_date')}
         </Text>
-        <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
+        <Ionicons name="chevron-forward" size={18} color={c.mutedForeground} />
       </TouchableOpacity>
       <DateWheelPicker
         visible={showDatePicker}
@@ -258,7 +260,7 @@ export default function OnboardingScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('onboarding_weight')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={weightKg}
             onChangeText={setWeightKg}
             keyboardType="decimal-pad"
@@ -268,7 +270,7 @@ export default function OnboardingScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('onboarding_height')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={heightCm}
             onChangeText={setHeightCm}
             keyboardType="decimal-pad"
@@ -289,51 +291,51 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
-  outerContainer: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: c.background },
+  outerContainer: { flex: 1, backgroundColor: c.background },
   innerContainer: { flex: 1, justifyContent: 'center', padding: 24 },
-  container: { flex: 1, padding: 24, backgroundColor: colors.background },
+  container: { flex: 1, padding: 24, backgroundColor: c.background },
   scrollContainer: { justifyContent: 'center', padding: 24, paddingTop: 60, paddingBottom: 40, minHeight: '100%' },
   emoji: { fontSize: 64, textAlign: 'center', marginBottom: 16 },
-  title: { ...typography.headline, fontSize: 28, textAlign: 'center', marginBottom: 8, color: colors.foreground },
-  subtitle: { ...typography.body, fontSize: 16, color: colors.mutedForeground, textAlign: 'center', marginBottom: 32 },
+  title: { ...typography.headline, fontSize: 28, textAlign: 'center', marginBottom: 8, color: c.foreground },
+  subtitle: { ...typography.body, fontSize: 16, color: c.mutedForeground, textAlign: 'center', marginBottom: 32 },
   button: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     marginTop: 16,
   },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: { ...typography.bodyBold, color: colors.primaryForeground, fontSize: 16 },
+  buttonText: { ...typography.bodyBold, color: c.primaryForeground, fontSize: 16 },
   goalScrollContent: { padding: 24, paddingBottom: 40 },
   goalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 16 },
   goalCard: {
     width: '47%',
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
   },
-  goalCardSelected: { borderColor: colors.primary, backgroundColor: colors.inputBackground },
+  goalCardSelected: { borderColor: c.primary, backgroundColor: c.inputBackground },
   goalEmoji: { fontSize: 32, marginBottom: 8 },
-  goalLabel: { ...typography.bodyBold, fontSize: 14, textAlign: 'center', color: colors.foreground },
+  goalLabel: { ...typography.bodyBold, fontSize: 14, textAlign: 'center', color: c.foreground },
   input: {
     ...typography.body,
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
     marginBottom: 12,
-    backgroundColor: colors.inputBackground,
-    color: colors.foreground,
+    backgroundColor: c.inputBackground,
+    color: c.foreground,
   },
   sectionLabel: {
     ...typography.bodyBold,
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginBottom: 8,
     textTransform: 'uppercase',
   },
@@ -347,19 +349,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
   },
   chipActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '20',
+    borderColor: c.primary,
+    backgroundColor: c.primary + '20',
   },
   chipText: {
     ...typography.body,
     fontSize: 13,
-    color: colors.foreground,
+    color: c.foreground,
   },
   chipTextActive: {
-    color: colors.primary,
+    color: c.primary,
   },
   metricsRow: {
     flexDirection: 'row',
@@ -376,7 +378,7 @@ const styles = StyleSheet.create({
   skipText: {
     ...typography.body,
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   dateRow: {
     flexDirection: 'row',
@@ -384,16 +386,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 12,
     padding: 16,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     marginBottom: 12,
   },
   dateRowText: {
     ...typography.body,
     fontSize: 15,
-    color: colors.foreground,
+    color: c.foreground,
     flex: 1,
   },
   dateRowPlaceholder: {
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
 });

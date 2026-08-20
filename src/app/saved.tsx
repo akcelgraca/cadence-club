@@ -1,18 +1,22 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useColors } from '../hooks/useColors';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
-import { router } from 'expo-router';
+
 import { useFocusEffect } from 'expo-router/react-navigation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { getSavedPosts, unsavePost } from '../services/social';
 import { SocialPostCard } from '../components/social/SocialPostCard';
-import { colors, typography, withAlpha } from '../lib/theme';
+import { typography, withAlpha, type Colors } from '../lib/theme';
 import type { Activity } from '../lib/types';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../lib/navigation';
 
 export default function SavedPostsScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [posts, setPosts] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,15 +54,15 @@ export default function SavedPostsScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+        <TouchableOpacity onPress={() => goBackOr('/(tabs)')} hitSlop={12}>
+          <Ionicons name="chevron-back" size={24} color={c.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('saved_title')}</Text>
         <View style={{ width: 32 }} />
       </View>
 
       {loading ? (
-        <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>
+        <View style={styles.center}><ActivityIndicator color={c.primary} /></View>
       ) : (
         <FlatList
           data={posts}
@@ -66,7 +70,7 @@ export default function SavedPostsScreen() {
           renderItem={({ item }) => (
             <View>
               <View style={styles.savedBar}>
-                <Ionicons name="bookmark" size={13} color={colors.primary} />
+                <Ionicons name="bookmark" size={13} color={c.primary} />
                 <Text style={styles.savedBarText}>{t('activity_saved_title')}</Text>
                 <View style={{ flex: 1 }} />
                 <TouchableOpacity onPress={() => handleUnsave(item)} hitSlop={8}>
@@ -83,7 +87,7 @@ export default function SavedPostsScreen() {
           ListEmptyComponent={
             <View style={styles.empty}>
               <View style={styles.emptyIcon}>
-                <Ionicons name="bookmark-outline" size={40} color={colors.primary} />
+                <Ionicons name="bookmark-outline" size={40} color={c.primary} />
               </View>
               <Text style={styles.emptyTitle}>{t('saved_empty')}</Text>
               <Text style={styles.emptySub}>
@@ -97,8 +101,8 @@ export default function SavedPostsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   header: {
@@ -108,12 +112,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   headerTitle: {
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
   },
 
   savedBar: {
@@ -128,21 +132,21 @@ const styles = StyleSheet.create({
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 11,
     letterSpacing: 0.5,
-    color: colors.primary,
+    color: c.primary,
     textTransform: 'uppercase',
   },
-  removeText: { ...typography.bodyMedium, fontSize: 12, color: colors.mutedForeground },
+  removeText: { ...typography.bodyMedium, fontSize: 12, color: c.mutedForeground },
 
   empty: { alignItems: 'center', paddingVertical: 80, paddingHorizontal: 40, gap: 10 },
   emptyIcon: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: withAlpha(colors.primary, 0.1),
+    backgroundColor: withAlpha(c.primary, 0.1),
     alignItems: 'center', justifyContent: 'center',
     marginBottom: 8,
   },
-  emptyTitle: { ...typography.bodyBold, fontSize: 17, color: colors.foreground },
+  emptyTitle: { ...typography.bodyBold, fontSize: 17, color: c.foreground },
   emptySub: {
-    ...typography.body, fontSize: 14, color: colors.mutedForeground,
+    ...typography.body, fontSize: 14, color: c.mutedForeground,
     textAlign: 'center', lineHeight: 20,
   },
 });

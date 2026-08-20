@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { UserSettings } from '../lib/types';
+// Estático, e não `await import()`: o import dinâmico não corre no jest
+// ("dynamic import callback was invoked without --experimental-vm-modules").
+import { syncNotificationPrefs } from '../services/push';
 
 const SETTINGS_KEY = 'user-settings';
 
@@ -13,6 +16,9 @@ const DEFAULTS: UserSettings = {
     follows: true,
     streaks: true,
     badges: true,
+    clubs: true,
+    messages: true,
+    events: true,
   },
   showStats: true,
   autoPause: true,
@@ -67,6 +73,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     };
     set({ settings: merged });
     await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(merged));
+
+    // O servidor é que envia o push, portanto é ele que precisa de saber.
+    if (partial.notifications) {
+      void syncNotificationPrefs(merged.notifications as unknown as Record<string, boolean>);
+    }
   },
 
   resetSettings: async () => {

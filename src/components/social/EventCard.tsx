@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { localeTag } from '../../utils/dateHelpers';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIcon } from '../common/ActivityIcon';
 import { attendEvent, leaveEvent, deleteClubEvent } from '../../services/events';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { MONTH_SHORT_KEYS } from '../../lib/constants';
 import type { ClubEvent } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +30,8 @@ interface EventCardProps {
 export function EventCard({
   event, showClub = false, canAttend = true, canDelete = false, onChanged,
 }: EventCardProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [attending, setAttending] = useState(event.is_attending ?? false);
   const [count, setCount] = useState(event.attendee_count ?? 0);
@@ -92,20 +96,20 @@ export function EventCard({
 
         <View style={styles.metaRow}>
           <View style={styles.metaItem}>
-            <Ionicons name="time-outline" size={12} color={colors.mutedForeground} />
+            <Ionicons name="time-outline" size={12} color={c.mutedForeground} />
             <Text style={styles.metaText}>
-              {date.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
+              {date.toLocaleTimeString(localeTag(), { hour: '2-digit', minute: '2-digit' })}
             </Text>
           </View>
           {!!event.location && (
             <View style={styles.metaItem}>
-              <Ionicons name="location-outline" size={12} color={colors.mutedForeground} />
+              <Ionicons name="location-outline" size={12} color={c.mutedForeground} />
               <Text style={styles.metaText} numberOfLines={1}>{event.location}</Text>
             </View>
           )}
           {!!event.activity_type && (
             <View style={styles.metaItem}>
-              <ActivityIcon activityKey={event.activity_type} size={12} tintColor={colors.mutedForeground} />
+              <ActivityIcon activityKey={event.activity_type} size={12} tintColor={c.mutedForeground} />
               {!!event.distance && (
                 <Text style={styles.metaText}>{(event.distance / 1000).toFixed(1)} km</Text>
               )}
@@ -119,7 +123,7 @@ export function EventCard({
 
         <View style={styles.footer}>
           <View style={styles.metaItem}>
-            <Ionicons name="people-outline" size={12} color={colors.mutedForeground} />
+            <Ionicons name="people-outline" size={12} color={c.mutedForeground} />
             <Text style={styles.metaText}>
               {count} {count === 1 ? 'inscrito' : 'inscritos'}
             </Text>
@@ -129,7 +133,7 @@ export function EventCard({
 
           {canDelete && (
             <TouchableOpacity onPress={confirmDelete} hitSlop={8} style={styles.deleteBtn}>
-              <Ionicons name="trash-outline" size={16} color={colors.destructive} />
+              <Ionicons name="trash-outline" size={16} color={c.destructive} />
             </TouchableOpacity>
           )}
 
@@ -140,7 +144,7 @@ export function EventCard({
               disabled={busy}
             >
               {busy ? (
-                <ActivityIndicator size="small" color={attending ? colors.primary : colors.primaryForeground} />
+                <ActivityIndicator size="small" color={attending ? c.primary : c.primaryForeground} />
               ) : (
                 <Text style={[styles.attendText, attending && styles.attendTextActive]}>
                   {attending ? 'Inscrito' : 'Vou'}
@@ -154,14 +158,14 @@ export function EventCard({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   card: {
     flexDirection: 'row',
     gap: 12,
     padding: 12,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   cardPast: { opacity: 0.72 },
 
@@ -170,47 +174,47 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 12,
     alignItems: 'center',
-    backgroundColor: withAlpha(colors.primary, 0.1),
+    backgroundColor: withAlpha(c.primary, 0.1),
   },
-  dateBoxPast: { backgroundColor: withAlpha(colors.foreground, 0.06) },
+  dateBoxPast: { backgroundColor: withAlpha(c.foreground, 0.06) },
   dateWeekday: {
     fontFamily: 'Barlow_600SemiBold', fontSize: 10,
-    color: colors.primary, textTransform: 'uppercase', letterSpacing: 0.5,
+    color: c.primary, textTransform: 'uppercase', letterSpacing: 0.5,
   },
   dateDay: {
     fontFamily: 'BarlowCondensed_900Black', fontSize: 24,
-    color: colors.primary, lineHeight: 26,
+    color: c.primary, lineHeight: 26,
   },
   dateMonth: {
     fontFamily: 'Barlow_500Medium', fontSize: 10,
-    color: colors.primary, textTransform: 'uppercase',
+    color: c.primary, textTransform: 'uppercase',
   },
-  mutedText: { color: colors.mutedForeground },
+  mutedText: { color: c.mutedForeground },
 
   content: { flex: 1, minWidth: 0 },
   clubName: {
     fontFamily: 'Barlow_600SemiBold', fontSize: 11,
-    color: colors.primary, textTransform: 'uppercase', letterSpacing: 0.5,
+    color: c.primary, textTransform: 'uppercase', letterSpacing: 0.5,
     marginBottom: 2,
   },
-  title: { ...typography.bodyBold, fontSize: 15, color: colors.foreground, marginBottom: 4 },
+  title: { ...typography.bodyBold, fontSize: 15, color: c.foreground, marginBottom: 4 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
-  metaText: { ...typography.body, fontSize: 12, color: colors.mutedForeground },
-  desc: { ...typography.body, fontSize: 13, color: colors.mutedForeground, marginTop: 6, lineHeight: 18 },
+  metaText: { ...typography.body, fontSize: 12, color: c.mutedForeground },
+  desc: { ...typography.body, fontSize: 13, color: c.mutedForeground, marginTop: 6, lineHeight: 18 },
 
   footer: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 },
   deleteBtn: { padding: 4 },
   attendBtn: {
     paddingHorizontal: 16, paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     minWidth: 72, alignItems: 'center',
   },
   attendBtnActive: {
-    backgroundColor: withAlpha(colors.primary, 0.12),
-    borderWidth: 1, borderColor: withAlpha(colors.primary, 0.35),
+    backgroundColor: withAlpha(c.primary, 0.12),
+    borderWidth: 1, borderColor: withAlpha(c.primary, 0.35),
   },
-  attendText: { fontFamily: 'Barlow_600SemiBold', fontSize: 12, color: colors.primaryForeground },
-  attendTextActive: { color: colors.primary },
+  attendText: { fontFamily: 'Barlow_600SemiBold', fontSize: 12, color: c.primaryForeground },
+  attendTextActive: { color: c.primary },
 });

@@ -1,10 +1,12 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { useTranslation } from 'react-i18next';
 import { formatDuration } from '../../utils/dateHelpers';
 import { formatDistance } from '../../utils/formatDistance';
 import { formatPace } from '../../utils/formatPace';
 import { useSettingsStore } from '../../store/settingsStore';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 
 interface LiveTrackerProps {
   elapsedTime: number;
@@ -14,6 +16,8 @@ interface LiveTrackerProps {
 }
 
 export function LiveTracker({ elapsedTime, distance, currentPace, gpsSignal }: LiveTrackerProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
 
@@ -38,15 +42,15 @@ export function LiveTracker({ elapsedTime, distance, currentPace, gpsSignal }: L
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: { alignItems: 'center', flex: 1, justifyContent: 'center' },
   gpsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
   gpsDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
-  gpsGood: { backgroundColor: colors.gpsGood },
-  gpsWeak: { backgroundColor: colors.gpsWeak },
-  gpsNone: { backgroundColor: colors.destructive },
-  gpsText: { ...typography.mono, color: colors.foreground, fontSize: 12 },
-  time: { ...typography.statNumber, fontSize: 56, color: colors.foreground, fontVariant: ['tabular-nums'] },
-  distance: { ...typography.statNumber, fontSize: 28, color: colors.foreground, marginTop: 4 },
-  pace: { ...typography.mono, fontSize: 20, color: colors.mutedForeground, marginTop: 8 },
+  gpsGood: { backgroundColor: c.gpsGood },
+  gpsWeak: { backgroundColor: c.gpsWeak },
+  gpsNone: { backgroundColor: c.destructive },
+  gpsText: { ...typography.mono, color: c.foreground, fontSize: 12 },
+  time: { ...typography.statNumber, fontSize: 56, color: c.foreground, fontVariant: ['tabular-nums'] },
+  distance: { ...typography.statNumber, fontSize: 28, color: c.foreground, marginTop: 4 },
+  pace: { ...typography.mono, fontSize: 20, color: c.mutedForeground, marginTop: 8 },
 });

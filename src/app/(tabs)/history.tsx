@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, SectionList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +15,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { formatDistance } from '../../utils/formatDistance';
 import { ACTIVITY_CATEGORIES } from '../../lib/constants';
 import type { Activity, ActivityCategory } from '../../lib/types';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 20;
@@ -41,6 +42,8 @@ interface MonthSection {
 }
 
 export default function HistoryScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { profile } = useAuthStore();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
@@ -133,7 +136,7 @@ export default function HistoryScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={c.primary} />
       </SafeAreaView>
     );
   }
@@ -186,14 +189,14 @@ export default function HistoryScreen() {
           filter === 'all' ? (
             <View style={styles.empty}>
               <View style={styles.emptyIcon}>
-                <Ionicons name="calendar-outline" size={40} color={colors.primary} />
+                <Ionicons name="calendar-outline" size={40} color={c.primary} />
               </View>
               <Text style={styles.emptyTitle}>{t('history_empty_title')}</Text>
               <Text style={styles.emptyBody}>
                 {t('history_empty_body')}
               </Text>
               <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/record')}>
-                <Ionicons name="play" size={14} color={colors.primaryForeground} />
+                <Ionicons name="play" size={14} color={c.primaryForeground} />
                 <Text style={styles.emptyBtnText}>{t('history_record_activity')}</Text>
               </TouchableOpacity>
             </View>
@@ -207,7 +210,7 @@ export default function HistoryScreen() {
         ListFooterComponent={
           isFetchingNextPage ? (
             <View style={styles.footerLoader}>
-              <ActivityIndicator size="small" color={colors.primary} />
+              <ActivityIndicator size="small" color={c.primary} />
             </View>
           ) : sections.length > 0 && !hasNextPage ? (
             <Text style={styles.endText}>{t('history_end')}</Text>
@@ -224,11 +227,11 @@ export default function HistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   center: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
-    padding: 24, backgroundColor: colors.background,
+    padding: 24, backgroundColor: c.background,
   },
   listContent: { paddingBottom: 32, flexGrow: 1 },
 
@@ -237,14 +240,14 @@ const styles = StyleSheet.create({
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 28,
     lineHeight: 30,
-    color: colors.foreground,
+    color: c.foreground,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   yearLine: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 3,
   },
 
@@ -255,21 +258,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 8,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   monthTitle: {
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 15,
     letterSpacing: 1.2,
-    color: colors.foreground,
+    color: c.foreground,
     textTransform: 'uppercase',
   },
   monthTotals: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 11,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
 
   cardWrap: { paddingHorizontal: 20, paddingTop: 12 },
@@ -279,7 +282,7 @@ const styles = StyleSheet.create({
     ...typography.body,
     fontSize: 11,
     letterSpacing: 1.5,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textAlign: 'center',
     paddingVertical: 24,
   },
@@ -287,18 +290,18 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', paddingHorizontal: 40, paddingVertical: 60, gap: 10 },
   emptyIcon: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: withAlpha(colors.primary, 0.1),
+    backgroundColor: withAlpha(c.primary, 0.1),
     alignItems: 'center', justifyContent: 'center', marginBottom: 6,
   },
-  emptyTitle: { ...typography.bodyBold, fontSize: 17, color: colors.foreground, textAlign: 'center' },
+  emptyTitle: { ...typography.bodyBold, fontSize: 17, color: c.foreground, textAlign: 'center' },
   emptyBody: {
-    ...typography.body, fontSize: 14, color: colors.mutedForeground,
+    ...typography.body, fontSize: 14, color: c.mutedForeground,
     textAlign: 'center', lineHeight: 20,
   },
   emptyBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     marginTop: 8, paddingHorizontal: 20, paddingVertical: 11,
-    borderRadius: 22, backgroundColor: colors.primary,
+    borderRadius: 22, backgroundColor: c.primary,
   },
-  emptyBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: colors.primaryForeground },
+  emptyBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: c.primaryForeground },
 });

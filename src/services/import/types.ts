@@ -23,6 +23,8 @@ export interface TrackPoint {
   lng: number;
   /** Metros. Null quando o ficheiro não traz altimetria. */
   elevation: number | null;
+  /** Batimento no instante do ponto, quando o ficheiro o traz. */
+  heartRate: number | null;
   /** ISO 8601. Null em ficheiros sem tempos (rotas, não treinos). */
   time: string | null;
 }

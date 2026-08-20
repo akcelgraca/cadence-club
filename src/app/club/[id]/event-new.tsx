@@ -1,23 +1,25 @@
 import { useMemo, useState } from 'react';
+import { localeTag, monthNames } from '../../../utils/dateHelpers';
+import { useColors } from '../../../hooks/useColors';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
   Alert, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { createClubEvent } from '../../../services/events';
 import { ActivityIcon } from '../../../components/common/ActivityIcon';
 import { ACTIVITY_CATEGORIES } from '../../../lib/constants';
-import { colors, typography, withAlpha } from '../../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../../lib/theme';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../../../lib/navigation';
 
 /** Índice 0 = domingo, como o Date.getDay(). */
 const WEEKDAY_KEYS = [
   'training_day_sun', 'training_day_mon', 'training_day_tue', 'training_day_wed',
   'training_day_thu', 'training_day_fri', 'training_day_sat',
 ];
-const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 /** Próximos 60 dias, para escolha rápida sem picker nativo. */
 function buildDays(): Date[] {
@@ -44,8 +46,11 @@ function buildTimes(): string[] {
 const SUGGESTED_ACTIVITIES = ['run', 'trail_run', 'walk', 'cycle', 'mtb', 'swimming', 'yoga'];
 
 export default function NewClubEventScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const MONTHS = useMemo(() => monthNames('short'), [t]);
   const days = useMemo(buildDays, []);
   const times = useMemo(buildTimes, []);
 
@@ -93,7 +98,7 @@ export default function NewClubEventScreen() {
         distance: Number.isFinite(km) && km > 0 ? km * 1000 : undefined,
         starts_at: startsAt.toISOString(),
       });
-      router.back();
+      goBackOr(`/club/${id}`);
     } catch (e: any) {
       Alert.alert(e?.message ?? t('event_new_error'));
     } finally {
@@ -104,13 +109,13 @@ export default function NewClubEventScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+        <TouchableOpacity onPress={() => goBackOr(`/club/${id}`)} hitSlop={12}>
+          <Ionicons name="chevron-back" size={24} color={c.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('event_new_title')}</Text>
         <TouchableOpacity onPress={handleCreate} disabled={!title.trim() || saving} hitSlop={12}>
           {saving
-            ? <ActivityIndicator size="small" color={colors.primary} />
+            ? <ActivityIndicator size="small" color={c.primary} />
             : <Text style={[styles.saveText, !title.trim() && styles.saveTextDisabled]}>{t('create')}</Text>}
         </TouchableOpacity>
       </View>
@@ -122,7 +127,7 @@ export default function NewClubEventScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('event_new_title_placeholder')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={title}
             onChangeText={setTitle}
             maxLength={120}
@@ -181,7 +186,7 @@ export default function NewClubEventScreen() {
                   <ActivityIcon
                     activityKey={a.key}
                     size={13}
-                    tintColor={active ? colors.primaryForeground : colors.mutedForeground}
+                    tintColor={active ? c.primaryForeground : c.mutedForeground}
                   />
                   <Text style={[styles.actText, active && styles.dayTextActive]}>{a.key.replace('_', ' ')}</Text>
                 </TouchableOpacity>
@@ -194,7 +199,7 @@ export default function NewClubEventScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('event_new_location_placeholder')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={location}
             onChangeText={setLocation}
             maxLength={120}
@@ -205,7 +210,7 @@ export default function NewClubEventScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('event_new_limit_placeholder')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={distanceKm}
             onChangeText={setDistanceKm}
             keyboardType="decimal-pad"
@@ -217,7 +222,7 @@ export default function NewClubEventScreen() {
           <TextInput
             style={[styles.input, styles.inputMulti]}
             placeholder={t('event_new_notes_placeholder')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -227,9 +232,10 @@ export default function NewClubEventScreen() {
 
           {/* Resumo */}
           <View style={styles.summary}>
-            <Ionicons name="calendar-outline" size={16} color={colors.primary} />
+            <Ionicons name="calendar-outline" size={16} color={c.primary} />
             <Text style={styles.summaryText}>
-              {startsAt.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })} às {time}
+              {startsAt.toLocaleDateString(localeTag(), { weekday: 'long', day: 'numeric', month: 'long' })}{' '}
+              {t('event_at_time', { time })}
             </Text>
           </View>
 
@@ -239,7 +245,7 @@ export default function NewClubEventScreen() {
             disabled={!title.trim() || saving}
           >
             {saving
-              ? <ActivityIndicator color={colors.primaryForeground} />
+              ? <ActivityIndicator color={c.primaryForeground} />
               : <Text style={styles.createBtnText}>{t('event_new_create')}</Text>}
           </TouchableOpacity>
         </ScrollView>
@@ -248,8 +254,8 @@ export default function NewClubEventScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -257,22 +263,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
-  headerTitle: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 18, color: colors.foreground },
-  saveText: { fontFamily: 'Barlow_600SemiBold', fontSize: 15, color: colors.primary },
-  saveTextDisabled: { color: colors.mutedForeground },
+  headerTitle: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 18, color: c.foreground },
+  saveText: { fontFamily: 'Barlow_600SemiBold', fontSize: 15, color: c.primary },
+  saveTextDisabled: { color: c.mutedForeground },
 
   form: { padding: 16, paddingBottom: 40 },
   label: {
     fontFamily: 'Barlow_600SemiBold', fontSize: 13,
-    color: colors.foreground, marginBottom: 8, marginTop: 18,
+    color: c.foreground, marginBottom: 8, marginTop: 18,
   },
   input: {
-    ...typography.body, fontSize: 15, color: colors.foreground,
-    backgroundColor: colors.card, borderRadius: 12,
+    ...typography.body, fontSize: 15, color: c.foreground,
+    backgroundColor: c.card, borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 12,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: c.border,
   },
   inputMulti: { minHeight: 90, paddingTop: 12 },
 
@@ -280,43 +286,43 @@ const styles = StyleSheet.create({
   dayChip: {
     width: 58, paddingVertical: 8, borderRadius: 14,
     alignItems: 'center',
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
-  dayChipActive: { backgroundColor: colors.primary },
-  dayWeek: { fontFamily: 'Barlow_500Medium', fontSize: 10, color: colors.mutedForeground, textTransform: 'uppercase' },
-  dayNum: { fontFamily: 'BarlowCondensed_900Black', fontSize: 20, color: colors.foreground, lineHeight: 22 },
-  dayMonth: { fontFamily: 'Barlow_500Medium', fontSize: 10, color: colors.mutedForeground, textTransform: 'uppercase' },
-  dayTextActive: { color: colors.primaryForeground },
+  dayChipActive: { backgroundColor: c.primary },
+  dayWeek: { fontFamily: 'Barlow_500Medium', fontSize: 10, color: c.mutedForeground, textTransform: 'uppercase' },
+  dayNum: { fontFamily: 'BarlowCondensed_900Black', fontSize: 20, color: c.foreground, lineHeight: 22 },
+  dayMonth: { fontFamily: 'Barlow_500Medium', fontSize: 10, color: c.mutedForeground, textTransform: 'uppercase' },
+  dayTextActive: { color: c.primaryForeground },
 
   timeChip: {
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
-  timeChipActive: { backgroundColor: colors.primary },
-  timeText: { fontFamily: 'DMMono_400Regular', fontSize: 13, color: colors.foreground },
+  timeChipActive: { backgroundColor: c.primary },
+  timeText: { fontFamily: 'DMMono_400Regular', fontSize: 13, color: c.foreground },
 
   actChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
-  actChipActive: { backgroundColor: colors.primary },
+  actChipActive: { backgroundColor: c.primary },
   actText: {
     fontFamily: 'Barlow_500Medium', fontSize: 12,
-    color: colors.mutedForeground, textTransform: 'capitalize',
+    color: c.mutedForeground, textTransform: 'capitalize',
   },
 
   summary: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     marginTop: 24, padding: 14, borderRadius: 12,
-    backgroundColor: withAlpha(colors.primary, 0.08),
+    backgroundColor: withAlpha(c.primary, 0.08),
   },
-  summaryText: { ...typography.bodyMedium, fontSize: 14, color: colors.foreground, flex: 1 },
+  summaryText: { ...typography.bodyMedium, fontSize: 14, color: c.foreground, flex: 1 },
 
   createBtn: {
-    backgroundColor: colors.primary, borderRadius: 14,
+    backgroundColor: c.primary, borderRadius: 14,
     paddingVertical: 15, alignItems: 'center', marginTop: 16,
   },
   createBtnDisabled: { opacity: 0.45 },
-  createBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 16, color: colors.primaryForeground },
+  createBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 16, color: c.primaryForeground },
 });

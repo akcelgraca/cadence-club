@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, Image, TouchableOpacity, StyleSheet,
   ScrollView, ActionSheetIOS, Alert, Platform,
@@ -18,7 +19,7 @@ import { useAuthStore } from '../../store/authStore';
 import { giveKudo, removeKudo, reportActivity, savePost } from '../../services/social';
 import { deleteActivity } from '../../services/activities';
 import { buildStaticMapUrl } from '../../lib/staticMap';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { getActivityByKey } from '../../lib/constants';
 import { CommentsSheet } from './CommentsSheet';
 import ShareSheet from '../share/ShareSheet';
@@ -42,6 +43,8 @@ interface StatBoxProps {
   flex?: number;
 }
 function StatBox({ value, label, flex = 1 }: StatBoxProps) {
+  const c = useColors();
+  const statStyles = useMemo(() => makeStatStyles(c), [c]);
   const { num, unit } = parseStatValue(value);
   return (
     <View style={[statStyles.box, { flex }]}>
@@ -54,7 +57,7 @@ function StatBox({ value, label, flex = 1 }: StatBoxProps) {
   );
 }
 
-const statStyles = StyleSheet.create({
+const makeStatStyles = (c: Colors) => StyleSheet.create({
   box: {
     alignItems: 'center',
     paddingVertical: 8,
@@ -64,20 +67,20 @@ const statStyles = StyleSheet.create({
   num: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 26,
-    color: colors.foreground,
+    color: c.foreground,
     letterSpacing: 0.3,
   },
   unit: {
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginBottom: 2,
   },
   label: {
     fontFamily: 'Barlow_500Medium',
     fontSize: 10,
     letterSpacing: 1.2,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textTransform: 'uppercase',
     marginTop: 1,
   },
@@ -91,6 +94,8 @@ interface SocialPostCardProps {
 }
 
 export function SocialPostCard({ activity, onDeleted }: SocialPostCardProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { width: screenW } = useWindowDimensions();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
@@ -310,14 +315,14 @@ export function SocialPostCard({ activity, onDeleted }: SocialPostCardProps) {
               {activity.profile?.city ? ` · ${activity.profile.city}` : ''}
             </Text>
             <View style={styles.activityPill}>
-              <ActivityIcon activityKey={activity.type} size={10} tintColor={colors.primary} />
+              <ActivityIcon activityKey={activity.type} size={10} tintColor={c.primary} />
               <Text style={styles.activityPillText}>{activityLabel}</Text>
             </View>
           </View>
         </View>
 
         <TouchableOpacity style={styles.dotsBtn} onPress={handleOptionsMenu} hitSlop={12}>
-          <Ionicons name="ellipsis-horizontal" size={20} color={colors.mutedForeground} />
+          <Ionicons name="ellipsis-horizontal" size={20} color={c.mutedForeground} />
         </TouchableOpacity>
       </View>
 
@@ -372,7 +377,7 @@ export function SocialPostCard({ activity, onDeleted }: SocialPostCardProps) {
                 <View style={{ width: screenW, height: mediaH }}>
                   {slide.type === 'placeholder' ? (
                     <View style={[styles.placeholderSlide, { width: screenW, height: mediaH }]}>
-                      <ActivityIcon activityKey={activity.type} size={72} tintColor={colors.primary} />
+                      <ActivityIcon activityKey={activity.type} size={72} tintColor={c.primary} />
                       <Text style={styles.placeholderLabel}>{activityLabel}</Text>
                     </View>
                   ) : (
@@ -436,13 +441,13 @@ export function SocialPostCard({ activity, onDeleted }: SocialPostCardProps) {
         <View style={styles.countsRow}>
           {kudosCount > 0 && (
             <View style={styles.countItem}>
-              <Ionicons name="flash" size={13} color={colors.primary} />
+              <Ionicons name="flash" size={13} color={c.primary} />
               <Text style={styles.countText}>{kudosCount} boost{kudosCount !== 1 ? 's' : ''}</Text>
             </View>
           )}
           {commentsCount > 0 && (
             <TouchableOpacity style={styles.countItem} onPress={() => setCommentsVisible(true)}>
-              <Ionicons name="chatbubble" size={12} color={colors.mutedForeground} />
+              <Ionicons name="chatbubble" size={12} color={c.mutedForeground} />
               <Text style={styles.countText}>{commentsCount} comentário{commentsCount !== 1 ? 's' : ''}</Text>
             </TouchableOpacity>
           )}
@@ -457,7 +462,7 @@ export function SocialPostCard({ activity, onDeleted }: SocialPostCardProps) {
             <Ionicons
               name={boosted ? 'flash' : 'flash-outline'}
               size={24}
-              color={boosted ? colors.primary : colors.mutedForeground}
+              color={boosted ? c.primary : c.mutedForeground}
             />
             {boosted && <View style={styles.boostGlow} />}
           </TouchableOpacity>
@@ -465,19 +470,19 @@ export function SocialPostCard({ activity, onDeleted }: SocialPostCardProps) {
 
         {/* Comments */}
         <TouchableOpacity style={styles.actionBtn} onPress={() => setCommentsVisible(true)} activeOpacity={0.7}>
-          <Ionicons name="chatbubble-outline" size={22} color={colors.mutedForeground} />
+          <Ionicons name="chatbubble-outline" size={22} color={c.mutedForeground} />
         </TouchableOpacity>
 
         {/* Share */}
         <TouchableOpacity style={styles.actionBtn} onPress={() => setShareVisible(true)} activeOpacity={0.7}>
-          <Ionicons name="share-social-outline" size={22} color={colors.mutedForeground} />
+          <Ionicons name="share-social-outline" size={22} color={c.mutedForeground} />
         </TouchableOpacity>
 
         {/* Spacer + open activity */}
         <View style={{ flex: 1 }} />
         <TouchableOpacity style={styles.openActivityBtn} onPress={openActivity} activeOpacity={0.7}>
           <Text style={styles.openActivityText}>{t('post_view_activity')}</Text>
-          <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+          <Ionicons name="chevron-forward" size={14} color={c.primary} />
         </TouchableOpacity>
       </View>
 
@@ -511,8 +516,8 @@ export function SocialPostCard({ activity, onDeleted }: SocialPostCardProps) {
 
 // ─── styles ──────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  card: { backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  card: { backgroundColor: c.background },
 
   // Author
   authorRow: {
@@ -524,14 +529,14 @@ const styles = StyleSheet.create({
   },
   authorInfo: { flex: 1, minWidth: 0 },
   authorTopRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
-  authorName: { ...typography.bodyBold, fontSize: 15, color: colors.foreground, flexShrink: 1 },
+  authorName: { ...typography.bodyBold, fontSize: 15, color: c.foreground, flexShrink: 1 },
   authorMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  authorMeta: { ...typography.body, fontSize: 12, color: colors.mutedForeground },
+  authorMeta: { ...typography.body, fontSize: 12, color: c.mutedForeground },
   activityPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: withAlpha(colors.primary, 0.1),
+    backgroundColor: withAlpha(c.primary, 0.1),
     borderRadius: 20,
     paddingHorizontal: 7,
     paddingVertical: 2,
@@ -539,7 +544,7 @@ const styles = StyleSheet.create({
   activityPillText: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 10,
-    color: colors.primary,
+    color: c.primary,
   },
   dotsBtn: { padding: 4 },
 
@@ -548,7 +553,7 @@ const styles = StyleSheet.create({
   postTitle: {
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
     lineHeight: 22,
   },
 
@@ -557,13 +562,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: withAlpha(colors.primary, 0.08),
+    backgroundColor: withAlpha(c.primary, 0.08),
   },
   placeholderLabel: {
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 16,
     letterSpacing: 2,
-    color: colors.primary,
+    color: c.primary,
     textTransform: 'uppercase',
   },
 
@@ -600,12 +605,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingBottom: 8,
   },
-  statDivider: { width: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginVertical: 10 },
+  statDivider: { width: StyleSheet.hairlineWidth, backgroundColor: c.border, marginVertical: 10 },
 
   // Description
   descRow: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 4 },
-  descText: { ...typography.body, fontSize: 14, color: colors.foreground, lineHeight: 20 },
-  descToggle: { ...typography.bodyMedium, fontSize: 12, color: colors.primary, marginTop: 2 },
+  descText: { ...typography.body, fontSize: 14, color: c.foreground, lineHeight: 20 },
+  descToggle: { ...typography.bodyMedium, fontSize: 12, color: c.primary, marginTop: 2 },
 
   // Counts
   countsRow: {
@@ -616,7 +621,7 @@ const styles = StyleSheet.create({
     paddingBottom: 2,
   },
   countItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  countText: { ...typography.body, fontSize: 12, color: colors.mutedForeground },
+  countText: { ...typography.body, fontSize: 12, color: c.mutedForeground },
 
   // Actions
   actionsRow: {
@@ -630,7 +635,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4, left: 4, right: 4, bottom: 4,
     borderRadius: 20,
-    backgroundColor: withAlpha(colors.primary, 0.15),
+    backgroundColor: withAlpha(c.primary, 0.15),
   },
   openActivityBtn: {
     flexDirection: 'row',
@@ -642,20 +647,20 @@ const styles = StyleSheet.create({
   openActivityText: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 12,
-    color: colors.primary,
+    color: c.primary,
   },
 
   // Comments link
   commentsLink: { paddingHorizontal: 14, paddingBottom: 10 },
-  commentsLinkText: { ...typography.body, fontSize: 13, color: colors.mutedForeground },
+  commentsLinkText: { ...typography.body, fontSize: 13, color: c.mutedForeground },
 
   // Separator
   hairline: {
     height: 8,
-    backgroundColor: withAlpha(colors.foreground, 0.04),
+    backgroundColor: withAlpha(c.foreground, 0.04),
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
+    borderTopColor: c.border,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
 });

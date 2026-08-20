@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { formatPace } from '../../utils/formatPace';
 import { useSettingsStore } from '../../store/settingsStore';
 import { haversineDistance } from '../../utils/geo';
@@ -20,6 +21,8 @@ interface PaceProfileProps {
 }
 
 export function PaceProfile({ points, height = 160, style }: PaceProfileProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const unitSystem = useSettingsStore((s) => s.settings.unitSystem);
   const { width: screenWidth } = useWindowDimensions();
@@ -119,13 +122,13 @@ export function PaceProfile({ points, height = 160, style }: PaceProfileProps) {
           spacing={chartSpacing}
           initialSpacing={10}
           endSpacing={10}
-          color={colors.chartAccent}
+          color={c.chartAccent}
           thickness={2}
           curved
           curvature={0}
           strokeLinecap="round"
-          startFillColor={withAlpha(colors.chartAccent, 0.19)}
-          endFillColor={withAlpha(colors.chartAccent, 0)}
+          startFillColor={withAlpha(c.chartAccent, 0.19)}
+          endFillColor={withAlpha(c.chartAccent, 0)}
           startOpacity={0.3}
           endOpacity={0}
           hideDataPoints
@@ -136,10 +139,10 @@ export function PaceProfile({ points, height = 160, style }: PaceProfileProps) {
           xAxisLabelTextStyle={{ color: 'transparent' }}
           pointerConfig={{
             pointerStripHeight: height - 20,
-            pointerStripColor: colors.mutedForeground,
+            pointerStripColor: c.mutedForeground,
             pointerStripWidth: 1,
             strokeDashArray: [2, 5],
-            pointerColor: colors.chartAccent,
+            pointerColor: c.chartAccent,
             radius: 5,
             pointerLabelWidth: 90,
             pointerLabelHeight: 48,
@@ -174,9 +177,9 @@ export function PaceProfile({ points, height = 160, style }: PaceProfileProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 16,
@@ -191,13 +194,13 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'BarlowCondensed_900Black',
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
     textTransform: 'uppercase',
   },
   total: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 13,
-    color: colors.chartAccent,
+    color: c.chartAccent,
   },
   chartWrapper: {
     alignSelf: 'stretch',
@@ -211,10 +214,10 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
   tooltip: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     paddingHorizontal: 6,
     paddingVertical: 4,
     borderRadius: 12,
@@ -223,12 +226,12 @@ const styles = StyleSheet.create({
   tooltipDistance: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 10,
-    color: colors.foreground,
+    color: c.foreground,
   },
   tooltipPace: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 10,
-    color: colors.chartAccent,
+    color: c.chartAccent,
   },
   yAxisLabels: {
     position: 'absolute',
@@ -240,6 +243,6 @@ const styles = StyleSheet.create({
   yAxisLabel: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 9,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
 });

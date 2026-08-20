@@ -39,7 +39,7 @@ export default function ShareSheet({ visible, onClose, data }: Props) {
       onRequestClose={onClose}
     >
       <View style={styles.backdrop}>
-        <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityLabel="Fechar" />
+        <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityLabel={t('share_close')} />
         <View style={styles.sheet}>
           <View style={styles.handle} />
           <Text style={styles.title}>{t('share_activity')}</Text>
@@ -52,14 +52,14 @@ export default function ShareSheet({ visible, onClose, data }: Props) {
           <View style={styles.actions}>
             <Action
               icon="instagram"
-              label="Stories"
+              label={t('share_stories')}
               onPress={() => { track('activity_shared', { destination: 'instagram_stories' }); shareToInstagramStories(); }}
               disabled={busy}
               accent
             />
             <Action
               icon="share-2"
-              label="Partilhar"
+              label={t('share_system')}
               onPress={() => { track('activity_shared', { destination: 'system' }); shareGeneric(); }}
               disabled={busy}
             />

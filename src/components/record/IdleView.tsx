@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, Alert, Modal, FlatList, ActivityIndicator, TextInput } from 'react-native';
-import { useState, useEffect, useCallback } from 'react';
+import { useColors } from '../../hooks/useColors';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,12 +13,14 @@ import { searchRoutesForUser } from '../../services/search';
 import { ACTIVITY_CATEGORIES, getActivityByKey } from '../../lib/constants';
 import { ActivityIcon } from '../common/ActivityIcon';
 import { setPickerConfig } from '../../app/profile/settings/picker';
-import { colors } from '../../lib/theme';
+import { type Colors } from '../../lib/theme';
 import type { RunType } from '../../lib/types';
 import type { RoutePickerItem } from './shared';
-import { styles } from './recordStyles';
+import { makeStyles } from './recordStyles';
 
 export function IdleView({ isDistanceBased = true }: { isDistanceBased?: boolean }) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const selectType = useActivityStore((s) => s.selectType);
   const selectRoute = useActivityStore((s) => s.selectRoute);
@@ -136,7 +139,7 @@ export function IdleView({ isDistanceBased = true }: { isDistanceBased?: boolean
     <View style={styles.idleControls}>
       {/* Close button */}
       <TouchableOpacity style={styles.closeButton} onPress={() => router.replace('/(tabs)')}>
-        <Ionicons name="close" size={24} color={colors.mutedForeground} />
+        <Ionicons name="close" size={24} color={c.mutedForeground} />
       </TouchableOpacity>
 
       {/* Clock display for non-distance activities — absolutely centered */}
@@ -160,7 +163,7 @@ export function IdleView({ isDistanceBased = true }: { isDistanceBased?: boolean
             <ActivityIcon
               activityKey={type ?? ''}
               size={26}
-              tintColor={type ? colors.primary : colors.mutedForeground}
+              tintColor={type ? c.primary : c.mutedForeground}
             />
           </TouchableOpacity>
           <Text style={styles.idleButtonLabel}>{t('activity_select_type')}</Text>
@@ -174,7 +177,7 @@ export function IdleView({ isDistanceBased = true }: { isDistanceBased?: boolean
             disabled={!type}
             activeOpacity={0.85}
           >
-            <Ionicons name="play" size={34} color={colors.primaryForeground} />
+            <Ionicons name="play" size={34} color={c.primaryForeground} />
           </TouchableOpacity>
           <Text style={styles.idleButtonLabel}>{t('activity_start')}</Text>
         </View>
@@ -189,7 +192,7 @@ export function IdleView({ isDistanceBased = true }: { isDistanceBased?: boolean
               <Ionicons
                 name="map"
                 size={26}
-                color={selectedRouteName ? colors.primary : colors.mutedForeground}
+                color={selectedRouteName ? c.primary : c.mutedForeground}
               />
             </TouchableOpacity>
             <Text style={styles.idleButtonLabel}>{t('activity_select_route')}</Text>
@@ -206,7 +209,7 @@ export function IdleView({ isDistanceBased = true }: { isDistanceBased?: boolean
               <Ionicons
                 name="bluetooth"
                 size={26}
-                color={colors.mutedForeground}
+                color={c.mutedForeground}
               />
             </TouchableOpacity>
             <Text style={styles.idleButtonLabel}>{t('sensor_connect')}</Text>
@@ -218,10 +221,10 @@ export function IdleView({ isDistanceBased = true }: { isDistanceBased?: boolean
       {/* Selected route indicator */}
       {isDistanceBased && selectedRouteName && (
         <View style={styles.routeSelectedBar}>
-          <Ionicons name="map" size={14} color={colors.primary} />
+          <Ionicons name="map" size={14} color={c.primary} />
           <Text style={styles.routeSelectedText} numberOfLines={1}>{selectedRouteName}</Text>
           <TouchableOpacity onPress={clearRoute}>
-            <Ionicons name="close-circle" size={16} color={colors.mutedForeground} />
+            <Ionicons name="close-circle" size={16} color={c.mutedForeground} />
           </TouchableOpacity>
         </View>
       )}
@@ -238,25 +241,25 @@ export function IdleView({ isDistanceBased = true }: { isDistanceBased?: boolean
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{t('activity_choose_route')}</Text>
             <TouchableOpacity onPress={() => setShowRoutePicker(false)}>
-              <Ionicons name="close" size={24} color={colors.foreground} />
+              <Ionicons name="close" size={24} color={c.foreground} />
             </TouchableOpacity>
           </View>
 
           {/* Search bar */}
           <View style={styles.searchContainer}>
             <View style={styles.searchInputRow}>
-              <Ionicons name="search" size={16} color={colors.mutedForeground} />
+              <Ionicons name="search" size={16} color={c.mutedForeground} />
               <TextInput
                 style={styles.searchInput}
                 placeholder={t('feed_search_placeholder')}
-                placeholderTextColor={colors.mutedForeground}
+                placeholderTextColor={c.mutedForeground}
                 value={searchInput}
                 onChangeText={setSearchInput}
                 returnKeyType="search"
               />
               {searchInput.length > 0 && (
                 <TouchableOpacity onPress={() => setSearchInput('')}>
-                  <Ionicons name="close-circle" size={16} color={colors.mutedForeground} />
+                  <Ionicons name="close-circle" size={16} color={c.mutedForeground} />
                 </TouchableOpacity>
               )}
             </View>
@@ -264,7 +267,7 @@ export function IdleView({ isDistanceBased = true }: { isDistanceBased?: boolean
 
           {/* "Criar nova rota" button */}
           <TouchableOpacity style={styles.createRouteButton} onPress={handleCreateRoute}>
-            <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
+            <Ionicons name="add-circle-outline" size={18} color={c.primary} />
             <Text style={styles.createRouteText}>{t('route_create_new')}</Text>
           </TouchableOpacity>
 
@@ -279,7 +282,7 @@ export function IdleView({ isDistanceBased = true }: { isDistanceBased?: boolean
 
           {routesLoading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.primary} />
+              <ActivityIndicator size="large" color={c.primary} />
               <Text style={styles.loadingText}>{t('route_searching')}</Text>
             </View>
           ) : routes && routes.length > 0 ? (
@@ -296,7 +299,7 @@ export function IdleView({ isDistanceBased = true }: { isDistanceBased?: boolean
                   onPress={() => handleSelectRoute(item)}
                 >
                   <View style={styles.routeCardHeader}>
-                    <Ionicons name="map" size={20} color={colors.primary} />
+                    <Ionicons name="map" size={20} color={c.primary} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.routeCardName}>{item.name}</Text>
                       {(item as any).creator_name && (

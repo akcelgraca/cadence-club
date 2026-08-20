@@ -1,9 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput,
   Alert, ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+
 import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,12 +14,15 @@ import {
   updatePrivacyZoneRadius, applyZonesToAllActivities, type PrivacyZone,
 } from '../../services/privacyZones';
 import { forwardGeocode } from '../../services/geocoding';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../../lib/navigation';
 
 const RADII = [200, 500, 1000, 1500];
 
 export default function PrivacyZonesScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [zones, setZones] = useState<PrivacyZone[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +62,7 @@ export default function PrivacyZonesScreen() {
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       await createPrivacyZone({
-        label: 'Casa',
+        label: t('privacy_zone_home'),
         lat: loc.coords.latitude,
         lng: loc.coords.longitude,
         radius,
@@ -122,8 +126,8 @@ export default function PrivacyZonesScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+        <TouchableOpacity onPress={() => goBackOr('/profile/settings')} hitSlop={12}>
+          <Ionicons name="chevron-back" size={24} color={c.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('settings_privacy_zone')}</Text>
         <View style={{ width: 32 }} />
@@ -131,7 +135,7 @@ export default function PrivacyZonesScreen() {
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.intro}>
-          <Ionicons name="shield-checkmark-outline" size={18} color={colors.primary} />
+          <Ionicons name="shield-checkmark-outline" size={18} color={c.primary} />
           <Text style={styles.introText}>
             Dentro destas zonas, o teu percurso não aparece a mais ninguém. Tu continuas a
             ver o traçado completo nas tuas atividades.
@@ -139,7 +143,7 @@ export default function PrivacyZonesScreen() {
         </View>
 
         {loading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: 32 }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: 32 }} />
         ) : (
           <>
             {zones.length > 0 && (
@@ -149,11 +153,11 @@ export default function PrivacyZonesScreen() {
                   <View key={zone.id} style={styles.zoneCard}>
                     <View style={styles.zoneHeader}>
                       <View style={styles.zoneIcon}>
-                        <Ionicons name="home-outline" size={17} color={colors.primary} />
+                        <Ionicons name="home-outline" size={17} color={c.primary} />
                       </View>
                       <Text style={styles.zoneLabel} numberOfLines={1}>{zone.label}</Text>
                       <TouchableOpacity onPress={() => confirmDelete(zone)} hitSlop={10}>
-                        <Ionicons name="trash-outline" size={17} color={colors.destructive} />
+                        <Ionicons name="trash-outline" size={17} color={c.destructive} />
                       </TouchableOpacity>
                     </View>
                     <View style={styles.radiusRow}>
@@ -199,10 +203,10 @@ export default function PrivacyZonesScreen() {
               disabled={busy}
             >
               {busy
-                ? <ActivityIndicator size="small" color={colors.primaryForeground} />
+                ? <ActivityIndicator size="small" color={c.primaryForeground} />
                 : (
                   <>
-                    <Ionicons name="locate" size={16} color={colors.primaryForeground} />
+                    <Ionicons name="locate" size={16} color={c.primaryForeground} />
                     <Text style={styles.primaryBtnText}>{t('zones_use_current_location')}</Text>
                   </>
                 )}
@@ -214,7 +218,7 @@ export default function PrivacyZonesScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('zones_address_placeholder')}
-                placeholderTextColor={colors.mutedForeground}
+                placeholderTextColor={c.mutedForeground}
                 value={address}
                 onChangeText={setAddress}
                 returnKeyType="done"
@@ -225,7 +229,7 @@ export default function PrivacyZonesScreen() {
                 onPress={addFromAddress}
                 disabled={busy || !address.trim()}
               >
-                <Ionicons name="add" size={20} color={colors.primaryForeground} />
+                <Ionicons name="add" size={20} color={c.primaryForeground} />
               </TouchableOpacity>
             </View>
 
@@ -242,83 +246,83 @@ export default function PrivacyZonesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border,
   },
-  headerTitle: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 18, color: colors.foreground },
+  headerTitle: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 18, color: c.foreground },
   content: { padding: 16, paddingBottom: 48 },
 
   intro: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
     padding: 14, borderRadius: 12,
-    backgroundColor: withAlpha(colors.primary, 0.08),
+    backgroundColor: withAlpha(c.primary, 0.08),
   },
   introText: {
-    ...typography.body, fontSize: 13, color: colors.foreground,
+    ...typography.body, fontSize: 13, color: c.foreground,
     flex: 1, lineHeight: 18,
   },
 
   sectionTitle: {
     fontFamily: 'Barlow_600SemiBold', fontSize: 12,
-    color: colors.mutedForeground, textTransform: 'uppercase', letterSpacing: 1,
+    color: c.mutedForeground, textTransform: 'uppercase', letterSpacing: 1,
     marginTop: 26, marginBottom: 10,
   },
   label: {
     fontFamily: 'Barlow_600SemiBold', fontSize: 13,
-    color: colors.foreground, marginBottom: 8,
+    color: c.foreground, marginBottom: 8,
   },
 
   zoneCard: {
-    backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 10,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
+    backgroundColor: c.card, borderRadius: 14, padding: 14, marginBottom: 10,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: c.border,
   },
   zoneHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   zoneIcon: {
     width: 32, height: 32, borderRadius: 16,
-    backgroundColor: withAlpha(colors.primary, 0.12),
+    backgroundColor: withAlpha(c.primary, 0.12),
     alignItems: 'center', justifyContent: 'center',
   },
-  zoneLabel: { ...typography.bodyBold, fontSize: 15, color: colors.foreground, flex: 1 },
+  zoneLabel: { ...typography.bodyBold, fontSize: 15, color: c.foreground, flex: 1 },
 
   radiusRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   radiusChip: {
     paddingHorizontal: 13, paddingVertical: 7, borderRadius: 16,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
-  radiusChipActive: { backgroundColor: colors.primary },
-  radiusText: { fontFamily: 'DMMono_400Regular', fontSize: 12, color: colors.mutedForeground },
-  radiusTextActive: { color: colors.primaryForeground },
+  radiusChipActive: { backgroundColor: c.primary },
+  radiusText: { fontFamily: 'DMMono_400Regular', fontSize: 12, color: c.mutedForeground },
+  radiusTextActive: { color: c.primaryForeground },
 
   primaryBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: colors.primary, borderRadius: 14,
+    backgroundColor: c.primary, borderRadius: 14,
     paddingVertical: 14, marginTop: 18,
   },
-  primaryBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 14, color: colors.primaryForeground },
+  primaryBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 14, color: c.primaryForeground },
 
   orText: {
-    ...typography.body, fontSize: 12, color: colors.mutedForeground,
+    ...typography.body, fontSize: 12, color: c.mutedForeground,
     textAlign: 'center', marginVertical: 14,
   },
   addressRow: { flexDirection: 'row', gap: 8 },
   input: {
-    flex: 1, ...typography.body, fontSize: 15, color: colors.foreground,
-    backgroundColor: colors.card, borderRadius: 12,
+    flex: 1, ...typography.body, fontSize: 15, color: c.foreground,
+    backgroundColor: c.card, borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 12,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: c.border,
   },
   addBtn: {
-    width: 46, borderRadius: 12, backgroundColor: colors.primary,
+    width: 46, borderRadius: 12, backgroundColor: c.primary,
     alignItems: 'center', justifyContent: 'center',
   },
   addBtnOff: { opacity: 0.4 },
 
   emptyNote: {
     ...typography.body, fontSize: 13, lineHeight: 19,
-    color: colors.mutedForeground, marginTop: 24, textAlign: 'center',
+    color: c.mutedForeground, marginTop: 24, textAlign: 'center',
   },
 });

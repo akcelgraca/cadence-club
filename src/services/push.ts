@@ -74,6 +74,30 @@ export async function savePushToken(token: string): Promise<void> {
   }
 }
 
+/**
+ * Manda as preferências de push para o servidor.
+ *
+ * É quem envia que tem de as conhecer. Enquanto viveram só no AsyncStorage,
+ * os interruptores das Definições não desligavam notificação nenhuma — a edge
+ * function nunca soube deles.
+ *
+ * Silencioso em erro: falhar a sincronizar não pode impedir a definição de
+ * ficar guardada no telemóvel, e a próxima alteração volta a tentar.
+ */
+export async function syncNotificationPrefs(prefs: Record<string, boolean>): Promise<void> {
+  try {
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) return;
+
+    await supabase
+      .from('profiles')
+      .update({ notification_prefs: prefs })
+      .eq('id', user.user.id);
+  } catch (error) {
+    console.warn('[Push] Failed to sync preferences:', error);
+  }
+}
+
 export async function removePushToken(): Promise<void> {
   try {
     const { data: user } = await supabase.auth.getUser();

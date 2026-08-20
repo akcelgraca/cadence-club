@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { localeTag } from '../../utils/dateHelpers';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import type { UserBadge } from '../../lib/types';
-import { colors, typography } from '../../lib/theme';
+import { typography, type Colors } from '../../lib/theme';
 import { getBadgeImage } from '../../lib/badgeImages';
 
 interface TrophyCaseProps {
@@ -11,6 +13,8 @@ interface TrophyCaseProps {
 }
 
 export function TrophyCase({ badges }: TrophyCaseProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const [selectedBadge, setSelectedBadge] = useState<UserBadge | null>(null);
 
@@ -38,7 +42,7 @@ export function TrophyCase({ badges }: TrophyCaseProps) {
                 {getBadgeImage(ub.badge?.icon ?? '') ? (
                   <Image source={getBadgeImage(ub.badge?.icon ?? '')} style={styles.badgeImage} resizeMode="contain" />
                 ) : (
-                  <Ionicons name={(ub.badge?.icon as any) ?? 'ribbon'} size={28} color={colors.primary} />
+                  <Ionicons name={(ub.badge?.icon as any) ?? 'ribbon'} size={28} color={c.primary} />
                 )}
               </View>
               <Text style={styles.badgeName} numberOfLines={2}>{ub.badge?.name}</Text>
@@ -62,7 +66,7 @@ export function TrophyCase({ badges }: TrophyCaseProps) {
             {getBadgeImage(selectedBadge?.badge?.icon ?? '') ? (
           <Image source={getBadgeImage(selectedBadge?.badge?.icon ?? '')} style={styles.modalBadgeImage} resizeMode="contain" />
         ) : (
-          <Ionicons name={(selectedBadge?.badge?.icon as any) ?? 'ribbon'} size={56} color={colors.primary} />
+          <Ionicons name={(selectedBadge?.badge?.icon as any) ?? 'ribbon'} size={56} color={c.primary} />
         )}
             <Text style={styles.modalName}>{selectedBadge?.badge?.name}</Text>
             <Text style={styles.modalDescription}>{selectedBadge?.badge?.description}</Text>
@@ -73,7 +77,7 @@ export function TrophyCase({ badges }: TrophyCaseProps) {
             ) : (
               <Text style={styles.modalActivity}>
                 {t('badge_earned_on')}{' '}
-                {new Date(selectedBadge?.earned_at ?? '').toLocaleDateString('pt-PT')}
+                {new Date(selectedBadge?.earned_at ?? '').toLocaleDateString(localeTag())}
               </Text>
             )}
             <TouchableOpacity
@@ -89,17 +93,17 @@ export function TrophyCase({ badges }: TrophyCaseProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   emptyContainer: { alignItems: 'center', padding: 20 },
-  emptyText: { ...typography.bodyBold, fontSize: 14, color: colors.mutedForeground },
-  emptySubtext: { ...typography.body, fontSize: 12, color: colors.mutedForeground, marginTop: 4 },
+  emptyText: { ...typography.bodyBold, fontSize: 14, color: c.mutedForeground },
+  emptySubtext: { ...typography.body, fontSize: 12, color: c.mutedForeground, marginTop: 4 },
   row: { flexDirection: 'row', gap: 16, paddingHorizontal: 4 },
   badgeItem: { alignItems: 'center', width: 72 },
   badgeIconContainer: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 6,
@@ -107,16 +111,16 @@ const styles = StyleSheet.create({
   badgeIcon: { fontSize: 28 },
   badgeImage: { width: 36, height: 36 },
   modalBadgeImage: { width: 72, height: 72, marginBottom: 12 },
-  badgeName: { ...typography.bodyBold, fontSize: 11, textAlign: 'center', color: colors.foreground },
+  badgeName: { ...typography.bodyBold, fontSize: 11, textAlign: 'center', color: c.foreground },
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlayDark,
+    backgroundColor: c.overlayDark,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
   },
   modalContent: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 20,
     padding: 32,
     alignItems: 'center',
@@ -124,14 +128,14 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   modalIcon: { fontSize: 56, marginBottom: 12 },
-  modalName: { ...typography.bodyBold, fontSize: 20, textAlign: 'center', marginBottom: 8, color: colors.foreground },
-  modalDescription: { ...typography.body, fontSize: 14, color: colors.mutedForeground, textAlign: 'center', marginBottom: 12 },
-  modalActivity: { ...typography.body, fontSize: 12, color: colors.mutedForeground, marginBottom: 16 },
+  modalName: { ...typography.bodyBold, fontSize: 20, textAlign: 'center', marginBottom: 8, color: c.foreground },
+  modalDescription: { ...typography.body, fontSize: 14, color: c.mutedForeground, textAlign: 'center', marginBottom: 12 },
+  modalActivity: { ...typography.body, fontSize: 12, color: c.mutedForeground, marginBottom: 16 },
   modalCloseButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 12,
     paddingHorizontal: 24,
     paddingVertical: 10,
   },
-  modalCloseText: { ...typography.bodyBold, color: colors.primaryForeground },
+  modalCloseText: { ...typography.bodyBold, color: c.primaryForeground },
 });

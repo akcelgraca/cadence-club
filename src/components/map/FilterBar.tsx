@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import { useTranslation } from 'react-i18next';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { ACTIVITY_CATEGORIES } from '../../lib/constants';
 import { ActivityIcon } from '../common/ActivityIcon';
 import { getActivityImage } from '../../lib/activityImages';
@@ -15,6 +16,8 @@ interface FilterBarProps {
 }
 
 export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { top, bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
@@ -83,7 +86,7 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
         onPress={() => setVisible(true)}
         activeOpacity={0.8}
       >
-        <Ionicons name="options-outline" size={18} color={activeCount > 0 ? colors.primary : colors.foreground} />
+        <Ionicons name="options-outline" size={18} color={activeCount > 0 ? c.primary : c.foreground} />
         {activeCount > 0 && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{activeCount}</Text>
@@ -107,7 +110,7 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
                 </TouchableOpacity>
               )}
               <TouchableOpacity onPress={() => setVisible(false)} style={styles.closeBtn}>
-                <Ionicons name="close" size={22} color={colors.foreground} />
+                <Ionicons name="close" size={22} color={c.foreground} />
               </TouchableOpacity>
             </View>
           </View>
@@ -128,8 +131,8 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
                     }}
                   >
                     {opt.key && getActivityImage(opt.key, 'white')
-                      ? <ActivityIcon activityKey={opt.key} size={14} tintColor={isActive ? colors.primaryForeground : colors.foreground} />
-                      : <Ionicons name={opt.icon as any} size={14} color={isActive ? colors.primaryForeground : colors.foreground} />
+                      ? <ActivityIcon activityKey={opt.key} size={14} tintColor={isActive ? c.primaryForeground : c.foreground} />
+                      : <Ionicons name={opt.icon as any} size={14} color={isActive ? c.primaryForeground : c.foreground} />
                     }
                     <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{opt.label}</Text>
                   </TouchableOpacity>
@@ -183,7 +186,7 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   fab: {
     position: 'absolute',
     top: 8,
@@ -194,7 +197,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     // Fundo claro com sombra — sobre mapas claros um fundo escuro
     // translúcido com ícone escuro fica ilegível
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -210,18 +213,18 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   badgeText: {
     fontFamily: 'DMMono_500Medium',
     fontSize: 10,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
   },
   backdrop: {
     flex: 1,
-    backgroundColor: colors.overlayDark,
+    backgroundColor: c.overlayDark,
   },
   sheet: {
     position: 'absolute',
@@ -229,13 +232,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     maxHeight: '70%',
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 20,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   sheetHeader: {
     flexDirection: 'row',
@@ -245,7 +248,7 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     ...typography.bodyBold,
-    color: colors.foreground,
+    color: c.foreground,
     fontSize: 18,
   },
   sheetHeaderActions: {
@@ -257,12 +260,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 14,
-    backgroundColor: withAlpha(colors.foreground, 0.08),
+    backgroundColor: withAlpha(c.foreground, 0.08),
   },
   clearBtnText: {
     ...typography.body,
     fontSize: 12,
-    color: colors.primary,
+    color: c.primary,
   },
   closeBtn: {
     padding: 4,
@@ -270,7 +273,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     ...typography.mono,
     fontSize: 11,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 10,
@@ -289,19 +292,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: 20,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
   chipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: c.primary,
+    borderColor: c.primary,
   },
   chipText: {
     ...typography.body,
     fontSize: 13,
-    color: colors.foreground,
+    color: c.foreground,
   },
   chipTextActive: {
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
     fontFamily: 'Barlow_600SemiBold',
   },
 });

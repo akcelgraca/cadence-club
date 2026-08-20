@@ -44,6 +44,36 @@ function tempo(v: unknown): string | null {
  * Devolve null quando o conteúdo não é XML válido ou não tem `<gpx>` — o
  * chamador distingue isso de "válido mas sem pontos", que é outro caso.
  */
+/**
+ * Batimento de um trackpoint de GPX.
+ *
+ * O formato não prevê frequência cardíaca: vive em `<extensions>`, e cada
+ * fabricante escolheu o seu prefixo de namespace. O Garmin e o Strava usam
+ * `gpxtpx:TrackPointExtension > gpxtpx:hr`; há exportadores que largam o
+ * prefixo. Como o parser está configurado sem processar namespaces, procura-se
+ * por qualquer chave que acabe em "hr".
+ */
+function batimentoGpx(ponto: any): number | null {
+  const ext = ponto?.extensions;
+  if (!ext) return null;
+
+  const procurar = (obj: any, profundidade = 0): number | null => {
+    if (!obj || typeof obj !== 'object' || profundidade > 4) return null;
+    for (const [chave, valor] of Object.entries(obj)) {
+      const nome = chave.toLowerCase().replace(/^.*:/, '');
+      if (nome === 'hr' || nome === 'heartrate') {
+        const n = Number(valor);
+        if (Number.isFinite(n) && n >= 30 && n <= 240) return Math.round(n);
+      }
+      const encontrado = procurar(valor, profundidade + 1);
+      if (encontrado !== null) return encontrado;
+    }
+    return null;
+  };
+
+  return procurar(ext);
+}
+
 export function parseGpx(xml: string): ParsedTrack | null {
   let raiz: any;
   try {
@@ -72,6 +102,7 @@ export function parseGpx(xml: string): ParsedTrack | null {
           lat,
           lng,
           elevation: numero(p.ele),
+          heartRate: batimentoGpx(p),
           time: tempo(p.time),
         });
       }

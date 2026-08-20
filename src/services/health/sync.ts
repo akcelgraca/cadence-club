@@ -120,6 +120,8 @@ export async function syncHealthWorkouts(options: PlanOptions = {}): Promise<Syn
         duration: workout.duration,
         elevation_gain: workout.elevationGain,
         avg_pace: workout.distance > 0 ? workout.duration / (workout.distance / 1000) : null,
+        avg_heart_rate: workout.avgHeartRate,
+        max_heart_rate: workout.maxHeartRate,
         start_time: workout.startTime,
         end_time: workout.endTime,
         // Um treino importado não tem traçado — o GPS fica no relógio. Sem

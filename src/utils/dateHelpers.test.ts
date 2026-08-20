@@ -1,4 +1,5 @@
-import { formatDuration, formatRelativeTime, formatDate } from './dateHelpers';
+import { formatDuration, formatRelativeTime, formatDate, localeTag, monthNames } from './dateHelpers';
+import i18n from '../lib/i18n';
 
 describe('formatDuration', () => {
   it('omite as horas abaixo de uma hora', () => {
@@ -29,10 +30,14 @@ describe('formatRelativeTime', () => {
 
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(agora);
+    // O idioma tem de ser fixado: estas frases passaram a vir do i18n, e o
+    // idioma por omissão nos testes é o do ambiente, não o português.
+    i18n.changeLanguage('pt');
   });
 
   afterEach(() => {
     jest.useRealTimers();
+    i18n.changeLanguage('pt');
   });
 
   /** Data a N segundos no passado. */
@@ -80,5 +85,36 @@ describe('formatDate', () => {
     expect(resultado).toContain('15');
     // Mês por extenso, não numérico.
     expect(resultado).toMatch(/[a-zçã]{3,}/i);
+  });
+});
+
+describe('idioma', () => {
+  afterEach(() => i18n.changeLanguage('pt'));
+
+  it('a etiqueta de locale segue o idioma da app', () => {
+    i18n.changeLanguage('pt');
+    expect(localeTag()).toBe('pt-PT');
+    i18n.changeLanguage('en');
+    expect(localeTag()).toBe('en-GB');
+  });
+
+  it('os meses vêm no idioma em vigor', () => {
+    // Havia quatro listas de meses escritas à mão, todas em português, e uma
+    // delas com "Marco" sem cedilha. Isto é o que impede a quinta.
+    i18n.changeLanguage('pt');
+    const pt = monthNames('long');
+    expect(pt).toHaveLength(12);
+    expect(pt[2]).toBe('Março');
+
+    i18n.changeLanguage('en');
+    expect(monthNames('long')[2]).toBe('March');
+  });
+
+  it('o tempo relativo também muda de idioma', () => {
+    const haUmaHora = new Date(Date.now() - 3600 * 1000).toISOString();
+    i18n.changeLanguage('pt');
+    expect(formatRelativeTime(haUmaHora)).toBe('há 1h');
+    i18n.changeLanguage('en');
+    expect(formatRelativeTime(haUmaHora)).toBe('1h ago');
   });
 });

@@ -3,7 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Profile, ActivityGoal } from '../lib/types';
 import { supabase } from '../services/supabase';
 import * as authService from '../services/auth';
-import { identifyUser, resetAnalytics, track } from '../lib/analytics';
+import { track } from '../lib/analytics';
+import { onSessionStarted, onSessionEnded } from '../services/session';
 
 const PROFILE_KEY = 'auth-profile';
 const PENDING_REGISTRATION_KEY = 'pending-registration';
@@ -98,13 +99,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
 
         if (profile) {
-          identifyUser(session.user.id);
+          onSessionStarted(session.user.id);
           set({ session, profile, isLoading: false, isOnboarded: true });
           return;
         }
 
         // Has session but no profile = needs onboarding
-        identifyUser(session.user.id);
+        onSessionStarted(session.user.id);
     set({ session, isLoading: false, isOnboarded: false });
         return;
       }
@@ -118,7 +119,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const data = await authService.signUp(email, password);
     track('signed_up', { method: 'email' });
     if (data.session) {
-      identifyUser(data.session.user.id);
+      onSessionStarted(data.session.user.id);
       set({ session: data.session });
     }
   },
@@ -177,6 +178,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
     }
 
+    onSessionStarted(data.session.user.id);
     set({
       session: data.session,
       profile,
@@ -192,6 +194,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
       }
 
+      onSessionStarted(data.session.user.id);
       set({
         session: data.session,
         profile,
@@ -208,6 +211,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
       }
 
+      onSessionStarted(data.session.user.id);
       set({
         session: data.session,
         profile,
@@ -268,7 +272,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {}
 
     await authService.signOut();
-    resetAnalytics();
+    await onSessionEnded();
     await AsyncStorage.removeItem(PROFILE_KEY);
     await AsyncStorage.removeItem(PENDING_REGISTRATION_KEY);
     set({ session: null, profile: null, isOnboarded: false });

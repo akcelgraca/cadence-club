@@ -1,4 +1,6 @@
+import { useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useColors } from '../hooks/useColors';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -6,7 +8,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import { markAsRead, markAllAsRead } from '../services/notifications';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatRelativeTime } from '../utils/dateHelpers';
-import { colors, typography, withAlpha } from '../lib/theme';
+import { typography, withAlpha, type Colors } from '../lib/theme';
 import type { Notification } from '../lib/types';
 
 const NOTIFICATION_ICONS: Record<string, string> = {
@@ -15,6 +17,10 @@ const NOTIFICATION_ICONS: Record<string, string> = {
   follow: 'person-add',
   streak: 'flame',
   badge: 'ribbon',
+  club_request: 'people',
+  club_accepted: 'people-circle',
+  message: 'mail',
+  event: 'calendar',
 };
 
 function getNotificationRoute(item: Notification): { pathname: string; params: any } | null {
@@ -31,12 +37,27 @@ function getNotificationRoute(item: Notification): { pathname: string; params: a
     case 'streak':
     case 'badge':
       return { pathname: '/(tabs)/profile', params: {} };
+    // Nos três tipos novos o `reference_id` não é uma atividade: é o clube nos
+    // dois primeiros e a conversa no terceiro. É por isso que o campo tem nome
+    // genérico e é quem lê que decide o que ele significa.
+    case 'club_request':
+    case 'club_accepted':
+    case 'event':
+      return item.reference_id
+        ? { pathname: '/club/[id]', params: { id: item.reference_id } }
+        : null;
+    case 'message':
+      return item.reference_id
+        ? { pathname: '/messages/[id]', params: { id: item.reference_id } }
+        : null;
     default:
       return null;
   }
 }
 
 export default function NotificationsScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const {
@@ -85,7 +106,7 @@ export default function NotificationsScreen() {
         <Ionicons
           name={(NOTIFICATION_ICONS[item.type] ?? 'notifications') as any}
           size={18}
-          color={!item.is_read ? colors.primary : colors.mutedForeground}
+          color={!item.is_read ? c.primary : c.mutedForeground}
         />
       </View>
       <View style={styles.notificationContent}>
@@ -112,7 +133,7 @@ export default function NotificationsScreen() {
     if (isLoading) return null;
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="notifications-off-outline" size={48} color={colors.mutedForeground} />
+        <Ionicons name="notifications-off-outline" size={48} color={c.mutedForeground} />
         <Text style={styles.emptyTitle}>{t('notifications_empty')}</Text>
         <Text style={styles.emptySubtitle}>
           {t('notifications_empty_subtext')}
@@ -125,11 +146,11 @@ export default function NotificationsScreen() {
     <View style={styles.container}>
       {isLoading ? (
         <View style={styles.centerLoader}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={c.primary} />
         </View>
       ) : isError ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="alert-circle-outline" size={48} color={colors.destructive} />
+          <Ionicons name="alert-circle-outline" size={48} color={c.destructive} />
           <Text style={styles.emptyTitle}>{t('error_loading')}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
             <Text style={styles.retryButtonText}>{t('retry')}</Text>
@@ -154,10 +175,10 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
   },
   content: {
     padding: 16,
@@ -172,31 +193,31 @@ const styles = StyleSheet.create({
   markAllRead: {
     ...typography.body,
     fontSize: 13,
-    color: colors.primary,
+    color: c.primary,
   },
   notificationItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
     marginBottom: 8,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 12,
     gap: 12,
   },
   notificationUnread: {
-    borderColor: withAlpha(colors.primary, 0.2),
-    backgroundColor: withAlpha(colors.primary, 0.03),
+    borderColor: withAlpha(c.primary, 0.2),
+    backgroundColor: withAlpha(c.primary, 0.03),
   },
   iconContainer: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: c.inputBackground,
     justifyContent: 'center',
     alignItems: 'center',
   },
   iconContainerUnread: {
-    backgroundColor: withAlpha(colors.primary, 0.1),
+    backgroundColor: withAlpha(c.primary, 0.1),
   },
   notificationContent: {
     flex: 1,
@@ -204,24 +225,24 @@ const styles = StyleSheet.create({
   notificationMessage: {
     ...typography.body,
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     lineHeight: 20,
   },
   notificationMessageUnread: {
-    color: colors.foreground,
+    color: c.foreground,
     fontFamily: 'Barlow_600SemiBold',
   },
   notificationTime: {
     ...typography.body,
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 4,
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   centerLoader: {
     flex: 1,
@@ -238,12 +259,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     ...typography.bodyBold,
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
   },
   emptySubtitle: {
     ...typography.body,
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textAlign: 'center',
     paddingHorizontal: 40,
   },
@@ -251,12 +272,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 12,
   },
   retryButtonText: {
     ...typography.bodyBold,
     fontSize: 14,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
   },
 });

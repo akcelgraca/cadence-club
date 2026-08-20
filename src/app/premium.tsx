@@ -1,19 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { useColors } from '../hooks/useColors';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
-import { router } from 'expo-router';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { colors, typography, withAlpha } from '../lib/theme';
+import { typography, withAlpha, type Colors } from '../lib/theme';
 import { FREE_HISTORY_MONTHS } from '../hooks/usePremium';
 import {
   getPlans, isAvailable, purchase, refreshEntitlement, restore, type Plan,
 } from '../services/purchases';
 import { track } from '../lib/analytics';
+import { goBackOr } from '../lib/navigation';
 
 /**
  * Paywall.
@@ -58,6 +60,8 @@ function perfilPath(pontos: number[], largura: number, altura: number): string {
 }
 
 export default function PremiumScreen() {
+  const c = useColors();
+  const s = useMemo(() => makeS(c), [c]);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
@@ -100,7 +104,7 @@ export default function PremiumScreen() {
       Alert.alert(
         t('premium_thanks_title'),
         ativo ? t('premium_thanks_body') : t('premium_pending_body'),
-        [{ text: t('ok'), onPress: () => router.back() }],
+        [{ text: t('ok'), onPress: () => goBackOr('/(tabs)/profile') }],
       );
     } finally {
       setAComprar(false);
@@ -130,8 +134,8 @@ export default function PremiumScreen() {
   return (
     <SafeAreaView style={s.container} edges={['top']}>
       <View style={s.topBar}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="close" size={26} color={colors.foreground} />
+        <TouchableOpacity onPress={() => goBackOr('/(tabs)/profile')} hitSlop={12}>
+          <Ionicons name="close" size={26} color={c.foreground} />
         </TouchableOpacity>
       </View>
 
@@ -139,10 +143,10 @@ export default function PremiumScreen() {
         {/* ── O gráfico é o argumento ─────────────────────────────────── */}
         <View style={s.grafico}>
           <Svg width="100%" height={96} viewBox="0 0 320 96" preserveAspectRatio="none">
-            <Path d={perfilPath(PERFIL, 320, 96)} stroke={withAlpha(colors.foreground, 0.13)}
+            <Path d={perfilPath(PERFIL, 320, 96)} stroke={withAlpha(c.foreground, 0.13)}
               strokeWidth={2} fill="none" />
             <Path d={perfilPath(PERFIL.slice(0, Math.ceil(PERFIL.length * CORTE)),
-              320 * CORTE, 96 * 0.72)} stroke={colors.primary} strokeWidth={2.5} fill="none" />
+              320 * CORTE, 96 * 0.72)} stroke={c.primary} strokeWidth={2.5} fill="none" />
           </Svg>
           <View style={[s.corte, { left: `${CORTE * 100}%` }]} />
           <View style={s.legenda}>
@@ -161,19 +165,19 @@ export default function PremiumScreen() {
           <Text style={s.grupoLabel}>{t('premium_always_free')}</Text>
           {GRATIS.map((k) => (
             <View key={k} style={s.linha}>
-              <Ionicons name="checkmark" size={16} color={colors.mutedForeground} />
+              <Ionicons name="checkmark" size={16} color={c.mutedForeground} />
               <Text style={s.linhaTextoFraca}>{t(k as any)}</Text>
             </View>
           ))}
 
           <View style={s.regua} />
 
-          <Text style={[s.grupoLabel, { color: colors.primary }]}>
+          <Text style={[s.grupoLabel, { color: c.primary }]}>
             {t('premium_adds')}
           </Text>
           {PAGO.map((k) => (
             <View key={k} style={s.linha}>
-              <Ionicons name="add" size={16} color={colors.primary} />
+              <Ionicons name="add" size={16} color={c.primary} />
               <Text style={s.linhaTexto}>{t(k as any)}</Text>
             </View>
           ))}
@@ -181,7 +185,7 @@ export default function PremiumScreen() {
 
         {/* ── Planos ─────────────────────────────────────────────────── */}
         {carregando ? (
-          <ActivityIndicator style={{ marginTop: 28 }} color={colors.primary} />
+          <ActivityIndicator style={{ marginTop: 28 }} color={c.primary} />
         ) : planos.length === 0 ? (
           // Sem produtos configurados na loja não há nada a vender. Dizer
           // isto é melhor do que um botão que não faz nada.
@@ -199,7 +203,7 @@ export default function PremiumScreen() {
                   onPress={() => setEscolhido(p.id)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[s.planoPeriodo, ativo && { color: colors.primary }]}>
+                  <Text style={[s.planoPeriodo, ativo && { color: c.primary }]}>
                     {t(`premium_period_${p.period.toLowerCase()}` as any, {
                       defaultValue: p.period,
                     })}
@@ -216,7 +220,7 @@ export default function PremiumScreen() {
               activeOpacity={0.85}
             >
               {aComprar
-                ? <ActivityIndicator color={colors.primaryForeground} />
+                ? <ActivityIndicator color={c.primaryForeground} />
                 : <Text style={s.ctaTexto}>{t('premium_cta')}</Text>}
             </TouchableOpacity>
           </>
@@ -233,71 +237,71 @@ export default function PremiumScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const makeS = (c: Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   topBar: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 8, alignItems: 'flex-end' },
   scroll: { paddingHorizontal: 24, paddingBottom: 48 },
 
   grafico: { marginTop: 4, marginBottom: 22 },
   corte: {
     position: 'absolute', top: 0, bottom: 0, width: 1,
-    backgroundColor: withAlpha(colors.foreground, 0.18),
+    backgroundColor: withAlpha(c.foreground, 0.18),
   },
   legenda: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
   legendaMono: {
-    ...typography.mono, fontSize: 10, color: colors.primary,
+    ...typography.mono, fontSize: 10, color: c.primary,
     letterSpacing: 0.4, textTransform: 'uppercase',
   },
-  legendaFraca: { color: withAlpha(colors.foreground, 0.35) },
+  legendaFraca: { color: withAlpha(c.foreground, 0.35) },
 
   titulo: {
     ...typography.statNumber, fontSize: 40, lineHeight: 42,
-    color: colors.foreground, textTransform: 'uppercase',
+    color: c.foreground, textTransform: 'uppercase',
   },
   subtitulo: {
     ...typography.body, fontSize: 15, lineHeight: 21,
-    color: colors.mutedForeground, marginTop: 10, marginBottom: 26,
+    color: c.mutedForeground, marginTop: 10, marginBottom: 26,
   },
 
-  lista: { backgroundColor: colors.card, borderRadius: 14, padding: 18 },
+  lista: { backgroundColor: c.card, borderRadius: 14, padding: 18 },
   grupoLabel: {
     ...typography.headline, fontSize: 11, letterSpacing: 1,
-    color: colors.mutedForeground, marginBottom: 10,
+    color: c.mutedForeground, marginBottom: 10,
   },
   linha: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 5 },
-  linhaTexto: { ...typography.bodyMedium, fontSize: 14, color: colors.foreground, flex: 1 },
-  linhaTextoFraca: { ...typography.body, fontSize: 14, color: colors.mutedForeground, flex: 1 },
-  regua: { height: 1, backgroundColor: colors.border, marginVertical: 16 },
+  linhaTexto: { ...typography.bodyMedium, fontSize: 14, color: c.foreground, flex: 1 },
+  linhaTextoFraca: { ...typography.body, fontSize: 14, color: c.mutedForeground, flex: 1 },
+  regua: { height: 1, backgroundColor: c.border, marginVertical: 16 },
 
   plano: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: colors.card, borderRadius: 12, padding: 16, marginTop: 12,
+    backgroundColor: c.card, borderRadius: 12, padding: 16, marginTop: 12,
     borderWidth: 1.5, borderColor: 'transparent',
   },
-  planoAtivo: { borderColor: colors.primary },
+  planoAtivo: { borderColor: c.primary },
   planoPeriodo: {
     ...typography.headline, fontSize: 13, letterSpacing: 0.6,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
   },
-  planoPreco: { ...typography.mono, fontSize: 15, color: colors.foreground },
+  planoPreco: { ...typography.mono, fontSize: 15, color: c.foreground },
 
   cta: {
-    backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16,
+    backgroundColor: c.primary, borderRadius: 12, paddingVertical: 16,
     alignItems: 'center', marginTop: 22,
   },
   ctaTexto: {
     ...typography.headline, fontSize: 15, letterSpacing: 1,
-    color: colors.primaryForeground,
+    color: c.primaryForeground,
   },
 
   indisponivel: {
-    ...typography.body, fontSize: 13, color: colors.mutedForeground,
+    ...typography.body, fontSize: 13, color: c.mutedForeground,
     textAlign: 'center', marginTop: 26,
   },
   repor: { alignItems: 'center', marginTop: 18 },
-  reporTexto: { ...typography.bodyMedium, fontSize: 13, color: colors.mutedForeground },
+  reporTexto: { ...typography.bodyMedium, fontSize: 13, color: c.mutedForeground },
   legal: {
     ...typography.body, fontSize: 11, lineHeight: 16,
-    color: withAlpha(colors.foreground, 0.4), textAlign: 'center', marginTop: 20,
+    color: withAlpha(c.foreground, 0.4), textAlign: 'center', marginTop: 20,
   },
 });

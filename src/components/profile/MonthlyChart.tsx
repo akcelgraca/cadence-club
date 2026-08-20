@@ -1,9 +1,10 @@
 import { View, Text, StyleSheet, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { useTranslation } from 'react-i18next';
 import { MONTH_SHORT_KEYS } from '../../lib/constants';
 import type { MonthlyStat } from '../../lib/types';
-import { colors, typography, withAlpha } from '../../lib/theme';
-import { useEffect } from 'react';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
+import { useEffect, useMemo } from 'react';
 import { track } from '../../lib/analytics';
 
 interface MonthlyChartProps {
@@ -55,6 +56,8 @@ function formatKm(value: number): string {
 }
 
 export function MonthlyChart({ data, isLoading, isError }: MonthlyChartProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
 
   // Só conta quando há dados — abrir o perfil e ver um esqueleto não é uso.
@@ -67,7 +70,7 @@ export function MonthlyChart({ data, isLoading, isError }: MonthlyChartProps) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>{t('monthly_last_12')}</Text>
-        <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 20, height: 180 }} />
+        <ActivityIndicator size="small" color={c.primary} style={{ marginTop: 20, height: 180 }} />
       </View>
     );
   }
@@ -155,7 +158,7 @@ export function MonthlyChart({ data, isLoading, isError }: MonthlyChartProps) {
                         {
                           height: Math.max(barHeight, value > 0 ? 2 : 0),
                           width: barWidth,
-                          backgroundColor: isCurrentMonth ? colors.primary : withAlpha(colors.primary, 0.5),
+                          backgroundColor: isCurrentMonth ? c.primary : withAlpha(c.primary, 0.5),
                         },
                       ]}
                     />
@@ -173,16 +176,16 @@ export function MonthlyChart({ data, isLoading, isError }: MonthlyChartProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 16,
     padding: 16,
   },
-  title: { ...typography.headline, fontSize: 18, marginBottom: 2, color: colors.foreground },
-  subtitle: { ...typography.mono, fontSize: 11, color: colors.mutedForeground, marginBottom: 16 },
+  title: { ...typography.headline, fontSize: 18, marginBottom: 2, color: c.foreground },
+  subtitle: { ...typography.mono, fontSize: 11, color: c.mutedForeground, marginBottom: 16 },
   chartRow: {
     flexDirection: 'row',
   },
@@ -195,7 +198,7 @@ const styles = StyleSheet.create({
   yLabel: {
     ...typography.mono,
     fontSize: 10,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     lineHeight: 12,
   },
   chartArea: {
@@ -208,7 +211,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
   barsRow: {
     flex: 1,
@@ -231,8 +234,8 @@ const styles = StyleSheet.create({
   barLabel: {
     ...typography.mono,
     fontSize: 8,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     marginTop: 4,
   },
-  emptyText: { ...typography.body, fontSize: 14, color: colors.mutedForeground, textAlign: 'center', paddingVertical: 30 },
+  emptyText: { ...typography.body, fontSize: 14, color: c.mutedForeground, textAlign: 'center', paddingVertical: 30 },
 });

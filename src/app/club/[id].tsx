@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, Animated,
   ActivityIndicator, Alert, RefreshControl, Share, useWindowDimensions,
@@ -20,9 +21,10 @@ import { SocialPostCard } from '../../components/social/SocialPostCard';
 import { EventCard } from '../../components/social/EventCard';
 import { ActivityIcon } from '../../components/common/ActivityIcon';
 import { ACTIVITY_CATEGORIES } from '../../lib/constants';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { ClubMember, ClubJoinRequest, Activity } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../../lib/navigation';
 
 type ClubTab = 'posts' | 'events' | 'members';
 
@@ -33,6 +35,8 @@ const TABS: { key: ClubTab; i18n_key: string }[] = [
 ];
 
 export default function ClubDetailScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const myId = useAuthStore((s) => s.profile?.id);
@@ -222,7 +226,7 @@ export default function ClubDetailScreen() {
         {
           text: t('delete'), style: 'destructive',
           onPress: async () => {
-            try { await deleteClub(club.id); router.back(); }
+            try { await deleteClub(club.id); goBackOr('/(tabs)/social'); }
             catch { Alert.alert(t('club_delete_error')); }
           },
         },
@@ -243,11 +247,11 @@ export default function ClubDetailScreen() {
     return (
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+          <TouchableOpacity onPress={() => goBackOr('/(tabs)/social')} hitSlop={12}>
+            <Ionicons name="chevron-back" size={24} color={c.foreground} />
           </TouchableOpacity>
         </View>
-        <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>
+        <View style={styles.center}><ActivityIndicator color={c.primary} /></View>
       </SafeAreaView>
     );
   }
@@ -256,8 +260,8 @@ export default function ClubDetailScreen() {
     return (
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+          <TouchableOpacity onPress={() => goBackOr('/(tabs)/social')} hitSlop={12}>
+            <Ionicons name="chevron-back" size={24} color={c.foreground} />
           </TouchableOpacity>
         </View>
         <View style={styles.center}><Text style={styles.errorText}>{t('club_not_found')}</Text></View>
@@ -294,7 +298,7 @@ export default function ClubDetailScreen() {
 
   const emptyBlock = (icon: keyof typeof Ionicons.glyphMap, title: string, sub: string) => (
     <View style={styles.emptyContent}>
-      <Ionicons name={icon} size={40} color={colors.mutedForeground} />
+      <Ionicons name={icon} size={40} color={c.mutedForeground} />
       <Text style={styles.emptyTitle}>{title}</Text>
       <Text style={styles.emptySub}>{sub}</Text>
     </View>
@@ -304,13 +308,13 @@ export default function ClubDetailScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+        <TouchableOpacity onPress={() => goBackOr('/(tabs)/social')} hitSlop={12}>
+          <Ionicons name="chevron-back" size={24} color={c.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{club.name}</Text>
         {isOwner ? (
           <TouchableOpacity onPress={handleOwnerMenu} hitSlop={12} accessibilityLabel={t('club_manage')}>
-            <Ionicons name="ellipsis-horizontal" size={20} color={colors.foreground} />
+            <Ionicons name="ellipsis-horizontal" size={20} color={c.foreground} />
           </TouchableOpacity>
         ) : (
           <View style={{ width: 32 }} />
@@ -332,24 +336,24 @@ export default function ClubDetailScreen() {
           <View style={styles.clubMeta}>
             {catDef && (
               <View style={styles.metaItem}>
-                <ActivityIcon activityKey={catDef.activities[0]?.key ?? ''} size={11} tintColor={colors.mutedForeground} />
+                <ActivityIcon activityKey={catDef.activities[0]?.key ?? ''} size={11} tintColor={c.mutedForeground} />
                 <Text style={styles.metaText}>{catDef.key}</Text>
               </View>
             )}
             {club.city && (
               <View style={styles.metaItem}>
-                <Ionicons name="location-outline" size={11} color={colors.mutedForeground} />
+                <Ionicons name="location-outline" size={11} color={c.mutedForeground} />
                 <Text style={styles.metaText}>{club.city}</Text>
               </View>
             )}
             <View style={styles.metaItem}>
-              <Ionicons name="people-outline" size={11} color={colors.mutedForeground} />
+              <Ionicons name="people-outline" size={11} color={c.mutedForeground} />
               <Text style={styles.metaText}>{club.member_count}</Text>
             </View>
             {club.is_private && (
               <View style={styles.metaItem}>
-                <Ionicons name="lock-closed" size={11} color={colors.warning} />
-                <Text style={[styles.metaText, { color: colors.warning }]}>{t('club_private')}</Text>
+                <Ionicons name="lock-closed" size={11} color={c.warning} />
+                <Text style={[styles.metaText, { color: c.warning }]}>{t('club_private')}</Text>
               </View>
             )}
           </View>
@@ -368,10 +372,10 @@ export default function ClubDetailScreen() {
           disabled={joiningLeaving}
         >
           {joiningLeaving
-            ? <ActivityIndicator size="small" color={joinSecondary ? colors.primary : colors.primaryForeground} />
+            ? <ActivityIndicator size="small" color={joinSecondary ? c.primary : c.primaryForeground} />
             : (
               <>
-                {club.is_member && <Ionicons name="checkmark" size={15} color={colors.primary} />}
+                {club.is_member && <Ionicons name="checkmark" size={15} color={c.primary} />}
                 <Text style={[styles.primaryBtnText, joinSecondary && styles.secondaryBtnText]}>
                   {joinLabel}
                 </Text>
@@ -385,12 +389,12 @@ export default function ClubDetailScreen() {
             onPress={() => router.push(`/club/${club.id}/chat`)}
             accessibilityLabel={t('club_open_chat')}
           >
-            <Ionicons name="chatbubble-ellipses-outline" size={18} color={colors.primary} />
+            <Ionicons name="chatbubble-ellipses-outline" size={18} color={c.primary} />
           </TouchableOpacity>
         )}
 
         <TouchableOpacity style={styles.iconBtn} onPress={handleShare} accessibilityLabel={t('club_share')}>
-          <Ionicons name="share-social-outline" size={18} color={colors.primary} />
+          <Ionicons name="share-social-outline" size={18} color={c.primary} />
         </TouchableOpacity>
       </View>
 
@@ -490,7 +494,7 @@ export default function ClubDetailScreen() {
             )}
             showsVerticalScrollIndicator={false}
             refreshControl={
-              <RefreshControl refreshing={activitiesFetching} onRefresh={refetchActivities} tintColor={colors.primary} />
+              <RefreshControl refreshing={activitiesFetching} onRefresh={refetchActivities} tintColor={c.primary} />
             }
           />
         </View>
@@ -523,7 +527,7 @@ export default function ClubDetailScreen() {
                     style={styles.newEventBtn}
                     onPress={() => router.push(`/club/${club.id}/event-new`)}
                   >
-                    <Ionicons name="add" size={16} color={colors.primaryForeground} />
+                    <Ionicons name="add" size={16} color={c.primaryForeground} />
                     <Text style={styles.newEventText}>{t('club_event')}</Text>
                   </TouchableOpacity>
                 )}
@@ -548,7 +552,7 @@ export default function ClubDetailScreen() {
             )}
             showsVerticalScrollIndicator={false}
             refreshControl={
-              <RefreshControl refreshing={eventsFetching} onRefresh={refetchEvents} tintColor={colors.primary} />
+              <RefreshControl refreshing={eventsFetching} onRefresh={refetchEvents} tintColor={c.primary} />
             }
           />
         </View>
@@ -572,10 +576,10 @@ export default function ClubDetailScreen() {
                         <Text style={styles.memberHandle}>@{req.profile?.username ?? ''}</Text>
                       </View>
                       <TouchableOpacity style={styles.acceptBtn} onPress={() => handleRespond(req, true)} hitSlop={6}>
-                        <Ionicons name="checkmark" size={18} color={colors.primaryForeground} />
+                        <Ionicons name="checkmark" size={18} color={c.primaryForeground} />
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.rejectBtn} onPress={() => handleRespond(req, false)} hitSlop={6}>
-                        <Ionicons name="close" size={18} color={colors.destructive} />
+                        <Ionicons name="close" size={18} color={c.destructive} />
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -596,17 +600,17 @@ export default function ClubDetailScreen() {
                 </View>
                 {item.role === 'admin' && (
                   <View style={styles.adminPill}>
-                    <Ionicons name="shield-checkmark" size={11} color={colors.primary} />
+                    <Ionicons name="shield-checkmark" size={11} color={c.primary} />
                     <Text style={styles.adminText}>{t('club_role_admin')}</Text>
                   </View>
                 )}
-                <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
+                <Ionicons name="chevron-forward" size={16} color={c.mutedForeground} />
               </TouchableOpacity>
             )}
             ListEmptyComponent={emptyBlock('people-outline', t('club_no_members'), t('club_no_members_body'))}
             showsVerticalScrollIndicator={false}
             refreshControl={
-              <RefreshControl refreshing={membersFetching} onRefresh={refetchMembers} tintColor={colors.primary} />
+              <RefreshControl refreshing={membersFetching} onRefresh={refetchMembers} tintColor={c.primary} />
             }
           />
         </View>
@@ -617,10 +621,10 @@ export default function ClubDetailScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  errorText: { ...typography.body, color: colors.mutedForeground },
+  errorText: { ...typography.body, color: c.mutedForeground },
   pager: { flex: 1 },
 
   header: {
@@ -630,12 +634,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   headerTitle: {
     fontFamily: 'BarlowCondensed_700Bold',
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
     flex: 1,
     textAlign: 'center',
     marginHorizontal: 8,
@@ -648,27 +652,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 8,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
   },
   bannerRight: { flex: 1, justifyContent: 'center' },
   avatarLg: {
     width: 60, height: 60, borderRadius: 18,
-    backgroundColor: withAlpha(colors.primary, 0.15),
+    backgroundColor: withAlpha(c.primary, 0.15),
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarLgLetter: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 28, color: colors.primary },
+  avatarLgLetter: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 28, color: c.primary },
   clubName: {
     fontFamily: 'BarlowCondensed_900Black', fontSize: 22,
-    color: colors.foreground, marginBottom: 5, textTransform: 'uppercase',
+    color: c.foreground, marginBottom: 5, textTransform: 'uppercase',
   },
   clubMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { ...typography.body, fontSize: 12, color: colors.mutedForeground },
+  metaText: { ...typography.body, fontSize: 12, color: c.mutedForeground },
 
   desc: {
-    ...typography.body, fontSize: 13, color: colors.mutedForeground,
+    ...typography.body, fontSize: 13, color: c.mutedForeground,
     paddingHorizontal: 16, paddingBottom: 10, lineHeight: 18,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
   },
 
   // Ações
@@ -677,7 +681,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 16,
     paddingBottom: 12,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
   },
   primaryBtn: {
     flex: 1,
@@ -687,35 +691,35 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 9,
     borderRadius: 20,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   secondaryBtn: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: withAlpha(colors.primary, 0.4),
+    borderColor: withAlpha(c.primary, 0.4),
   },
-  primaryBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 14, color: colors.primaryForeground },
-  secondaryBtnText: { color: colors.primary },
+  primaryBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 14, color: c.primaryForeground },
+  secondaryBtnText: { color: c.primary },
   iconBtn: {
     width: 40, height: 40, borderRadius: 20,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: withAlpha(colors.primary, 0.3),
+    borderWidth: 1, borderColor: withAlpha(c.primary, 0.3),
   },
 
   // Estatísticas
   statsStrip: {
     flexDirection: 'row',
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    borderColor: c.border,
     paddingVertical: 10,
   },
   statItem: { flex: 1, alignItems: 'center' },
-  statDivider: { width: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginVertical: 4 },
-  statValue: { fontFamily: 'BarlowCondensed_900Black', fontSize: 20, color: colors.foreground },
+  statDivider: { width: StyleSheet.hairlineWidth, backgroundColor: c.border, marginVertical: 4 },
+  statValue: { fontFamily: 'BarlowCondensed_900Black', fontSize: 20, color: c.foreground },
   statLabel: {
     fontFamily: 'Barlow_500Medium', fontSize: 9, letterSpacing: 0.8,
-    color: colors.mutedForeground, textTransform: 'uppercase', marginTop: 1,
+    color: c.mutedForeground, textTransform: 'uppercase', marginTop: 1,
   },
 
   // Abas
@@ -723,27 +727,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
+    borderColor: c.border,
+    backgroundColor: c.card,
     position: 'relative',
   },
   tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
   tabLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  tabText: { fontFamily: 'Barlow_500Medium', fontSize: 14, color: colors.mutedForeground },
-  tabTextActive: { fontFamily: 'Barlow_600SemiBold', color: colors.foreground },
+  tabText: { fontFamily: 'Barlow_500Medium', fontSize: 14, color: c.mutedForeground },
+  tabTextActive: { fontFamily: 'Barlow_600SemiBold', color: c.foreground },
   tabIndicator: {
     position: 'absolute', bottom: 0,
     height: 2,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 1,
   },
   tabBadge: {
     minWidth: 16, height: 16, borderRadius: 8,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  tabBadgeText: { fontFamily: 'Barlow_600SemiBold', fontSize: 10, color: colors.primaryForeground },
+  tabBadgeText: { fontFamily: 'Barlow_600SemiBold', fontSize: 10, color: c.primaryForeground },
 
   // Barra da aba Eventos
   eventsBar: {
@@ -756,41 +760,41 @@ const styles = StyleSheet.create({
   },
   segment: {
     flexDirection: 'row',
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
     borderRadius: 18,
     padding: 3,
   },
   segmentBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 15 },
-  segmentBtnActive: { backgroundColor: colors.card },
-  segmentText: { fontFamily: 'Barlow_500Medium', fontSize: 12, color: colors.mutedForeground },
-  segmentTextActive: { fontFamily: 'Barlow_600SemiBold', color: colors.foreground },
+  segmentBtnActive: { backgroundColor: c.card },
+  segmentText: { fontFamily: 'Barlow_500Medium', fontSize: 12, color: c.mutedForeground },
+  segmentTextActive: { fontFamily: 'Barlow_600SemiBold', color: c.foreground },
   newEventBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 3,
     paddingHorizontal: 12, paddingVertical: 7,
-    borderRadius: 16, backgroundColor: colors.primary,
+    borderRadius: 16, backgroundColor: c.primary,
   },
-  newEventText: { fontFamily: 'Barlow_600SemiBold', fontSize: 12, color: colors.primaryForeground },
+  newEventText: { fontFamily: 'Barlow_600SemiBold', fontSize: 12, color: c.primaryForeground },
 
   // Pedidos
   sectionHeader: {
     fontFamily: 'Barlow_600SemiBold', fontSize: 12,
-    color: colors.mutedForeground, textTransform: 'uppercase', letterSpacing: 1,
+    color: c.mutedForeground, textTransform: 'uppercase', letterSpacing: 1,
     paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6,
   },
   requestRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingVertical: 10, gap: 12,
-    backgroundColor: withAlpha(colors.primary, 0.05),
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
+    backgroundColor: withAlpha(c.primary, 0.05),
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border,
   },
   acceptBtn: {
     width: 34, height: 34, borderRadius: 17,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     alignItems: 'center', justifyContent: 'center',
   },
   rejectBtn: {
     width: 34, height: 34, borderRadius: 17,
-    borderWidth: 1, borderColor: withAlpha(colors.destructive, 0.4),
+    borderWidth: 1, borderColor: withAlpha(c.destructive, 0.4),
     alignItems: 'center', justifyContent: 'center',
   },
 
@@ -798,27 +802,27 @@ const styles = StyleSheet.create({
   memberRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingVertical: 12, gap: 12,
-    backgroundColor: colors.card,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
+    backgroundColor: c.card,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border,
   },
   memberInfo: { flex: 1 },
-  memberName: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
-  memberHandle: { ...typography.body, fontSize: 13, color: colors.mutedForeground, marginTop: 2 },
+  memberName: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
+  memberHandle: { ...typography.body, fontSize: 13, color: c.mutedForeground, marginTop: 2 },
   adminPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: withAlpha(colors.primary, 0.1),
+    backgroundColor: withAlpha(c.primary, 0.1),
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
   },
-  adminText: { fontFamily: 'Barlow_600SemiBold', fontSize: 11, color: colors.primary },
+  adminText: { fontFamily: 'Barlow_600SemiBold', fontSize: 11, color: c.primary },
 
   // Vazio
   emptyContent: {
     alignItems: 'center', justifyContent: 'center',
     paddingVertical: 50, paddingHorizontal: 32, gap: 10,
   },
-  emptyTitle: { ...typography.bodyBold, fontSize: 17, color: colors.foreground },
+  emptyTitle: { ...typography.bodyBold, fontSize: 17, color: c.foreground },
   emptySub: {
-    ...typography.body, fontSize: 14, color: colors.mutedForeground,
+    ...typography.body, fontSize: 14, color: c.mutedForeground,
     textAlign: 'center', lineHeight: 20,
   },
 });

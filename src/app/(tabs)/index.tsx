@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -17,10 +18,12 @@ import { ChallengesCard } from '../../components/home/ChallengesCard';
 import { UpcomingEventsCard } from '../../components/home/UpcomingEventsCard';
 import { RunCard } from '../../components/common/RunCard';
 import type { Activity } from '../../lib/types';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import { useTranslation } from 'react-i18next';
 
 export default function HomeScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { profile } = useAuthStore();
   const userId = profile?.id;
@@ -86,7 +89,7 @@ export default function HomeScreen() {
                 onPress={() => router.push('/(tabs)/history')}
               >
                 <Text style={styles.viewAllText}>{t('home_view_history')}</Text>
-                <Ionicons name="chevron-forward" size={12} color={colors.primary} />
+                <Ionicons name="chevron-forward" size={12} color={c.primary} />
               </TouchableOpacity>
             </View>
             <RunCard run={latestRun as Activity} />
@@ -99,7 +102,7 @@ export default function HomeScreen() {
             activeOpacity={0.85}
           >
             <View style={styles.firstRunIcon}>
-              <Ionicons name="pulse-outline" size={22} color={colors.primary} />
+              <Ionicons name="pulse-outline" size={22} color={c.primary} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.firstRunTitle}>{t('home_first_activity')}</Text>
@@ -107,7 +110,7 @@ export default function HomeScreen() {
                 {t('home_first_activity_body')}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
+            <Ionicons name="chevron-forward" size={16} color={c.mutedForeground} />
           </TouchableOpacity>
         )}
 
@@ -117,8 +120,8 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingTop: 0 },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background, paddingTop: 0 },
   content: { padding: 20, paddingTop: 16 },
   sectionHeader: {
     flexDirection: 'row',
@@ -129,13 +132,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...typography.headline,
     fontSize: 18,
-    color: colors.foreground,
+    color: c.foreground,
   },
   viewAll: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   viewAllText: {
     fontFamily: 'Barlow_600SemiBold',
     fontSize: 12,
-    color: colors.primary,
+    color: c.primary,
   },
   firstRun: {
     flexDirection: 'row',
@@ -143,18 +146,18 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     borderRadius: 16,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   firstRunIcon: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: withAlpha(colors.primary, 0.1),
+    backgroundColor: withAlpha(c.primary, 0.1),
     alignItems: 'center', justifyContent: 'center',
   },
-  firstRunTitle: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
+  firstRunTitle: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
   firstRunSub: {
     ...typography.body, fontSize: 12,
-    color: colors.mutedForeground, marginTop: 2, lineHeight: 16,
+    color: c.mutedForeground, marginTop: 2, lineHeight: 16,
   },
 });

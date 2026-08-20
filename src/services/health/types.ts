@@ -24,8 +24,10 @@ export interface ExternalWorkout {
   duration: number;
   /** Metros de subida acumulada, quando a plataforma os der. */
   elevationGain: number;
-  /** Batimento médio, quando existir. */
+  /** Batimento médio, quando a origem o der. */
   avgHeartRate: number | null;
+  /** Batimento máximo durante o treino. */
+  maxHeartRate: number | null;
   /**
    * Nome da app que gravou o treino.
    * Serve para não reimportar o que a própria app escreveu na Saúde.

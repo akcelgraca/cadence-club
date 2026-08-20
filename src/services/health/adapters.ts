@@ -29,6 +29,19 @@ function carregar(loader: () => any): any | null {
   }
 }
 
+/**
+ * Batimento arredondado, ou null.
+ *
+ * A CHECK da base de dados só aceita 30-240; valores fora disso são artefactos
+ * do sensor e não vale a pena guardá-los.
+ */
+function arredondaBpm(q: any): number | null {
+  const n = Number(q?.quantity);
+  if (!Number.isFinite(n)) return null;
+  const bpm = Math.round(n);
+  return bpm >= 30 && bpm <= 240 ? bpm : null;
+}
+
 /** Quantity do HealthKit: { quantity, unit }. Zero quando não vem. */
 function quantidade(q: any): number {
   const n = Number(q?.quantity);
@@ -120,7 +133,23 @@ export const healthKitAdapter: HealthAdapter = {
       ascending: true,
     });
 
-    return (amostras ?? []).map((w: any): ExternalWorkout => ({
+    // O batimento vem por treino, numa chamada extra a cada um. Falhar aqui
+    // não pode perder o treino — sem batimento a atividade entra na mesma.
+    const comBatimento = await Promise.all(
+      (amostras ?? []).map(async (w: any) => {
+        try {
+          const hr = await w.getStatistic?.('HKQuantityTypeIdentifierHeartRate', 'count/min');
+          return {
+            avg: arredondaBpm(hr?.averageQuantity),
+            max: arredondaBpm(hr?.maximumQuantity),
+          };
+        } catch {
+          return { avg: null, max: null };
+        }
+      }),
+    );
+
+    return (amostras ?? []).map((w: any, i: number): ExternalWorkout => ({
       externalId: String(w.uuid ?? ''),
       // Enum numérico (running = 37, …). O mapeamento aceita número ou nome.
       rawType: w.workoutActivityType,
@@ -129,13 +158,36 @@ export const healthKitAdapter: HealthAdapter = {
       distance: quantidade(w.totalDistance),
       duration: quantidade(w.duration),
       elevationGain: quantidade(w.metadata?.HKElevationAscended),
-      avgHeartRate: null,
+      avgHeartRate: comBatimento[i]?.avg ?? null,
+      maxHeartRate: comBatimento[i]?.max ?? null,
       sourceApp: w.sourceRevision?.source?.name ?? null,
     })).filter((w: ExternalWorkout) => w.externalId);
   },
 };
 
 // ── Android ──────────────────────────────────────────────────────────────────
+
+/**
+ * Média e máximo das amostras de batimento dentro de um intervalo.
+ *
+ * Exportada para ser testável: é a única parte do adaptador do Android que
+ * tem lógica a sério, e é fácil de enganar — amostras fora do intervalo do
+ * treino contaminariam a média com batimentos de repouso.
+ */
+export function resumoBatimento(
+  amostras: { t: number; bpm: number }[],
+  inicioMs: number,
+  fimMs: number,
+): { avg: number | null; max: number | null } {
+  const dentro = amostras.filter((a) => a.t >= inicioMs && a.t <= fimMs && a.bpm >= 30 && a.bpm <= 240);
+  if (dentro.length === 0) return { avg: null, max: null };
+
+  const soma = dentro.reduce((s, a) => s + a.bpm, 0);
+  return {
+    avg: Math.round(soma / dentro.length),
+    max: Math.round(Math.max(...dentro.map((a) => a.bpm))),
+  };
+}
 
 const HEALTH_CONNECT_READ = [
   { accessType: 'read' as const, recordType: 'ExerciseSession' as const },
@@ -191,17 +243,35 @@ export const healthConnectAdapter: HealthAdapter = {
     if (!HC) return [];
 
     await HC.initialize();
-    const { records } = await HC.readRecords('ExerciseSession', {
-      timeRangeFilter: {
-        operator: 'between',
-        startTime: since.toISOString(),
-        endTime: new Date().toISOString(),
-      },
-    });
+    const agora = new Date().toISOString();
+    const janela = {
+      operator: 'between' as const,
+      startTime: since.toISOString(),
+      endTime: agora,
+    };
+
+    const { records } = await HC.readRecords('ExerciseSession', { timeRangeFilter: janela });
+
+    // O batimento vive num registo HeartRate separado do ExerciseSession, com
+    // as amostras todas do período. Lê-se uma vez e reparte-se pelos treinos
+    // conforme o intervalo de cada um — ler por treino seriam N chamadas.
+    let amostrasHr: { t: number; bpm: number }[] = [];
+    try {
+      const hr = await HC.readRecords('HeartRate', { timeRangeFilter: janela });
+      amostrasHr = (hr.records ?? []).flatMap((r: any) =>
+        (r.samples ?? []).map((a: any) => ({
+          t: new Date(a.time).getTime(),
+          bpm: Number(a.beatsPerMinute),
+        })),
+      ).filter((a: any) => Number.isFinite(a.t) && Number.isFinite(a.bpm));
+    } catch {
+      // Sem permissão de batimento, os treinos entram sem ele.
+    }
 
     return (records ?? []).map((r: any): ExternalWorkout => {
       const inicio = new Date(r.startTime);
       const fim = new Date(r.endTime);
+      const { avg, max } = resumoBatimento(amostrasHr, inicio.getTime(), fim.getTime());
       return {
         externalId: String(r.metadata?.id ?? ''),
         // exerciseType é numérico (RUNNING = 56, BIKING = 8, …).
@@ -214,7 +284,8 @@ export const healthConnectAdapter: HealthAdapter = {
         distance: 0,
         duration: Math.max(0, (fim.getTime() - inicio.getTime()) / 1000),
         elevationGain: 0,
-        avgHeartRate: null,
+        avgHeartRate: avg,
+        maxHeartRate: max,
         sourceApp: r.metadata?.dataOrigin ?? null,
       };
     }).filter((w: ExternalWorkout) => w.externalId);

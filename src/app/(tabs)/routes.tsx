@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useColors } from '../../hooks/useColors';
 import {
   View, Text, StyleSheet, TouchableOpacity, FlatList,
   ActivityIndicator, useWindowDimensions,
@@ -23,7 +24,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { fetchNearbyRoutes, getSavedRouteIds, saveRoute, unsaveRoute } from '../../services/routes';
 import { reverseGeocode } from '../../services/geocoding';
-import { colors, typography, withAlpha } from '../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { NearbyRoute } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
 import { track } from '../../lib/analytics';
@@ -33,6 +34,8 @@ const CARD_RATIO = 0.82;
 const CAROUSEL_HEIGHT = 156;
 
 export default function RoutesScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width: screenW } = useWindowDimensions();
@@ -240,7 +243,7 @@ export default function RoutesScreen() {
                 id={`finish-${selectedRoute.id}`}
                 coordinate={selectedRoute.path[selectedRoute.path.length - 1]}
                 type="finish"
-                label="Fim"
+                label={t('segment_new_end')}
               />
             </>
           )}
@@ -265,7 +268,7 @@ export default function RoutesScreen() {
         {/* Localidade — ao lado do botão de filtros */}
         {cityName && !isCreating && (
           <View style={[styles.cityBadge, { top: insets.top + 8 }]}>
-            <Ionicons name="location" size={12} color={colors.primary} />
+            <Ionicons name="location" size={12} color={c.primary} />
             <Text style={styles.cityText} numberOfLines={1}>{cityName}</Text>
           </View>
         )}
@@ -287,21 +290,21 @@ export default function RoutesScreen() {
                 onPress={() => setStyleMenuOpen((v) => !v)}
                 accessibilityLabel={t('settings_map_style')}
               >
-                <Ionicons name="layers-outline" size={18} color={colors.foreground} />
+                <Ionicons name="layers-outline" size={18} color={c.foreground} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.controlBtn}
                 onPress={() => setShowTerrain((v) => !v)}
                 accessibilityLabel={t('routes_terrain')}
               >
-                <Ionicons name="triangle" size={17} color={showTerrain ? colors.primary : colors.mutedForeground} />
+                <Ionicons name="triangle" size={17} color={showTerrain ? c.primary : c.mutedForeground} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.controlBtn}
                 onPress={() => { track('premium_feature_used', { feature: 'map_3d' }); handleToggle3D(); }}
                 accessibilityLabel={t('routes_3d')}
               >
-                <Ionicons name="cube-outline" size={18} color={show3D ? colors.primary : colors.mutedForeground} />
+                <Ionicons name="cube-outline" size={18} color={show3D ? c.primary : c.mutedForeground} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.controlBtn, savedOnly && styles.controlBtnActive]}
@@ -311,7 +314,7 @@ export default function RoutesScreen() {
                 <Ionicons
                   name={savedOnly ? 'bookmark' : 'bookmark-outline'}
                   size={17}
-                  color={savedOnly ? colors.primary : colors.mutedForeground}
+                  color={savedOnly ? c.primary : c.mutedForeground}
                 />
               </TouchableOpacity>
             </View>
@@ -345,7 +348,7 @@ export default function RoutesScreen() {
             onPress={startCreating}
             accessibilityLabel={t('routes_create')}
           >
-            <Ionicons name="add" size={28} color={colors.primaryForeground} />
+            <Ionicons name="add" size={28} color={c.primaryForeground} />
           </TouchableOpacity>
         )}
 
@@ -353,7 +356,7 @@ export default function RoutesScreen() {
         {!isCreating && (
           isLoading ? (
             <View style={styles.carouselState}>
-              <ActivityIndicator color={colors.primary} />
+              <ActivityIndicator color={c.primary} />
             </View>
           ) : visibleRoutes.length > 0 ? (
             <FlatList
@@ -392,7 +395,7 @@ export default function RoutesScreen() {
                 <Ionicons
                   name={savedOnly ? 'bookmark-outline' : 'map-outline'}
                   size={22}
-                  color={colors.primary}
+                  color={c.primary}
                 />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.emptyTitle}>
@@ -425,8 +428,8 @@ export default function RoutesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
 
   // Pastilha da localidade (à direita do botão de filtros)
   cityBadge: {
@@ -439,14 +442,14 @@ const styles = StyleSheet.create({
     height: 40,
     paddingHorizontal: 14,
     borderRadius: 20,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
   },
-  cityText: { ...typography.bodyMedium, fontSize: 13, color: colors.foreground, flexShrink: 1 },
+  cityText: { ...typography.bodyMedium, fontSize: 13, color: c.foreground, flexShrink: 1 },
 
   // Controlos agrupados
   controlStack: {
@@ -456,7 +459,7 @@ const styles = StyleSheet.create({
   },
   controlBtn: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     justifyContent: 'center', alignItems: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.15,
@@ -466,13 +469,13 @@ const styles = StyleSheet.create({
   },
   // Ativo = anel verde sobre branco opaco; um fundo translúcido deixaria
   // o mapa passar através do botão
-  controlBtnActive: { borderWidth: 1.5, borderColor: colors.primary },
+  controlBtnActive: { borderWidth: 1.5, borderColor: c.primary },
 
   backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   styleMenu: {
     position: 'absolute',
     right: 60,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 12,
     paddingVertical: 4,
     minWidth: 118,
@@ -489,28 +492,28 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     marginVertical: 1,
   },
-  styleMenuItemActive: { backgroundColor: withAlpha(colors.primary, 0.12) },
+  styleMenuItemActive: { backgroundColor: withAlpha(c.primary, 0.12) },
   styleMenuText: {
     fontFamily: 'DMMono_400Regular',
     fontSize: 11,
-    color: colors.mutedForeground,
+    color: c.mutedForeground,
     textTransform: 'uppercase',
   },
-  styleMenuTextActive: { color: colors.primary, fontFamily: 'DMMono_500Medium' },
+  styleMenuTextActive: { color: c.primary, fontFamily: 'DMMono_500Medium' },
 
   routeDot: {
     width: 10, height: 10, borderRadius: 5,
-    borderWidth: 1.5, borderColor: colors.primaryForeground,
+    borderWidth: 1.5, borderColor: c.primaryForeground,
   },
-  routeDotStart: { backgroundColor: colors.markerStart },
-  routeDotEnd: { backgroundColor: colors.markerEnd },
+  routeDotStart: { backgroundColor: c.markerStart },
+  routeDotEnd: { backgroundColor: c.markerEnd },
   routeDotDimmed: { opacity: 0.35 },
 
   fab: {
     position: 'absolute',
     right: 20,
     width: 56, height: 56, borderRadius: 28,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     justifyContent: 'center', alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -536,7 +539,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     width: '100%',
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: 18,
     padding: 16,
     shadowColor: '#000',
@@ -545,9 +548,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
-  emptyTitle: { ...typography.bodyBold, fontSize: 15, color: colors.foreground },
+  emptyTitle: { ...typography.bodyBold, fontSize: 15, color: c.foreground },
   emptySub: {
     ...typography.body, fontSize: 12,
-    color: colors.mutedForeground, marginTop: 2, lineHeight: 16,
+    color: c.mutedForeground, marginTop: 2, lineHeight: 16,
   },
 });

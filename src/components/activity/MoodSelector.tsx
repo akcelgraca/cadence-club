@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { colors, typography } from '../../lib/theme';
+import { useColors } from '../../hooks/useColors';
+import { typography, type Colors } from '../../lib/theme';
 import { useTranslation } from 'react-i18next';
 
 const MOOD_IMAGES = [
@@ -16,6 +18,8 @@ interface MoodSelectorProps {
 }
 
 export function MoodSelector({ selected, onSelect }: MoodSelectorProps) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   return (
     <View style={styles.container}>
@@ -36,17 +40,17 @@ export function MoodSelector({ selected, onSelect }: MoodSelectorProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Colors) => StyleSheet.create({
   container: { alignItems: 'center' },
-  title: { ...typography.bodyMedium, fontSize: 16, marginBottom: 12, color: colors.foreground },
+  title: { ...typography.bodyMedium, fontSize: 16, marginBottom: 12, color: c.foreground },
   row: { flexDirection: 'row', gap: 8 },
   button: {
     alignItems: 'center',
     padding: 10,
     borderRadius: 12,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
   },
-  buttonSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  buttonSelected: { backgroundColor: c.primary, borderColor: c.primary },
   moodImage: { width: 44, height: 44, borderRadius: 22, marginBottom: 4 },
-  label: { ...typography.body, fontSize: 10, color: colors.mutedForeground },
+  label: { ...typography.body, fontSize: 10, color: c.mutedForeground },
 });

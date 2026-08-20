@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useColors } from '../../../hooks/useColors';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
   Alert, ActivityIndicator, KeyboardAvoidingView, Platform,
@@ -13,8 +14,9 @@ import { useAuthStore } from '../../../store/authStore';
 import { useSettingsStore } from '../../../store/settingsStore';
 import { computeSplits } from '../../../utils/splits';
 import { formatDistance } from '../../../utils/formatDistance';
-import { colors, typography, withAlpha } from '../../../lib/theme';
+import { typography, withAlpha, type Colors } from '../../../lib/theme';
 import { useTranslation } from 'react-i18next';
+import { goBackOr } from '../../../lib/navigation';
 
 /**
  * Cria um troço a partir de um pedaço desta atividade.
@@ -23,6 +25,8 @@ import { useTranslation } from 'react-i18next';
  * é a unidade que as pessoas usam para falar de percursos ("do km 2 ao 5").
  */
 export default function NewSegmentScreen() {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const queryClient = useQueryClient();
@@ -97,7 +101,7 @@ export default function NewSegmentScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.center} edges={['top']}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={c.primary} />
       </SafeAreaView>
     );
   }
@@ -110,7 +114,7 @@ export default function NewSegmentScreen() {
             ? t('segment_new_no_gps')
             : t('segment_new_not_yours')}
         </Text>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => goBackOr(`/activity/${id}`)}>
           <Text style={styles.backBtnText}>{t('route_creator_back')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -120,13 +124,13 @@ export default function NewSegmentScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+        <TouchableOpacity onPress={() => goBackOr(`/activity/${id}`)} hitSlop={12}>
+          <Ionicons name="chevron-back" size={24} color={c.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('activity_create_segment')}</Text>
         <TouchableOpacity onPress={handleCreate} disabled={saving || !name.trim()} hitSlop={12}>
           {saving
-            ? <ActivityIndicator size="small" color={colors.primary} />
+            ? <ActivityIndicator size="small" color={c.primary} />
             : <Text style={[styles.saveText, !name.trim() && styles.saveTextOff]}>{t('create')}</Text>}
         </TouchableOpacity>
       </View>
@@ -134,7 +138,7 @@ export default function NewSegmentScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
           <View style={styles.notice}>
-            <Ionicons name="people-outline" size={14} color={colors.mutedForeground} />
+            <Ionicons name="people-outline" size={14} color={c.mutedForeground} />
             <Text style={styles.noticeText}>
               Os troços são partilhados com a comunidade. Quem passar por aqui vê o próprio
               tempo e a média do grupo — não há classificações.
@@ -145,7 +149,7 @@ export default function NewSegmentScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('segment_new_name_placeholder')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={name}
             onChangeText={setName}
             maxLength={120}
@@ -191,7 +195,7 @@ export default function NewSegmentScreen() {
           </ScrollView>
 
           <View style={styles.summary}>
-            <Ionicons name="git-commit-outline" size={16} color={colors.primary} />
+            <Ionicons name="git-commit-outline" size={16} color={c.primary} />
             <Text style={styles.summaryText}>
               {startUnit === 0
                 ? t('segment_new_range_from_start', {
@@ -212,7 +216,7 @@ export default function NewSegmentScreen() {
           <TextInput
             style={[styles.input, styles.inputMulti]}
             placeholder={t('segment_new_notes_placeholder')}
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={c.mutedForeground}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -226,7 +230,7 @@ export default function NewSegmentScreen() {
             disabled={saving || !name.trim()}
           >
             {saving
-              ? <ActivityIndicator color={colors.primaryForeground} />
+              ? <ActivityIndicator color={c.primaryForeground} />
               : <Text style={styles.createBtnText}>{t('activity_create_segment')}</Text>}
           </TouchableOpacity>
         </ScrollView>
@@ -235,74 +239,74 @@ export default function NewSegmentScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const makeStyles = (c: Colors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   center: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
-    padding: 32, gap: 14, backgroundColor: colors.background,
+    padding: 32, gap: 14, backgroundColor: c.background,
   },
-  errorText: { ...typography.body, fontSize: 15, color: colors.mutedForeground, textAlign: 'center' },
+  errorText: { ...typography.body, fontSize: 15, color: c.mutedForeground, textAlign: 'center' },
   backBtn: {
     paddingHorizontal: 20, paddingVertical: 10,
-    borderRadius: 20, backgroundColor: colors.primary,
+    borderRadius: 20, backgroundColor: c.primary,
   },
-  backBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: colors.primaryForeground },
+  backBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 13, color: c.primaryForeground },
 
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border,
   },
-  headerTitle: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 18, color: colors.foreground },
-  saveText: { fontFamily: 'Barlow_600SemiBold', fontSize: 15, color: colors.primary },
-  saveTextOff: { color: colors.mutedForeground },
+  headerTitle: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 18, color: c.foreground },
+  saveText: { fontFamily: 'Barlow_600SemiBold', fontSize: 15, color: c.primary },
+  saveTextOff: { color: c.mutedForeground },
 
   form: { padding: 16, paddingBottom: 48 },
 
   notice: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,
     padding: 12, borderRadius: 12,
-    backgroundColor: withAlpha(colors.primary, 0.07),
+    backgroundColor: withAlpha(c.primary, 0.07),
   },
   noticeText: {
-    ...typography.body, fontSize: 12, color: colors.mutedForeground,
+    ...typography.body, fontSize: 12, color: c.mutedForeground,
     flex: 1, lineHeight: 17,
   },
 
   label: {
     fontFamily: 'Barlow_600SemiBold', fontSize: 13,
-    color: colors.foreground, marginTop: 20, marginBottom: 8,
+    color: c.foreground, marginTop: 20, marginBottom: 8,
   },
   input: {
-    ...typography.body, fontSize: 15, color: colors.foreground,
-    backgroundColor: colors.card, borderRadius: 12,
+    ...typography.body, fontSize: 15, color: c.foreground,
+    backgroundColor: c.card, borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 12,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: c.border,
   },
   inputMulti: { minHeight: 80, paddingTop: 12 },
 
   chipRow: { gap: 8, paddingRight: 8, paddingVertical: 2 },
   chip: {
     paddingHorizontal: 14, paddingVertical: 9, borderRadius: 18,
-    backgroundColor: withAlpha(colors.foreground, 0.06),
+    backgroundColor: withAlpha(c.foreground, 0.06),
   },
-  chipActive: { backgroundColor: colors.primary },
+  chipActive: { backgroundColor: c.primary },
   chipDisabled: { opacity: 0.35 },
-  chipText: { fontFamily: 'DMMono_400Regular', fontSize: 12, color: colors.mutedForeground },
-  chipTextActive: { color: colors.primaryForeground },
+  chipText: { fontFamily: 'DMMono_400Regular', fontSize: 12, color: c.mutedForeground },
+  chipTextActive: { color: c.primaryForeground },
 
   summary: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     marginTop: 18, padding: 14, borderRadius: 12,
-    backgroundColor: colors.card,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
+    backgroundColor: c.card,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: c.border,
   },
-  summaryText: { ...typography.bodyMedium, fontSize: 14, color: colors.foreground, flex: 1 },
+  summaryText: { ...typography.bodyMedium, fontSize: 14, color: c.foreground, flex: 1 },
 
   createBtn: {
-    backgroundColor: colors.primary, borderRadius: 14,
+    backgroundColor: c.primary, borderRadius: 14,
     paddingVertical: 15, alignItems: 'center', marginTop: 28,
   },
   createBtnOff: { opacity: 0.45 },
-  createBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 16, color: colors.primaryForeground },
+  createBtnText: { fontFamily: 'Barlow_600SemiBold', fontSize: 16, color: c.primaryForeground },
 });

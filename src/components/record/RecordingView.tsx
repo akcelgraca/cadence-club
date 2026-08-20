@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useEffect } from 'react';
+import { useColors } from '../../hooks/useColors';
+import { useEffect, useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useActivityStore } from '../../store/activityStore';
@@ -9,10 +10,12 @@ import { formatDuration } from '../../utils/dateHelpers';
 import { formatDistance } from '../../utils/formatDistance';
 import { formatPace, formatSpeed, formatElevation } from '../../utils/formatPace';
 import { calculateActivityCalories } from '../../utils/calculateCalories';
-import { colors } from '../../lib/theme';
-import { styles } from './recordStyles';
+import { type Colors } from '../../lib/theme';
+import { makeStyles } from './recordStyles';
 
 export function RecordingView({ startTracking }: { startTracking: () => Promise<void> }) {
+  const c = useColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const pause = useActivityStore((s) => s.pause);
   const elapsedTime = useActivityStore((s) => s.elapsedTime);
@@ -112,7 +115,7 @@ export function RecordingView({ startTracking }: { startTracking: () => Promise<
 
       {/* Pausa — alvo grande, é o botão que se procura a correr */}
       <TouchableOpacity style={styles.pauseButton} onPress={pause} activeOpacity={0.7}>
-        <Ionicons name="pause" size={22} color={colors.foreground} />
+        <Ionicons name="pause" size={22} color={c.foreground} />
         <Text style={styles.pauseButtonText}>{t('activity_pause_button')}</Text>
       </TouchableOpacity>
     </View>

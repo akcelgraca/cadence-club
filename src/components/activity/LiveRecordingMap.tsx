@@ -74,7 +74,7 @@ export function LiveRecordingMap({
               id="route-finish"
               coordinate={routePath![routePath!.length - 1]}
               type="finish"
-              label="Fim"
+              label={t('segment_new_end')}
             />
           )}
         </>

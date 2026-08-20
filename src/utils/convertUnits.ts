@@ -1,7 +1,8 @@
 import type { UnitSystem } from '../lib/types';
 
 // Conversion factors
-const MI_PER_KM = 0.621371;
+/** Exportada porque a voz precisa da mesma conversão que o ecrã. */
+export const MI_PER_KM = 0.621371;
 const FT_PER_M = 3.28084;
 
 /**
