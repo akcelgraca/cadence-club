@@ -777,7 +777,13 @@ Coisas já mordidas, para não se repetirem:
 
 ## 9. Plano de teste no iPhone físico
 
-**Build instalada: 20 ago 2026, 14:03.** Acrescenta as unidades do feedback de
+**Build instalada: 20 ago 2026, 14:41.** Acrescenta os meses do histórico e os
+desafios traduzidos. **Precisa da migração 048 aplicada** — sem ela os nomes dos
+desafios continuam a vir em português da base de dados, e o `is_collective`
+chega `undefined`, o que faz o desafio da comunidade mostrar progresso
+individual.
+
+**Build anterior: 20 ago 2026, 14:03.** Acrescenta as unidades do feedback de
 voz. Verificada por inspeção do bundle: `voice_mi_plural` e `voice_mi_singular`
 presentes.
 
