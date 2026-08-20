@@ -199,6 +199,38 @@ num clube de milhares deixa de ser.
 - ✅ Três testes protegem isto: dicionários com as mesmas chaves, mesmos marcadores `{{}}` nos dois idiomas, e todas as chamadas `t()` a apontar para chaves existentes (uma chave em falta não estoira — aparece em bruto ao utilizador)
 - Padrão: constantes com texto visível guardam `i18n_key`, nunca o texto
 
+#### 3.2.3 Push — os cinco elos, e como saber qual partiu (20 ago)
+
+Uma notificação atravessa cinco passos. Falha em qualquer um deles e o sintoma é
+o mesmo — o telemóvel não toca — por isso vale a pena saber distingui-los.
+
+| # | Elo | Como confirmar |
+|---|---|---|
+| 1 | A app regista e guarda o token | `SELECT id, expo_push_token FROM profiles WHERE id = auth.uid();` — tem de começar por `ExponentPushToken[` |
+| 2 | A ação cria a linha | `SELECT type, message, created_at FROM notifications ORDER BY created_at DESC LIMIT 5;` |
+| 3 | O webhook chama a função | Logs da edge function no painel do Supabase. **Sem invocação nenhuma, é aqui.** |
+| 4 | A função aceita e envia | Os mesmos logs: `Muted by preference`, `No valid push token`, ou erro do Expo |
+| 5 | Expo → FCM → telemóvel | Se 1–4 estão bem e não chega nada, é credencial de plataforma |
+
+**⚠️ O elo 3 nunca foi documentado como configurado.** A função está publicada,
+mas quem a chama é um *Database Webhook* do Supabase em `INSERT` na tabela
+`notifications` — e não há registo de esse webhook alguma vez ter sido criado.
+Publicar a função não basta: sem o webhook ela nunca é invocada. Configura-se em
+**Database → Webhooks**, com o URL da função e o cabeçalho
+`x-webhook-secret`.
+
+**Corrigido no mesmo dia, e é de segurança:** a verificação do segredo era
+opcional — `if (expectedToken && ...)`. Bastava a variável `WEBHOOK_SECRET` não
+existir para o endpoint ficar **aberto**, e ele lê `user_id` e `message` do
+corpo do pedido. Quem soubesse o URL mandava a notificação que quisesse a quem
+quisesse; o URL de uma edge function é derivável do projeto, e este repositório
+é público. Passou a recusar com 500 quando o segredo não está configurado, que é
+o critério que o `revenuecat-webhook` já usava.
+
+**Consequência prática:** é preciso definir `WEBHOOK_SECRET` nas variáveis da
+edge function **e** pôr o mesmo valor no cabeçalho do webhook. Se já havia push
+a funcionar sem segredo, para até isso estar feito — de propósito.
+
 #### 3.2.2 FCM — push no Android (20 ago) 🚧
 
 Metade feita: a que é código. A outra metade precisa de contas, e essa é tua.
