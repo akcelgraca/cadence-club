@@ -199,6 +199,37 @@ num clube de milhares deixa de ser.
 - ✅ Três testes protegem isto: dicionários com as mesmas chaves, mesmos marcadores `{{}}` nos dois idiomas, e todas as chamadas `t()` a apontar para chaves existentes (uma chave em falta não estoira — aparece em bruto ao utilizador)
 - Padrão: constantes com texto visível guardam `i18n_key`, nunca o texto
 
+#### 3.2.7 `POST /auth/v1/signup` a devolver 500 (20 ago) 🔎
+
+O erro que aparecia no ecrã das preferências de treino **não era desse ecrã**: o
+passo do questionário no onboarding só faz `setStep('profile')`, sem um único
+pedido à rede. Os logs do Supabase mostraram a origem:
+
+```
+POST | 500 | /auth/v1/signup | okhttp/4.10.0
+```
+
+**Não é do código da app.** O `signUp` é `supabase.auth.signUp({ email,
+password })` e mais nada — não há como devolver 500 do lado do cliente. Também
+não é de nada que se tenha mudado a 19 ou 20 de agosto: não existe gatilho em
+`auth.users` neste projeto (o perfil é criado pela app, no `createProfile`), e a
+coluna `notification_prefs` da 047 tem `DEFAULT`, portanto não interfere.
+
+**Hipótese principal, por confirmar nos *Auth logs*:** o serviço de email
+embutido do Supabase tem um limite baixo de envios por hora nos projetos
+gratuitos, e com a confirmação de email ligada o GoTrue devolve **500** quando o
+limite é excedido. Foram criadas várias contas de teste hoje, entre o iPhone e o
+emulador.
+
+**Como confirmar:** *Logs → Auth*. A mensagem do GoTrue distingue os casos —
+`Error sending confirmation email` (limite/SMTP) de `Database error saving new
+user` (gatilho ou restrição).
+
+**Desbloqueio para testar:** *Authentication → Providers → Email* e desligar
+**Confirm email** enquanto se testa; ou configurar SMTP próprio, que é preciso
+de qualquer forma antes de lançar — o serviço embutido do Supabase é
+explicitamente só para desenvolvimento.
+
 #### 3.2.6 Os builds do EAS saíam sem credenciais (20 ago) ✅
 
 Dois problemas reportados no Android, **uma só causa**: o login com Google
