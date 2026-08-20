@@ -744,7 +744,11 @@ Coisas já mordidas, para não se repetirem:
 
 ## 9. Plano de teste no iPhone físico
 
-**Build instalada: 20 ago 2026, 13:34.** Acrescenta as 21 correções de i18n
+**Build instalada: 20 ago 2026, 14:03.** Acrescenta as unidades do feedback de
+voz. Verificada por inspeção do bundle: `voice_mi_plural` e `voice_mi_singular`
+presentes.
+
+**Build anterior: 20 ago 2026, 13:34.** Acrescenta as 21 correções de i18n
 (abas do Social e do Perfil, meses, locales, tempo relativo, voz). Verificada
 por inspeção do bundle: `social_tab_clubs`, `profile_tab_summary`,
 `share_card_time`, `time_hours`, `voice_km_plural` e `localeTag` presentes, e
