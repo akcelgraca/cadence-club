@@ -36,7 +36,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 **O risco de hoje é comercial, não técnico.** A canalização de monetização está construída e desligada (4.6), a importação de ficheiros está na fase 1 (4.5), e nada disto se pode testar a sério nem lançar sem **conta paga da Apple**. A app também não tem utilizadores, por isso não há dados de retenção para decidir preços.
 
-⚠️ **A `047_more_notifications.sql` está por aplicar** (20 ago). A `044`, a `045` e a `046` foram aplicadas a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
+✅ **Não há migrações por aplicar.** A `047` foi aplicada a 20 ago; a `044`, a `045` e a `046` a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
 
 ---
 
@@ -123,7 +123,10 @@ vivem em ficheiros que o TypeScript não lê. O teste do SQL ignora comentários
 porque a primeira versão passava a olhar para uma linha comentada.
 
 **Por fazer, e nenhuma destas é código:**
-1. **Aplicar a migração 047** na Supabase
+1. ✅ **Migração 047 aplicada** (20 ago). O `VERIFICAR_MIGRACOES.sql` passou a
+   cobri-la: o `CHECK` com os quatro tipos novos, a coluna
+   `notification_prefs`, e os quatro gatilhos, um a um — faltar um deles é não
+   haver notificação nenhuma desse lado, e em silêncio
 2. **Redeployar a `send-push`** (`supabase functions deploy send-push`) — sem
    isto os tipos novos chegam com o título genérico e os interruptores não
    filtram
