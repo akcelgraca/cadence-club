@@ -36,7 +36,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 **O risco de hoje é comercial, não técnico.** A canalização de monetização está construída e desligada (4.6), a importação de ficheiros está na fase 1 (4.5), e nada disto se pode testar a sério nem lançar sem **conta paga da Apple**. A app também não tem utilizadores, por isso não há dados de retenção para decidir preços.
 
-✅ **Não há migrações por aplicar.** A `047` foi aplicada a 20 ago; a `044`, a `045` e a `046` a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
+⚠️ **A `049_push_webhook.sql` está por aplicar.** A `047` e a `048` foram aplicadas a 20 ago; a `044`, a `045` e a `046` a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
 
 ---
 
@@ -198,6 +198,324 @@ num clube de milhares deixa de ser.
 - 1188 chaves em cada idioma
 - ✅ Três testes protegem isto: dicionários com as mesmas chaves, mesmos marcadores `{{}}` nos dois idiomas, e todas as chamadas `t()` a apontar para chaves existentes (uma chave em falta não estoira — aparece em bruto ao utilizador)
 - Padrão: constantes com texto visível guardam `i18n_key`, nunca o texto
+
+#### 3.2.6 Os builds do EAS saíam sem credenciais (20 ago) ✅
+
+Dois problemas reportados no Android, **uma só causa**: o login com Google
+abria o browser e não voltava, e guardar as preferências de treino falhava com
+`UnknownHostException: unable to resolve`.
+
+O bundle do APK continha `YOUR_PROJECT.supabase.co`, `your-anon-key` e
+`your-mapbox-token` — os valores por omissão do `constants.ts`. O `.env` é
+gitignorado, portanto não chega ao EAS, e o `eas.json` só levava as duas
+variáveis do PostHog acrescentadas a 19 ago. **As outras cinco nunca lá
+estiveram.**
+
+**Porque é que o Google falhava sem dar erro:** o
+`supabase.auth.signInWithOAuth` constrói o URL do lado do cliente, sem chamada à
+rede. O browser abria em `https://YOUR_PROJECT.supabase.co/auth/v1/authorize`,
+essa página nunca resolvia, e não havia redirecionamento de volta. Nada a ver com
+o esquema `cadence://`, que está registado no manifesto Android.
+
+**Correção:** todas as `EXPO_PUBLIC_*` passaram para **variáveis de ambiente do
+EAS** (`preview` e `production`), e não para o `eas.json` — o repositório é
+público. Os blocos `env` saíram do `eas.json`, e cada perfil passou a declarar
+`"environment"`. **Sem esse campo as variáveis do EAS não se aplicam**, portanto
+dava para fazer tudo o resto certo e continuar a falhar.
+
+✅ `npm run env:check` — compara os nomes que o código lê (em todo o `src`, não
+só no `constants.ts`: os IDs do Google são lidos noutro sítio, e a primeira
+versão do script não os via) contra o `.env` e contra os dois ambientes do EAS,
+e confirma que cada perfil aponta para um ambiente. As chaves do RevenueCat
+estão marcadas como vazias de propósito, para o script não nos treinar a
+ignorá-lo.
+
+O `constants.ts` passou também a avisar em `__DEV__` quando está a usar valores
+de exemplo — `UnknownHostException` não diz a ninguém que faltou uma variável.
+
+**Build corrigido:** `ae062eab-691d-4250-96c0-d593973ae15f`. Verificado por
+inspeção do bundle **antes** de o dar como bom: `oygedlkjvshcforoklbr` presente,
+`YOUR_PROJECT.supabase.co` e os restantes valores de exemplo a zero. Instalado
+no emulador, arranca sem erros de resolução no logcat.
+
+**Nota:** as builds de iPhone nunca tiveram este problema — são locais, pelo
+`xcodebuild`, que lê o `.env` do disco. Só os builds do EAS saíam vazios.
+
+#### 3.2.5 Emulador Android — o que já existe nesta máquina (20 ago)
+
+Não é preciso instalar nada. O SDK está em `~/Library/Android/sdk` (sem Android
+Studio) e já tem emulador e imagens.
+
+**AVD existente: `Pixel_4`** — API 29 (Android 10), `google_apis_playstore`,
+`arm64-v8a`. Nativo no Apple Silicon, portanto rápido.
+
+**O detalhe que decide se serve para testar push:** a imagem tem de trazer os
+Google Play services. Confirmado neste AVD (`com.google.android.gms` e
+`com.android.vending` instalados). Uma imagem **AOSP** — sem `google_apis` nem
+`playstore` no nome — **não recebe FCM**, e o sintoma seria o
+`getExpoPushTokenAsync()` a devolver null sem explicação.
+
+```bash
+~/Library/Android/sdk/emulator/emulator -list-avds
+~/Library/Android/sdk/emulator/emulator -avd Pixel_4 &
+~/Library/Android/sdk/platform-tools/adb install -r caminho/para.apk
+```
+
+APK de 20 ago instalado e a app confirmada a arrancar (ecrã de login, em inglês,
+que é o idioma do emulador — serve também de prova do i18n).
+
+**⚠️ Limitação que apanha o login com Google:** o Chrome que vem nesta imagem é
+a versão **101 (2022)** e rebenta ao arrancar num emulador só arm64:
+
+```
+java.lang.RuntimeException: Unable to start activity CustomTabActivity:
+  Starting in 64-bit mode requires the 64-bit native library.
+```
+
+Como o login com Google passa por um *custom tab*, **não há como o testar neste
+emulador** — e o erro que aparece na app é consequência disso, não um defeito da
+app. O logcat confirma que o pedido já sai com o URL certo
+(`oygedlkjvshcforoklbr.supabase.co`), portanto a correção das variáveis de
+ambiente funcionou; é o browser que morre a seguir.
+
+Testar o Google num **Android físico**. Tudo o resto — push, modo escuro, i18n,
+entrada por email — testa-se bem no emulador.
+
+**Limitação deste AVD:** Android 10 não traz Health Connect (só é nativo a
+partir do Android 14). Para testar a sincronização de saúde é preciso instalar a
+app Health Connect pela Play Store, ou criar um AVD de API 34 — a imagem
+`android-34/google_apis` já está descarregada, falta só o AVD.
+
+#### 3.2.4 Build Android — falhou, corrigido, e passou (20 ago) ✅
+
+Primeiro build Android desde 1 de agosto. **Falhou no Gradle**, com o erro
+inútil do EAS: `EAS_BUILD_UNKNOWN_GRADLE_ERROR`.
+
+Build: `746617dc-3d52-4fbb-8252-36d73c741e74`, perfil `preview`.
+
+**Já descartado — não vale a pena repetir:**
+
+- **Token de download do Mapbox.** Era a primeira suspeita, porque existe um
+  `MAPBOX_DOWNLOAD_TOKEN` no ambiente `preview` do EAS e o nome está errado (o
+  Gradle procura `MAPBOX_DOWNLOADS_TOKEN`, com S). Mas o próprio
+  `@rnmapbox/maps` diz no `android/install.md`: *"mapbox lifted auth requirement
+  from downloads so MAPBOX_DOWNLOADS_TOKEN is no longer needed"*. O nome errado
+  é ruído, não a causa.
+- **A cadeia de plugins de configuração.** `npx expo config --type prebuild`
+  corre sem erro, e um `expo prebuild --platform android` numa cópia do projeto
+  gera o `android/` completo.
+- **O `googleServicesFile` acrescentado hoje.** O prebuild copia o
+  `google-services.json` para `android/app/`, mete o
+  `classpath 'com.google.gms:google-services:4.4.4'` e aplica o plugin. Está
+  tudo onde devia.
+
+**Encontrado pelo `expo-doctor`, e por resolver — mas nenhum explica um erro de
+Gradle:**
+- falta o peer `expo-font`, exigido pelo `@expo/vector-icons` (risco de crash em
+  runtime, não de build)
+- `expo@57.0.8` apanhado pela regressão de memória do Hermes V1; a correção é o
+  `57.0.9`
+- 19 pacotes fora das versões do SDK 57
+
+**Não dá para reproduzir localmente:** o Mac só tem JDK 11, e o RN 0.86 precisa
+do 17.
+
+**A causa, encontrada no log:**
+
+```
+uses-sdk:minSdkVersion 24 cannot be smaller than version 26 declared in
+library [androidx.health.connect:connect-client:1.1.0]
+```
+
+O `react-native-health-connect` arrasta o `connect-client:1.1.0`, que exige
+**minSdk 26**. O projeto estava em 24, o valor por omissão do Expo. Falhou no
+`processReleaseMainManifest`, ao fim de 25 minutos de compilação — nada a ver
+com FCM, Mapbox ou o que quer que se tenha feito hoje. Estava à espera desde que
+o Health Connect entrou.
+
+**Correção:** `expo-build-properties` com `android.minSdkVersion: 26`.
+Confirmado num prebuild de teste que sai `android.minSdkVersion=26` no
+`gradle.properties` — vale a pena confirmar antes de gastar outro build de 25
+minutos.
+
+**O que se perde:** Android 7.0 e 7.1 (API 24–25). Sem consequência prática — o
+Health Connect exige 26 de qualquer forma, portanto esses telemóveis nunca
+poderiam usar a sincronização de saúde. O Android 8.0 é de 2017.
+
+**De caminho:** instalado o `expo-font` que faltava (peer do
+`@expo/vector-icons`); sem ele há risco de crash em runtime fora do Expo Go, e
+seria neste mesmo build.
+
+**✅ Build seguinte passou.** `c286e71a-651c-4819-a8f7-6b50b3244502`, perfil
+`preview`. APK:
+https://expo.dev/artifacts/eas/f2OVWUQLqHN6pjtmzGZSM_rDRAxaTdzdZ5FhFbMwy7Y.apk
+
+É o **primeiro build Android desde 1 de agosto**, e o primeiro de sempre com
+push a funcionar. Traz tudo o que se fez a 19 e 20 de agosto: modo escuro,
+notificações de clubes/mensagens/eventos, frequência cardíaca (incluindo a
+leitura do Health Connect), calorias por modalidade, as 21 correções de i18n, as
+unidades da voz, e os ecrãs que já não ficam sem saída.
+
+**Como se chega aos logs do EAS a partir do código** — porque não é óbvio e
+custou a descobrir: o `eas build:view --json` traz um campo `logFiles` com um
+URL assinado (válido 15 minutos). O conteúdo vem em **Brotli**, não em gzip: o
+`curl --compressed` desta máquina não o aceita e o Python não traz descompressor
+de Brotli, mas o `node` traz — `zlib.brotliDecompressSync`. As linhas são JSON,
+uma por linha, com a mensagem em `msg`.
+
+#### 3.2.3 Push — os cinco elos, e como saber qual partiu (20 ago)
+
+Uma notificação atravessa cinco passos. Falha em qualquer um deles e o sintoma é
+o mesmo — o telemóvel não toca — por isso vale a pena saber distingui-los.
+
+| # | Elo | Como confirmar |
+|---|---|---|
+| 1 | A app regista e guarda o token | `SELECT id, expo_push_token FROM profiles WHERE id = auth.uid();` — tem de começar por `ExponentPushToken[` |
+| 2 | A ação cria a linha | `SELECT type, message, created_at FROM notifications ORDER BY created_at DESC LIMIT 5;` |
+| 3 | O webhook chama a função | Logs da edge function no painel do Supabase. **Sem invocação nenhuma, é aqui.** |
+| 4 | A função aceita e envia | Os mesmos logs: `Muted by preference`, `No valid push token`, ou erro do Expo |
+| 5 | Expo → FCM → telemóvel | Se 1–4 estão bem e não chega nada, é credencial de plataforma |
+
+**Ficheiro de diagnóstico:** `supabase/VERIFICAR_PUSH.sql`. Colar no SQL Editor.
+Responde pelos elos 1, 2 e 3 sem depender de encontrar nada no painel — os
+"Database Webhooks" do Supabase são, por baixo, um gatilho que chama
+`supabase_functions.http_request`, portanto vê-se em `pg_trigger`. Os elos 4 e 5
+só se veem nos logs da edge function.
+
+**No painel, a opção mudou de sítio:** deixou de estar em *Database → Webhooks*.
+Nas versões recentes está em **Integrations → Database Webhooks** (ou pela
+pesquisa do painel, `Ctrl/Cmd + K` → "webhook").
+
+**⚠️ O elo 3 estava mesmo em falta — confirmado a 20 ago.** O
+`VERIFICAR_PUSH.sql` devolveu `EM FALTA` no gatilho da `notifications`. A edge
+function estava publicada desde sempre e **nunca foi invocada uma única vez**:
+publicar uma edge function não cria nada na base de dados. Era esta a razão de
+nunca ter chegado um push.
+
+**Migração `049_push_webhook.sql`** cria o gatilho. Faz-se por SQL em vez de
+pelo painel por duas razões: fica em migração como tudo o resto, e o segredo vem
+do **Vault** em vez de ficar colado à definição do gatilho.
+
+Antes de aplicar, guardar o segredo uma vez (e **não** commitar):
+
+```sql
+SELECT vault.create_secret('o-mesmo-valor-do-WEBHOOK_SECRET', 'send_push_webhook_secret');
+```
+
+**Duas decisões dentro do gatilho que valem a pena registar:**
+
+- **Sem segredo, avisa e deixa passar — nunca rebenta.** O gatilho corre dentro
+  da transação de quem mandou a mensagem; um `RAISE` faria a mensagem não chegar
+  a ser gravada. Trocar uma notificação em falta por uma mensagem perdida é um
+  mau negócio. O aviso fica nos logs do Postgres.
+- **`net.http_post` é assíncrono.** Põe o pedido numa fila e devolve logo, para
+  que ninguém fique à espera da resposta do Expo para ver a sua mensagem
+  enviada.
+
+**Corrigido no mesmo dia, e é de segurança:** a verificação do segredo era
+opcional — `if (expectedToken && ...)`. Bastava a variável `WEBHOOK_SECRET` não
+existir para o endpoint ficar **aberto**, e ele lê `user_id` e `message` do
+corpo do pedido. Quem soubesse o URL mandava a notificação que quisesse a quem
+quisesse; o URL de uma edge function é derivável do projeto, e este repositório
+é público. Passou a recusar com 500 quando o segredo não está configurado, que é
+o critério que o `revenuecat-webhook` já usava.
+
+**Consequência prática:** é preciso definir `WEBHOOK_SECRET` nas variáveis da
+edge function **e** pôr o mesmo valor no cabeçalho do webhook. Se já havia push
+a funcionar sem segredo, para até isso estar feito — de propósito.
+
+#### 3.2.2 FCM — push no Android (20 ago) 🚧
+
+Metade feita: a que é código. A outra metade precisa de contas, e essa é tua.
+
+**Feito:**
+- `app.json` → `android.googleServicesFile: "./google-services.json"`
+- `.gitignore` → a **chave da conta de serviço** fica de fora
+  (`*-firebase-adminsdk-*.json`, `service-account*.json`); o
+  `google-services.json` **não** é ignorado, porque só tem identificadores
+  públicos e o EAS precisa dele no build — é o que a documentação do Expo diz
+- `npm run push:check` — confirma o que dá para confirmar daqui
+
+**Feito a 20 ago:** projeto Firebase `cadence-club-7e32c` criado, app Android
+registada com `com.akcelgraca.cadence`, e o `google-services.json` na raiz.
+O `npm run push:check` confirma que o pacote bate certo nos dois ficheiros.
+
+O `google-services.json` **está commitado**, apesar de o repositório ser
+público. É o que a documentação do Expo indica — o ficheiro só tem
+identificadores públicos, e a chave Android que traz é restringida pelo nome do
+pacote e pela assinatura — e é o que permite ao EAS lê-lo no build sem mais
+configuração. A alternativa (variável de ambiente do tipo ficheiro no EAS, com
+o `app.json` convertido em `app.config.js`) foi ponderada e posta de lado por
+acrescentar peças sem resolver um risco real.
+
+**Feito a 20 ago, 15:4x:** chave da conta de serviço gerada e carregada no EAS.
+
+```
+Push Notifications (FCM V1): Google Service Account Key For FCM V1
+Project ID    cadence-club-7e32c
+Client Email  firebase-adminsdk-fbsvc@cadence-club-7e32c.iam.gserviceaccount.com
+```
+
+**A dúvida do perfil ficou respondida pela própria CLI**, que não a documentação:
+a mensagem é *"Google Service Account Key assigned to **com.akcelgraca.cadence**
+for FCM V1"* — ou seja, a chave é atribuída ao **identificador da aplicação**, e
+não ao perfil de build. Serve os quatro perfis. Não é preciso repetir para o
+`preview`.
+
+⚠️ **A chave privada ficou dentro da pasta do projeto**
+(`cadence-club-7e32c-firebase-adminsdk-fbsvc-….json`), que é um repositório
+**público**. Confirmado que o git a ignora, que nunca foi rastreada e que não
+aparece em nenhum commit — o padrão `*-firebase-adminsdk-*.json` apanha-a. Mesmo
+assim, o sítio certo para ela é fora do projeto: já cumpriu a função, e o EAS
+guarda-a do lado dele.
+
+**Por fazer:**
+5. `eas build --platform android --profile preview`
+
+**O erro que o `push:check` existe para apanhar** não dá erro nenhum: se o
+pacote no `app.json` não for o mesmo que está registado no
+`google-services.json`, o Firebase não reconhece a app, o
+`getExpoPushTokenAsync()` devolve `null`, e a app corre sem se queixar. Só se
+descobre a olhar para um telemóvel que nunca recebe nada. Verificado com um
+ficheiro de pacote trocado — o script apanha e diz quais são os dois valores.
+
+⚠️ **Atenção ao `expo prebuild`:** o `app.json` já aponta para o
+`google-services.json`. Enquanto o ficheiro não existir, um `prebuild` falha a
+dizer que não o encontra. Os builds de iPhone não passam por lá (vão direitos ao
+`xcodebuild` sobre a pasta `ios/`), portanto não são afetados.
+
+#### 3.9.2 i18n — histórico e desafios (20 ago)
+
+**Histórico.** A lista de meses estava **meio migrada**: `'month_jan'` a
+`'month_jun'` já eram chaves, `'Julho'` a `'Dezembro'` ainda eram texto — e
+**nenhuma das doze passava pelo `t()`**. Ou seja, de janeiro a junho o cabeçalho
+de secção mostrava literalmente `month_jan`, e de julho a dezembro mostrava
+português em qualquer idioma. As duas metades estavam erradas de maneiras
+diferentes. Também `'atividade'/'atividades'` e o `em` da linha do ano.
+
+A secção passou a guardar `monthI18nKey` e `year` em vez de um título montado,
+com o `t()` no momento de desenhar — o que permite trocar de idioma sem
+reconstruir as secções.
+
+**Desafios.** O nome e a descrição vinham da base de dados em português, e o
+ecrã mostrava-os em bruto. Seguiu-se o caminho da migração `041` (planos de
+treino): a `048` converte as colunas em chaves de tradução, e a app resolve ao
+desenhar. Linhas que escapem ao mapeamento continuam como estão, porque o
+i18next devolve a própria chave quando não a encontra.
+
+**⚠️ E um bug que a tradução ia expor:** o ecrã decidia se um desafio era
+coletivo com `challenge.name.toLowerCase().includes('comunidade')`. Além de
+frágil, morria assim que o nome passasse a ser uma chave — e morria **em
+silêncio**, com o desafio da comunidade a mostrar progresso individual. Passou
+a coluna `is_collective`, que obrigou a recriar a
+`get_challenges_with_progress()` (o `CREATE OR REPLACE` não muda o tipo de
+retorno — dá `42P13`).
+
+✅ **Migração `048` aplicada** (20 ago). O `VERIFICAR_MIGRACOES.sql` cobre-a, incluindo a verificação de que a RPC devolve mesmo o `is_collective` — se não devolver, o ecrã recebe `undefined` e o desafio coletivo mostra progresso individual, sem erro nenhum.
+
+O teste dos meses foi alargado: só cobria os abreviados, e foi por isso que
+deixou passar `'Julho', 'Agosto'` no histórico. Agora cobre também os nomes por
+extenso, verificado com uma regressão de propósito.
 
 #### 3.9.1 i18n — o que a migração deixou para trás (20 ago)
 
@@ -725,6 +1043,43 @@ Coisas já mordidas, para não se repetirem:
 2. ✅ Migrações verificadas — **042 e 043 aplicadas e completas**; a **025** é só um salto na numeração
 3. ✅ Meta App ID metido, e build com ele instalada no iPhone
 
+### ✅ Analytics a recolher (20 ago)
+A `EXPO_PUBLIC_POSTHOG_KEY` está preenchida, validada contra o `eu.i.posthog.com`
+(`npm run analytics:check` devolve OK), presente no `eas.json` para os perfis
+`preview` e `production`, **e dentro da build instalada no iPhone**. O relógio
+dos 30 dias de retenção está a contar a partir de hoje.
+
+### O que bloqueia mais coisas ao mesmo tempo
+**A conta Apple Developer paga (99 USD/ano)** deixou de ser uma decisão isolada
+e passou a ser o único item com semanas de espera. Bloqueia, em simultâneo:
+
+- **push remoto no iOS** — sem `aps-environment` não há entrega, e é por isso
+  que as notificações da migração 047 não se conseguem testar no telemóvel
+- **HealthKit no iPhone físico** — logo, a frequência cardíaca vinda do Watch
+- **produtos nas lojas** — logo, toda a monetização
+- **builds que não expiram em 7 dias** — a atual expira a **25 ago**
+
+Tudo o resto é código, e código faz-se a qualquer momento. Isto não.
+
+**O FCM não é alternativa à conta Apple — é a outra metade.** Os documentos do
+Expo são explícitos: *"For Android, you need to configure Firebase Cloud
+Messaging (FCM)"* e *"A paid Apple Developer Account is required to generate
+credentials"* (iOS). Uma por plataforma, e nenhuma substitui a outra:
+
+| Plataforma | Credencial | Custo |
+|---|---|---|
+| iOS | conta Apple Developer paga + chave APNs | 99 USD/ano |
+| Android | projeto Firebase + `google-services.json` + chave de serviço no Expo | grátis |
+
+Como esta app se destina às duas lojas — e todos os builds anteriores foram
+Android APK via EAS — **as duas vão ser precisas**. A conta Apple não dispensa
+o FCM.
+
+Onde o FCM é de facto alternativa é **só para testar agora**: serve para provar
+que o encadeamento funciona (gatilho → linha em `notifications` → edge function
+→ Expo → telemóvel) sem esperar pela Apple. Prova-o num Android, não no iPhone.
+Ver 3.2.1.
+
 ### Curto prazo (validação)
 4. **Testar a app instalada no iPhone** — tudo o que foi construído desde 1 de agosto (segments, zonas de privacidade, fila offline, fotos, analytics, partilha) está pela primeira vez num telemóvel
 5. **Testar a sincronização de saúde no simulador iOS** — repor o entitlement, `npx expo run:ios` (Debug), e usar o `devSeed` pelas Definições. Cobre os casos 1, 2, 3, 5 e 6 do README do módulo, sem custar nada (ver secção 4.1)
@@ -744,7 +1099,13 @@ Coisas já mordidas, para não se repetirem:
 
 ## 9. Plano de teste no iPhone físico
 
-**Build instalada: 20 ago 2026, 14:03.** Acrescenta as unidades do feedback de
+**Build instalada: 20 ago 2026, 14:41.** Acrescenta os meses do histórico e os
+desafios traduzidos. **Precisa da migração 048 aplicada** — sem ela os nomes dos
+desafios continuam a vir em português da base de dados, e o `is_collective`
+chega `undefined`, o que faz o desafio da comunidade mostrar progresso
+individual.
+
+**Build anterior: 20 ago 2026, 14:03.** Acrescenta as unidades do feedback de
 voz. Verificada por inspeção do bundle: `voice_mi_plural` e `voice_mi_singular`
 presentes.
 

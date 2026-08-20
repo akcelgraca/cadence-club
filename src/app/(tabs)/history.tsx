@@ -20,9 +20,14 @@ import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 20;
 
-const MONTH_NAMES = [
+/**
+ * Chaves, não texto. Estava meio migrado: as seis primeiras já eram chaves e as
+ * seis últimas tinham ficado em português — e nenhuma delas passava pelo `t()`,
+ * portanto os meses de janeiro a junho apareciam no ecrã como `month_jan`.
+ */
+const MONTH_KEYS = [
   'month_jan', 'month_feb', 'month_mar', 'month_apr', 'month_may', 'month_jun',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+  'month_jul', 'month_aug', 'month_sep', 'month_oct', 'month_nov', 'month_dec',
 ];
 
 /** tipo de atividade → categoria, construído uma vez. */
@@ -34,7 +39,9 @@ for (const cat of ACTIVITY_CATEGORIES) {
 }
 
 interface MonthSection {
-  title: string;
+  monthI18nKey: string;
+  /** Null no ano corrente — nesse caso o título é só o mês. */
+  year: number | null;
   monthKey: string;
   distance: number;
   count: number;
@@ -108,9 +115,10 @@ export default function HistoryScreen() {
         const isThisYear = year === new Date().getFullYear();
         section = {
           monthKey,
-          title: isThisYear
-            ? MONTH_NAMES[date.getMonth()]
-            : `${MONTH_NAMES[date.getMonth()]} ${year}`,
+          // Só a chave e o ano; o `t()` fica para o momento de desenhar, que é
+          // o que permite trocar de idioma sem reconstruir as secções.
+          monthI18nKey: MONTH_KEYS[date.getMonth()],
+          year: isThisYear ? null : year,
           distance: 0,
           count: 0,
           data: [],
@@ -162,10 +170,12 @@ export default function HistoryScreen() {
         )}
         renderSectionHeader={({ section }) => (
           <View style={styles.monthHeader}>
-            <Text style={styles.monthTitle}>{section.title}</Text>
+            <Text style={styles.monthTitle}>
+              {t(section.monthI18nKey as any)}{section.year ? ` ${section.year}` : ''}
+            </Text>
             <Text style={styles.monthTotals}>
               {formatDistance(section.distance, unitSystem)} · {section.count}{' '}
-              {section.count === 1 ? 'atividade' : 'atividades'}
+              {t(section.count === 1 ? 'history_activity_one' : 'history_activity_other')}
             </Text>
           </View>
         )}
@@ -174,8 +184,9 @@ export default function HistoryScreen() {
             <View style={styles.headerArea}>
               <Text style={styles.pageTitle}>{t('tab_history')}</Text>
               <Text style={styles.yearLine}>
-                {new Date().getFullYear()} · {formatDistance(yearSummary.distance, unitSystem)} em{' '}
-                {yearSummary.count} {yearSummary.count === 1 ? 'atividade' : 'atividades'}
+                {new Date().getFullYear()} · {formatDistance(yearSummary.distance, unitSystem)}{' '}
+                {t('history_year_in')} {yearSummary.count}{' '}
+                {t(yearSummary.count === 1 ? 'history_activity_one' : 'history_activity_other')}
               </Text>
             </View>
             <FilterPills

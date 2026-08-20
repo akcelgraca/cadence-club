@@ -50,7 +50,7 @@ export function ChallengesCard() {
             <View style={styles.iconWrap}>
               <Ionicons name="trophy" size={16} color={c.primary} />
             </View>
-            <Text style={styles.cardTitle} numberOfLines={1}>{featured.name}</Text>
+            <Text style={styles.cardTitle} numberOfLines={1}>{t(featured.name as any)}</Text>
           </View>
 
           <View style={styles.progressRow}>

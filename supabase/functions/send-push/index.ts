@@ -156,9 +156,22 @@ Deno.serve(async (req: Request) => {
   }
 
   // Auth via custom header (Supabase API gateway intercepts Authorization)
-  const webhookSecret = req.headers.get("x-webhook-secret");
+  // Sem segredo configurado recusa-se tudo, em vez de deixar passar.
+  //
+  // O `if (expectedToken && ...)` que aqui estava tornava a verificacao
+  // opcional: bastava a variavel nao existir para o endpoint ficar aberto. E um
+  // endpoint aberto que le `user_id` e `message` do corpo do pedido e um
+  // problema a serio — quem soubesse o URL mandava a notificacao que quisesse
+  // a quem quisesse. O URL de uma edge function e derivavel do projeto, e este
+  // repositorio e publico.
+  //
+  // E o mesmo criterio que o `revenuecat-webhook` ja usava.
   const expectedToken = Deno.env.get("WEBHOOK_SECRET");
-  if (expectedToken && webhookSecret !== expectedToken) {
+  if (!expectedToken) {
+    console.error("[send-push] WEBHOOK_SECRET nao configurado — pedido recusado");
+    return new Response("Webhook secret not configured", { status: 500 });
+  }
+  if (req.headers.get("x-webhook-secret") !== expectedToken) {
     return new Response("Unauthorized", { status: 401 });
   }
 

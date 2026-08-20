@@ -27,7 +27,10 @@ export function ChallengeRow({ challenge, onChanged }: { challenge: Challenge; o
   const { t } = useTranslation();
   const isOver = daysLeft(challenge.end_date) === 0;
   // Meta da comunidade: progresso coletivo; restantes: progresso individual
-  const isCollective = challenge.name.toLowerCase().includes('comunidade');
+  // Vem da coluna `is_collective` (migração 048). Antes era adivinhado com
+  // `name.includes('comunidade')`, que morria assim que o nome passasse a ser
+  // uma chave de tradução — e morria em silêncio.
+  const isCollective = challenge.is_collective === true;
   const value = isCollective ? challenge.community_progress : challenge.my_progress;
   const pct = challenge.goal > 0 ? Math.min(1, value / challenge.goal) : 0;
 
@@ -45,8 +48,8 @@ export function ChallengeRow({ challenge, onChanged }: { challenge: Challenge; o
     <View style={[styles.card, isOver && styles.cardOver]}>
       <View style={styles.cardTop}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>{challenge.name}</Text>
-          <Text style={styles.cardDesc}>{challenge.description}</Text>
+          <Text style={styles.cardTitle}>{t(challenge.name as any)}</Text>
+          <Text style={styles.cardDesc}>{t(challenge.description as any)}</Text>
         </View>
         {isCollective && (
           <View style={styles.collectivePill}>
@@ -79,12 +82,12 @@ export function ChallengeRow({ challenge, onChanged }: { challenge: Challenge; o
         <View style={styles.footerMeta}>
           <Ionicons name="time-outline" size={12} color={c.mutedForeground} />
           <Text style={styles.footerText}>
-            {isOver ? 'Terminado' : `${daysLeft(challenge.end_date)} dias`}
+            {isOver ? t('challenge_over') : t('challenge_days_left', { n: daysLeft(challenge.end_date) })}
           </Text>
         </View>
         {isCollective && challenge.joined && (
           <Text style={styles.footerText}>
-            · o teu contributo: {formatChallengeValue(challenge.my_progress, challenge.type)}
+            {t('challenge_your_contribution', { value: formatChallengeValue(challenge.my_progress, challenge.type) })}
           </Text>
         )}
         <View style={{ flex: 1 }} />
@@ -94,7 +97,7 @@ export function ChallengeRow({ challenge, onChanged }: { challenge: Challenge; o
             onPress={toggle}
           >
             <Text style={[styles.joinText, challenge.joined && styles.joinTextActive]}>
-              {challenge.joined ? 'A participar' : 'Participar'}
+              {challenge.joined ? t('challenge_joined') : t('challenge_join')}
             </Text>
           </TouchableOpacity>
         )}

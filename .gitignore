@@ -47,3 +47,18 @@ yarn-error.*
 
 # supabase CLI local state (contém pooler-url com credenciais)
 supabase/.temp/
+
+# FCM (notificações Android)
+#
+# O `google-services.json` **é para commitar** — só tem identificadores
+# públicos, e o EAS precisa dele no build. É o que a documentação do Expo diz.
+#
+# A chave da conta de serviço é o oposto: dá acesso de envio ao projeto
+# Firebase inteiro. Vive no computador, sobe uma vez para o EAS, e nunca entra
+# no repositório.
+*-firebase-adminsdk-*.json
+service-account*.json
+# O snippet do Admin SDK, na própria página onde a chave se gera, chama-lhe
+# `serviceAccountKey.json` — é o nome para que mais gente lhe pega ao renomear.
+serviceAccountKey*.json
+*serviceAccount*.json

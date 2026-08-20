@@ -107,7 +107,11 @@ describe('texto fixo no JSX', () => {
  */
 describe('datas e locales fixos', () => {
   it('ninguém escreve nomes de mês à mão', () => {
-    const meses = /'(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)'\s*,\s*'/;
+    // Abreviados e por extenso. A primeira versão só cobria os abreviados, e
+    // por isso deixou passar `['month_jan', ..., 'Julho', 'Agosto', ...]` no
+    // histórico — uma lista meio migrada, com seis chaves e seis literais.
+    const meses =
+      /'(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez|Janeiro|Fevereiro|Mar[cç]o|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)'\s*,\s*'/;
     const infratores = ficheirosDeEcra().filter((f) =>
       meses.test(readFileSync(path.join(raiz, f), 'utf8')),
     );

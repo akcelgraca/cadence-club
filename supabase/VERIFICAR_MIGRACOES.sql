@@ -1,4 +1,4 @@
--- Diagnóstico: as migrações 042 a 047 estão aplicadas e completas?
+-- Diagnóstico: as migrações 042 a 048 estão aplicadas e completas?
 --
 -- Correr no SQL Editor do Supabase. É UMA só instrução de propósito: o editor
 -- do Supabase só mostra o resultado da última instrução, por isso um ficheiro
@@ -139,6 +139,32 @@ SELECT * FROM (
 
   UNION ALL SELECT 25, '047_more_notifications', 'gatilho: evento de clube',
     CASE WHEN EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trigger_notify_on_club_event')
+         THEN 'APLICADA' ELSE 'EM FALTA' END
+
+  -- ── 048: desafios traduzíveis ────────────────────────────────────────────
+  UNION ALL SELECT 26, '048_challenge_i18n', 'nomes convertidos em chaves',
+    CASE WHEN NOT EXISTS (SELECT 1 FROM public.challenges WHERE name ILIKE '%comunidade%'
+                                                             OR name ILIKE 'Desafio do%')
+         THEN 'APLICADA' ELSE 'EM FALTA' END
+
+  UNION ALL SELECT 27, '048_challenge_i18n', 'coluna challenges.is_collective',
+    CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns
+                      WHERE table_schema='public' AND table_name='challenges'
+                        AND column_name='is_collective')
+         THEN 'APLICADA' ELSE 'EM FALTA' END
+
+  -- Se a função não devolver a coluna, o ecrã recebe `undefined` e o desafio
+  -- coletivo passa a mostrar progresso individual — sem erro nenhum.
+  UNION ALL SELECT 28, '048_challenge_i18n', 'RPC devolve is_collective',
+    CASE WHEN EXISTS (
+      SELECT 1 FROM pg_proc p
+      WHERE p.proname = 'get_challenges_with_progress'
+        AND array_to_string(p.proargnames, ',') ILIKE '%is_collective%'
+    ) THEN 'APLICADA' ELSE 'EM FALTA' END
+
+  -- Deve haver exatamente um coletivo entre os desafios de arranque.
+  UNION ALL SELECT 29, '048_challenge_i18n', 'desafio coletivo marcado',
+    CASE WHEN (SELECT count(*) FROM public.challenges WHERE is_collective) >= 1
          THEN 'APLICADA' ELSE 'EM FALTA' END
 ) t
 ORDER BY ord;

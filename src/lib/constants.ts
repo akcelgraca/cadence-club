@@ -4,6 +4,35 @@ export const MAPBOX_ACCESS_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN || 'your
 export const POSTHOG_API_KEY = process.env.EXPO_PUBLIC_POSTHOG_KEY || 'your-posthog-key';
 export const POSTHOG_HOST = process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com';
 
+/**
+ * Diz alto quando a configuração não chegou ao build.
+ *
+ * Sem isto, o sintoma é `UnknownHostException: unable to resolve` ao primeiro
+ * pedido — o que não diz a ninguém que faltou uma variável de ambiente. Foi o
+ * que aconteceu no primeiro build Android com push: o `.env` é gitignorado,
+ * portanto não sobe para o EAS, e a app saiu a apontar para
+ * `https://YOUR_PROJECT.supabase.co`.
+ *
+ * `npm run env:check` verifica isto antes de se gastar um build.
+ */
+if (__DEV__ && process.env.NODE_ENV !== 'test') {
+  const emFalta = Object.entries({
+    EXPO_PUBLIC_SUPABASE_URL: SUPABASE_URL,
+    EXPO_PUBLIC_SUPABASE_ANON_KEY: SUPABASE_ANON_KEY,
+    EXPO_PUBLIC_MAPBOX_TOKEN: MAPBOX_ACCESS_TOKEN,
+  })
+    .filter(([, v]) => v.startsWith('your-') || v.includes('YOUR_PROJECT'))
+    .map(([k]) => k);
+
+  if (emFalta.length > 0) {
+    console.warn(
+      `[config] a usar valores de exemplo: ${emFalta.join(', ')}. ` +
+        'A app vai falhar com UnknownHostException ao primeiro pedido. ' +
+        'Corre `npm run env:check`.',
+    );
+  }
+}
+
 // Activity
 export const GPS_INTERVAL = 5000; // 5 segundos entre leituras GPS
 export const GPS_DISTANCE_THRESHOLD = 5; // 5 metros de threshold

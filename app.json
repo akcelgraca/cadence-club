@@ -47,6 +47,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.akcelgraca.cadence",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -114,7 +115,16 @@
           "NSHealthUpdateUsageDescription": "O Cadence Club guarda os treinos que gravas na app Saúde."
         }
       ],
-      "react-native-health-connect"
+      "react-native-health-connect",
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ],
     "extra": {
       "router": {},
