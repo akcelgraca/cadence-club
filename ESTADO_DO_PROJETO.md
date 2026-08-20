@@ -223,10 +223,28 @@ configuração. A alternativa (variável de ambiente do tipo ficheiro no EAS, co
 o `app.json` convertido em `app.config.js`) foi ponderada e posta de lado por
 acrescentar peças sem resolver um risco real.
 
-**Por fazer, e só tu podes:**
-3. Project settings → Service accounts → **Generate new private key**
-4. `eas credentials` → Android → Google Service Account → **FCM V1** → carregar
-   essa chave
+**Feito a 20 ago, 15:4x:** chave da conta de serviço gerada e carregada no EAS.
+
+```
+Push Notifications (FCM V1): Google Service Account Key For FCM V1
+Project ID    cadence-club-7e32c
+Client Email  firebase-adminsdk-fbsvc@cadence-club-7e32c.iam.gserviceaccount.com
+```
+
+**A dúvida do perfil ficou respondida pela própria CLI**, que não a documentação:
+a mensagem é *"Google Service Account Key assigned to **com.akcelgraca.cadence**
+for FCM V1"* — ou seja, a chave é atribuída ao **identificador da aplicação**, e
+não ao perfil de build. Serve os quatro perfis. Não é preciso repetir para o
+`preview`.
+
+⚠️ **A chave privada ficou dentro da pasta do projeto**
+(`cadence-club-7e32c-firebase-adminsdk-fbsvc-….json`), que é um repositório
+**público**. Confirmado que o git a ignora, que nunca foi rastreada e que não
+aparece em nenhum commit — o padrão `*-firebase-adminsdk-*.json` apanha-a. Mesmo
+assim, o sítio certo para ela é fora do projeto: já cumpriu a função, e o EAS
+guarda-a do lado dele.
+
+**Por fazer:**
 5. `eas build --platform android --profile preview`
 
 **O erro que o `push:check` existe para apanhar** não dá erro nenhum: se o
