@@ -199,6 +199,44 @@ num clube de milhares deixa de ser.
 - ✅ Três testes protegem isto: dicionários com as mesmas chaves, mesmos marcadores `{{}}` nos dois idiomas, e todas as chamadas `t()` a apontar para chaves existentes (uma chave em falta não estoira — aparece em bruto ao utilizador)
 - Padrão: constantes com texto visível guardam `i18n_key`, nunca o texto
 
+#### 3.2.4 Build Android falhou — o que já está descartado (20 ago) ❌
+
+Primeiro build Android desde 1 de agosto. **Falhou no Gradle**, com o erro
+inútil do EAS: `EAS_BUILD_UNKNOWN_GRADLE_ERROR`.
+
+Build: `746617dc-3d52-4fbb-8252-36d73c741e74`, perfil `preview`.
+
+**Já descartado — não vale a pena repetir:**
+
+- **Token de download do Mapbox.** Era a primeira suspeita, porque existe um
+  `MAPBOX_DOWNLOAD_TOKEN` no ambiente `preview` do EAS e o nome está errado (o
+  Gradle procura `MAPBOX_DOWNLOADS_TOKEN`, com S). Mas o próprio
+  `@rnmapbox/maps` diz no `android/install.md`: *"mapbox lifted auth requirement
+  from downloads so MAPBOX_DOWNLOADS_TOKEN is no longer needed"*. O nome errado
+  é ruído, não a causa.
+- **A cadeia de plugins de configuração.** `npx expo config --type prebuild`
+  corre sem erro, e um `expo prebuild --platform android` numa cópia do projeto
+  gera o `android/` completo.
+- **O `googleServicesFile` acrescentado hoje.** O prebuild copia o
+  `google-services.json` para `android/app/`, mete o
+  `classpath 'com.google.gms:google-services:4.4.4'` e aplica o plugin. Está
+  tudo onde devia.
+
+**Encontrado pelo `expo-doctor`, e por resolver — mas nenhum explica um erro de
+Gradle:**
+- falta o peer `expo-font`, exigido pelo `@expo/vector-icons` (risco de crash em
+  runtime, não de build)
+- `expo@57.0.8` apanhado pela regressão de memória do Hermes V1; a correção é o
+  `57.0.9`
+- 19 pacotes fora das versões do SDK 57
+
+**Não dá para reproduzir localmente:** o Mac só tem JDK 11, e o RN 0.86 precisa
+do 17.
+
+**O que falta é o log.** Os logs do EAS estão atrás da sessão do expo.dev, e não
+há comando na CLI que os traga (`eas build:view` devolve o mesmo erro genérico).
+É preciso abrir a fase **"Run gradlew"** na página do build.
+
 #### 3.2.3 Push — os cinco elos, e como saber qual partiu (20 ago)
 
 Uma notificação atravessa cinco passos. Falha em qualquer um deles e o sintoma é
