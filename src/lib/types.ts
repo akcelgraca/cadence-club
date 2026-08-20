@@ -296,6 +296,8 @@ export interface Challenge {
   name: string;
   description: string;
   type: ChallengeType;
+  /** Meta somada por toda a comunidade. Antes era adivinhado pelo nome. */
+  is_collective?: boolean;
   goal: number;
   start_date: string;
   end_date: string;

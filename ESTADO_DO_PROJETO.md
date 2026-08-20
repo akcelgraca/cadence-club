@@ -36,7 +36,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 **O risco de hoje é comercial, não técnico.** A canalização de monetização está construída e desligada (4.6), a importação de ficheiros está na fase 1 (4.5), e nada disto se pode testar a sério nem lançar sem **conta paga da Apple**. A app também não tem utilizadores, por isso não há dados de retenção para decidir preços.
 
-✅ **Não há migrações por aplicar.** A `047` foi aplicada a 20 ago; a `044`, a `045` e a `046` a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
+⚠️ **A `048_challenge_i18n.sql` está por aplicar.** A `047` foi aplicada a 20 ago; a `044`, a `045` e a `046` a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
 
 ---
 
@@ -198,6 +198,39 @@ num clube de milhares deixa de ser.
 - 1188 chaves em cada idioma
 - ✅ Três testes protegem isto: dicionários com as mesmas chaves, mesmos marcadores `{{}}` nos dois idiomas, e todas as chamadas `t()` a apontar para chaves existentes (uma chave em falta não estoira — aparece em bruto ao utilizador)
 - Padrão: constantes com texto visível guardam `i18n_key`, nunca o texto
+
+#### 3.9.2 i18n — histórico e desafios (20 ago)
+
+**Histórico.** A lista de meses estava **meio migrada**: `'month_jan'` a
+`'month_jun'` já eram chaves, `'Julho'` a `'Dezembro'` ainda eram texto — e
+**nenhuma das doze passava pelo `t()`**. Ou seja, de janeiro a junho o cabeçalho
+de secção mostrava literalmente `month_jan`, e de julho a dezembro mostrava
+português em qualquer idioma. As duas metades estavam erradas de maneiras
+diferentes. Também `'atividade'/'atividades'` e o `em` da linha do ano.
+
+A secção passou a guardar `monthI18nKey` e `year` em vez de um título montado,
+com o `t()` no momento de desenhar — o que permite trocar de idioma sem
+reconstruir as secções.
+
+**Desafios.** O nome e a descrição vinham da base de dados em português, e o
+ecrã mostrava-os em bruto. Seguiu-se o caminho da migração `041` (planos de
+treino): a `048` converte as colunas em chaves de tradução, e a app resolve ao
+desenhar. Linhas que escapem ao mapeamento continuam como estão, porque o
+i18next devolve a própria chave quando não a encontra.
+
+**⚠️ E um bug que a tradução ia expor:** o ecrã decidia se um desafio era
+coletivo com `challenge.name.toLowerCase().includes('comunidade')`. Além de
+frágil, morria assim que o nome passasse a ser uma chave — e morria **em
+silêncio**, com o desafio da comunidade a mostrar progresso individual. Passou
+a coluna `is_collective`, que obrigou a recriar a
+`get_challenges_with_progress()` (o `CREATE OR REPLACE` não muda o tipo de
+retorno — dá `42P13`).
+
+⚠️ **Migração `048_challenge_i18n.sql` por aplicar.**
+
+O teste dos meses foi alargado: só cobria os abreviados, e foi por isso que
+deixou passar `'Julho', 'Agosto'` no histórico. Agora cobre também os nomes por
+extenso, verificado com uma regressão de propósito.
 
 #### 3.9.1 i18n — o que a migração deixou para trás (20 ago)
 
