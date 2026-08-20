@@ -70,5 +70,22 @@ SELECT * FROM (
     SELECT type, message FROM public.notifications
     ORDER BY created_at DESC LIMIT 3
   ) n
+
+  -- ── Elo 4: o que a edge function respondeu ───────────────────────────────
+  -- O `pg_net` guarda as respostas. Isto poupa a ida aos logs da função e diz
+  -- logo qual é o problema:
+  --
+  --   200  a função aceitou. Se mesmo assim nada chega, é elo 5 (credenciais)
+  --   401  o segredo do Vault não bate com o WEBHOOK_SECRET da função
+  --   500  a função não tem WEBHOOK_SECRET definido
+  --   sem linhas nenhumas → o gatilho não está a disparar (volta ao elo 3)
+  UNION ALL
+  SELECT 8, 'elo 4', 'resposta HTTP ' || r.status_code::text,
+         left(coalesce(r.content, r.error_msg, ''), 60)
+  FROM (
+    SELECT status_code, content, error_msg
+    FROM net._http_response
+    ORDER BY created DESC LIMIT 5
+  ) r
 ) t
 ORDER BY ord;
