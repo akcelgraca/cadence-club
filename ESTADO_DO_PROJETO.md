@@ -199,6 +199,48 @@ num clube de milhares deixa de ser.
 - ✅ Três testes protegem isto: dicionários com as mesmas chaves, mesmos marcadores `{{}}` nos dois idiomas, e todas as chamadas `t()` a apontar para chaves existentes (uma chave em falta não estoira — aparece em bruto ao utilizador)
 - Padrão: constantes com texto visível guardam `i18n_key`, nunca o texto
 
+#### 3.2.6 Os builds do EAS saíam sem credenciais (20 ago) ✅
+
+Dois problemas reportados no Android, **uma só causa**: o login com Google
+abria o browser e não voltava, e guardar as preferências de treino falhava com
+`UnknownHostException: unable to resolve`.
+
+O bundle do APK continha `YOUR_PROJECT.supabase.co`, `your-anon-key` e
+`your-mapbox-token` — os valores por omissão do `constants.ts`. O `.env` é
+gitignorado, portanto não chega ao EAS, e o `eas.json` só levava as duas
+variáveis do PostHog acrescentadas a 19 ago. **As outras cinco nunca lá
+estiveram.**
+
+**Porque é que o Google falhava sem dar erro:** o
+`supabase.auth.signInWithOAuth` constrói o URL do lado do cliente, sem chamada à
+rede. O browser abria em `https://YOUR_PROJECT.supabase.co/auth/v1/authorize`,
+essa página nunca resolvia, e não havia redirecionamento de volta. Nada a ver com
+o esquema `cadence://`, que está registado no manifesto Android.
+
+**Correção:** todas as `EXPO_PUBLIC_*` passaram para **variáveis de ambiente do
+EAS** (`preview` e `production`), e não para o `eas.json` — o repositório é
+público. Os blocos `env` saíram do `eas.json`, e cada perfil passou a declarar
+`"environment"`. **Sem esse campo as variáveis do EAS não se aplicam**, portanto
+dava para fazer tudo o resto certo e continuar a falhar.
+
+✅ `npm run env:check` — compara os nomes que o código lê (em todo o `src`, não
+só no `constants.ts`: os IDs do Google são lidos noutro sítio, e a primeira
+versão do script não os via) contra o `.env` e contra os dois ambientes do EAS,
+e confirma que cada perfil aponta para um ambiente. As chaves do RevenueCat
+estão marcadas como vazias de propósito, para o script não nos treinar a
+ignorá-lo.
+
+O `constants.ts` passou também a avisar em `__DEV__` quando está a usar valores
+de exemplo — `UnknownHostException` não diz a ninguém que faltou uma variável.
+
+**Build corrigido:** `ae062eab-691d-4250-96c0-d593973ae15f`. Verificado por
+inspeção do bundle **antes** de o dar como bom: `oygedlkjvshcforoklbr` presente,
+`YOUR_PROJECT.supabase.co` e os restantes valores de exemplo a zero. Instalado
+no emulador, arranca sem erros de resolução no logcat.
+
+**Nota:** as builds de iPhone nunca tiveram este problema — são locais, pelo
+`xcodebuild`, que lê o `.env` do disco. Só os builds do EAS saíam vazios.
+
 #### 3.2.5 Emulador Android — o que já existe nesta máquina (20 ago)
 
 Não é preciso instalar nada. O SDK está em `~/Library/Android/sdk` (sem Android
