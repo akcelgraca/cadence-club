@@ -36,7 +36,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 **O risco de hoje é comercial, não técnico.** A canalização de monetização está construída e desligada (4.6), a importação de ficheiros está na fase 1 (4.5), e nada disto se pode testar a sério nem lançar sem **conta paga da Apple**. A app também não tem utilizadores, por isso não há dados de retenção para decidir preços.
 
-✅ **Não há migrações por aplicar.** A `047` e a `048` foram aplicadas a 20 ago; a `044`, a `045` e a `046` a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
+⚠️ **A `049_push_webhook.sql` está por aplicar.** A `047` e a `048` foram aplicadas a 20 ago; a `044`, a `045` e a `046` a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
 
 ---
 
@@ -299,12 +299,31 @@ só se veem nos logs da edge function.
 Nas versões recentes está em **Integrations → Database Webhooks** (ou pela
 pesquisa do painel, `Ctrl/Cmd + K` → "webhook").
 
-**⚠️ O elo 3 nunca foi documentado como configurado.** A função está publicada,
-mas quem a chama é um *Database Webhook* do Supabase em `INSERT` na tabela
-`notifications` — e não há registo de esse webhook alguma vez ter sido criado.
-Publicar a função não basta: sem o webhook ela nunca é invocada. Configura-se em
-**Database → Webhooks**, com o URL da função e o cabeçalho
-`x-webhook-secret`.
+**⚠️ O elo 3 estava mesmo em falta — confirmado a 20 ago.** O
+`VERIFICAR_PUSH.sql` devolveu `EM FALTA` no gatilho da `notifications`. A edge
+function estava publicada desde sempre e **nunca foi invocada uma única vez**:
+publicar uma edge function não cria nada na base de dados. Era esta a razão de
+nunca ter chegado um push.
+
+**Migração `049_push_webhook.sql`** cria o gatilho. Faz-se por SQL em vez de
+pelo painel por duas razões: fica em migração como tudo o resto, e o segredo vem
+do **Vault** em vez de ficar colado à definição do gatilho.
+
+Antes de aplicar, guardar o segredo uma vez (e **não** commitar):
+
+```sql
+SELECT vault.create_secret('o-mesmo-valor-do-WEBHOOK_SECRET', 'send_push_webhook_secret');
+```
+
+**Duas decisões dentro do gatilho que valem a pena registar:**
+
+- **Sem segredo, avisa e deixa passar — nunca rebenta.** O gatilho corre dentro
+  da transação de quem mandou a mensagem; um `RAISE` faria a mensagem não chegar
+  a ser gravada. Trocar uma notificação em falta por uma mensagem perdida é um
+  mau negócio. O aviso fica nos logs do Postgres.
+- **`net.http_post` é assíncrono.** Põe o pedido numa fila e devolve logo, para
+  que ninguém fique à espera da resposta do Expo para ver a sua mensagem
+  enviada.
 
 **Corrigido no mesmo dia, e é de segurança:** a verificação do segredo era
 opcional — `if (expectedToken && ...)`. Bastava a variável `WEBHOOK_SECRET` não

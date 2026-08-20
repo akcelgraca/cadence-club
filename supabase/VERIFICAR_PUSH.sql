@@ -20,8 +20,16 @@ SELECT * FROM (
       JOIN pg_proc  p ON p.oid = t.tgfoid
       WHERE c.relname = 'notifications'
         AND NOT t.tgisinternal
-        AND p.proname = 'http_request'
+        -- `http_request` é o que o painel do Supabase gera;
+        -- `notify_push_webhook` é o da migração 049.
+        AND p.proname IN ('http_request', 'notify_push_webhook')
     ) THEN 'EXISTE' ELSE 'EM FALTA  ← é aqui' END AS estado
+
+  -- O segredo tem de estar no Vault com este nome, senão o gatilho da 049
+  -- avisa nos logs e não envia. Só se verifica a existência, nunca o valor.
+  UNION ALL SELECT 1, 'elo 3', 'segredo send_push_webhook_secret no Vault',
+    CASE WHEN EXISTS (SELECT 1 FROM vault.secrets WHERE name = 'send_push_webhook_secret')
+         THEN 'EXISTE' ELSE 'EM FALTA' END
 
   -- Se o schema não existir, os Database Webhooks nunca foram ativados no
   -- projeto. Ativam-se uma vez, no painel.
