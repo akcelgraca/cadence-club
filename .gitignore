@@ -58,3 +58,7 @@ supabase/.temp/
 # no repositório.
 *-firebase-adminsdk-*.json
 service-account*.json
+# O snippet do Admin SDK, na própria página onde a chave se gera, chama-lhe
+# `serviceAccountKey.json` — é o nome para que mais gente lhe pega ao renomear.
+serviceAccountKey*.json
+*serviceAccount*.json
