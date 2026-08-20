@@ -9,31 +9,27 @@
       "distribution": "internal",
       "ios": {
         "simulator": true
-      }
+      },
+      "environment": "development"
     },
     "development-device": {
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
         "simulator": false
-      }
+      },
+      "environment": "development"
     },
     "preview": {
       "distribution": "internal",
       "ios": {
         "simulator": false
       },
-      "env": {
-        "EXPO_PUBLIC_POSTHOG_KEY": "phc_mTdwdwzbXZvoy5GemBRyPkRzktUA33TdEKqRa7c5tfnK",
-        "EXPO_PUBLIC_POSTHOG_HOST": "https://eu.i.posthog.com"
-      }
+      "environment": "preview"
     },
     "production": {
       "distribution": "store",
-      "env": {
-        "EXPO_PUBLIC_POSTHOG_KEY": "phc_mTdwdwzbXZvoy5GemBRyPkRzktUA33TdEKqRa7c5tfnK",
-        "EXPO_PUBLIC_POSTHOG_HOST": "https://eu.i.posthog.com"
-      }
+      "environment": "production"
     }
   },
   "submit": {
