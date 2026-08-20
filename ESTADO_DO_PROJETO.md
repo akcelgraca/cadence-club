@@ -776,9 +776,24 @@ e passou a ser o único item com semanas de espera. Bloqueia, em simultâneo:
 
 Tudo o resto é código, e código faz-se a qualquer momento. Isto não.
 
-**Alternativa barata e imediata para testar push:** montar o **FCM** (projeto
-Firebase, `google-services.json`, chave de serviço no Expo) e um build Android
-via EAS. Não custa dinheiro e não depende da Apple. Ver 3.2.1.
+**O FCM não é alternativa à conta Apple — é a outra metade.** Os documentos do
+Expo são explícitos: *"For Android, you need to configure Firebase Cloud
+Messaging (FCM)"* e *"A paid Apple Developer Account is required to generate
+credentials"* (iOS). Uma por plataforma, e nenhuma substitui a outra:
+
+| Plataforma | Credencial | Custo |
+|---|---|---|
+| iOS | conta Apple Developer paga + chave APNs | 99 USD/ano |
+| Android | projeto Firebase + `google-services.json` + chave de serviço no Expo | grátis |
+
+Como esta app se destina às duas lojas — e todos os builds anteriores foram
+Android APK via EAS — **as duas vão ser precisas**. A conta Apple não dispensa
+o FCM.
+
+Onde o FCM é de facto alternativa é **só para testar agora**: serve para provar
+que o encadeamento funciona (gatilho → linha em `notifications` → edge function
+→ Expo → telemóvel) sem esperar pela Apple. Prova-o num Android, não no iPhone.
+Ver 3.2.1.
 
 ### Curto prazo (validação)
 4. **Testar a app instalada no iPhone** — tudo o que foi construído desde 1 de agosto (segments, zonas de privacidade, fila offline, fotos, analytics, partilha) está pela primeira vez num telemóvel
