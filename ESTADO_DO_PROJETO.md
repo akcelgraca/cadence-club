@@ -264,6 +264,23 @@ Google Play services. Confirmado neste AVD (`com.google.android.gms` e
 APK de 20 ago instalado e a app confirmada a arrancar (ecrã de login, em inglês,
 que é o idioma do emulador — serve também de prova do i18n).
 
+**⚠️ Limitação que apanha o login com Google:** o Chrome que vem nesta imagem é
+a versão **101 (2022)** e rebenta ao arrancar num emulador só arm64:
+
+```
+java.lang.RuntimeException: Unable to start activity CustomTabActivity:
+  Starting in 64-bit mode requires the 64-bit native library.
+```
+
+Como o login com Google passa por um *custom tab*, **não há como o testar neste
+emulador** — e o erro que aparece na app é consequência disso, não um defeito da
+app. O logcat confirma que o pedido já sai com o URL certo
+(`oygedlkjvshcforoklbr.supabase.co`), portanto a correção das variáveis de
+ambiente funcionou; é o browser que morre a seguir.
+
+Testar o Google num **Android físico**. Tudo o resto — push, modo escuro, i18n,
+entrada por email — testa-se bem no emulador.
+
 **Limitação deste AVD:** Android 10 não traz Health Connect (só é nativo a
 partir do Android 14). Para testar a sincronização de saúde é preciso instalar a
 app Health Connect pela Play Store, ou criar um AVD de API 34 — a imagem
