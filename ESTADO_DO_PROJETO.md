@@ -36,7 +36,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 **O risco de hoje é comercial, não técnico.** A canalização de monetização está construída e desligada (4.6), a importação de ficheiros está na fase 1 (4.5), e nada disto se pode testar a sério nem lançar sem **conta paga da Apple**. A app também não tem utilizadores, por isso não há dados de retenção para decidir preços.
 
-⚠️ **A `048_challenge_i18n.sql` está por aplicar.** A `047` foi aplicada a 20 ago; a `044`, a `045` e a `046` a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
+✅ **Não há migrações por aplicar.** A `047` e a `048` foram aplicadas a 20 ago; a `044`, a `045` e a `046` a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
 
 ---
 
@@ -226,7 +226,7 @@ a coluna `is_collective`, que obrigou a recriar a
 `get_challenges_with_progress()` (o `CREATE OR REPLACE` não muda o tipo de
 retorno — dá `42P13`).
 
-⚠️ **Migração `048_challenge_i18n.sql` por aplicar.**
+✅ **Migração `048` aplicada** (20 ago). O `VERIFICAR_MIGRACOES.sql` cobre-a, incluindo a verificação de que a RPC devolve mesmo o `is_collective` — se não devolver, o ecrã recebe `undefined` e o desafio coletivo mostra progresso individual, sem erro nenhum.
 
 O teste dos meses foi alargado: só cobria os abreviados, e foi por isso que
 deixou passar `'Julho', 'Agosto'` no histórico. Agora cobre também os nomes por
