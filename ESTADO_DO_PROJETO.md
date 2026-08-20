@@ -122,6 +122,27 @@ function e o interruptor. Nenhum deles é apanhado pelo compilador — quatro
 vivem em ficheiros que o TypeScript não lê. O teste do SQL ignora comentários,
 porque a primeira versão passava a olhar para uma linha comentada.
 
+**⚠️ Hoje nenhum dispositivo consegue receber estes pushes.** Descoberto a 20
+ago, ao preparar o teste:
+
+- **iOS** — o `aps-environment` foi removido para assinar com Personal Team.
+  Sem conta Apple paga não há push remoto no iPhone. Já estava registado na
+  secção 9.4, mas vale a pena repeti-lo aqui: **compilar para o iPhone não
+  ajuda nada a testar isto**.
+- **Android** — nunca houve FCM. Não há `google-services.json`, nem
+  `android.googleServicesFile` no `app.json`, nem chave de serviço carregada no
+  Expo. Sem isso o `getExpoPushTokenAsync()` não devolve token no Android, e o
+  `exp.host` não tem por onde entregar. O caminho mais barato para testar push
+  a sério é este: **criar um projeto Firebase e ligar o FCM** — não custa nada
+  e não depende da Apple.
+
+**O que já dá para testar sem nada disso:** a **lista dentro da app**. Os
+gatilhos criam as linhas em `notifications` assim que a migração está aplicada,
+portanto pedir para entrar num clube, aceitar um pedido, mandar uma mensagem ou
+criar um evento já faz aparecer a notificação no ecrã de Notificações — falta
+só o toque no telemóvel. É metade da funcionalidade, e é a metade que se
+verifica hoje.
+
 **Por fazer, e nenhuma destas é código:**
 1. ✅ **Migração 047 aplicada** (20 ago). O `VERIFICAR_MIGRACOES.sql` passou a
    cobri-la: o `CHECK` com os quatro tipos novos, a coluna
