@@ -235,9 +235,18 @@ português com a app em inglês, com a voz do sistema também fixada em `pt-PT`.
 ✅ Dois testes de guarda novos: nenhum ficheiro de ecrã escreve nomes de mês à
 mão, nem fixa `'pt-PT'`. Verificados a partir uma regressão de propósito.
 
-⚠️ **Fica por decidir:** o feedback de voz diz sempre "quilómetros", mesmo com o
-sistema imperial escolhido nas Definições. É outro bug, e de unidades, não de
-idioma.
+✅ **Corrigido no mesmo dia:** o feedback de voz dizia sempre "quilómetros",
+mesmo com o sistema imperial escolhido. Eram **dois** números errados, não um:
+a distância era anunciada em quilómetros, e o **ritmo também vinha por
+quilómetro** — quem corre em milhas via uma coisa no ecrã e ouvia outra ao
+ouvido, sem que nenhum dos dois batesse certo. 5'00"/km são 8'02"/milha.
+
+A conta saiu do `useLocationTracker` para `utils/voiceAnnouncement.ts`, função
+pura com oito testes: é a parte com contas e a única que se engana em silêncio
+— um anúncio errado não deixa rasto nenhum. Trata também o caso de trocar de
+sistema a meio do treino: aos 5 km já anunciados, em milhas isso são 3, e
+repetir números que a pessoa já ouviu seria pior do que calar-se até passar à
+frente.
 
 ### 3.10 Autenticação
 - Email/password, Google Sign-In, Apple Sign-In

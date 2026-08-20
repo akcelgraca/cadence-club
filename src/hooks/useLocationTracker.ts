@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import i18n from '../lib/i18n';
 import { localeTag } from '../utils/dateHelpers';
+import { anuncioDeDistancia } from '../utils/voiceAnnouncement';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { Alert, AppState, AppStateStatus } from 'react-native';
@@ -46,7 +46,7 @@ export function useLocationTracker() {
   const startTimeRef = useRef<number>(0);
   const lastSpeedRef = useRef<number>(0);
   const autoPauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastAnnouncedKmRef = useRef<number>(0);
+  const lastAnnouncedRef = useRef<number>(0);
 
   const trackIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -111,7 +111,7 @@ export function useLocationTracker() {
     lastPointRef.current = null;
     paceWindowRef.current = [];
     if (isFreshStart) {
-      lastAnnouncedKmRef.current = 0;
+      lastAnnouncedRef.current = 0;
     }
 
     try {
@@ -199,21 +199,19 @@ export function useLocationTracker() {
             }
           }
 
-          // --- Voice feedback per km ---
+          // --- Voz ao fim de cada unidade completa (km ou milha) ---
           if (settings.voiceFeedback) {
-            const kmCompleted = Math.floor(totalDistance / 1000);
-            if (kmCompleted > lastAnnouncedKmRef.current) {
-              lastAnnouncedKmRef.current = kmCompleted;
-              const paceMin = currentPace ? Math.floor(currentPace / 60) : 0;
-              const paceSec = currentPace ? Math.floor(currentPace % 60) : 0;
-              const paceStr = currentPace ? `${paceMin}'${paceSec.toString().padStart(2, '0')}` : '--';
-              // O texto e o idioma da voz andam juntos: falar português com
-              // a app em inglês soa a erro, e o contrário lê mal os números.
-              const text = i18n.t(
-                kmCompleted > 1 ? 'voice_km_plural' : 'voice_km_singular',
-                { km: kmCompleted, pace: paceStr },
-              );
-              Speech.speak(text, { language: localeTag() });
+            const anuncio = anuncioDeDistancia(
+              totalDistance,
+              currentPace,
+              settings.unitSystem,
+              lastAnnouncedRef.current,
+            );
+            if (anuncio) {
+              lastAnnouncedRef.current = anuncio.marco;
+              // O idioma da voz acompanha o texto: falar português com a app
+              // em inglês soa a erro, e o contrário lê mal os números.
+              Speech.speak(anuncio.texto, { language: localeTag() });
             }
           }
         }
