@@ -695,7 +695,20 @@ Coisas já mordidas, para não se repetirem:
 
 ## 9. Plano de teste no iPhone físico
 
-**Build instalada: 20 ago 2026, 02:03.** Inclui tudo o que foi feito a 19 e 20
+**Build instalada: 20 ago 2026, 12:59.** Acrescenta as notificações de clubes,
+mensagens e eventos, e os interruptores das Definições que passaram a desligar
+alguma coisa. Verificada por inspeção do bundle: `settings_notif_clubs`,
+`settings_notif_messages`, `settings_notif_events`, `club_request`,
+`club_accepted`, `referenceId` e `notification_prefs` presentes.
+
+**Lição do build:** o `-destination "id=<udid>"` falhou com *"The developer disk
+image could not be mounted on this device"*. O iPhone estava ligado por Wi-Fi
+(`transportType: localNetwork`), e por aí a imagem de desenvolvimento não monta
+de forma fiável. **`-destination "generic/platform=iOS"` resolve** — compila e
+assina sem precisar do dispositivo presente, e o `devicectl install` trata do
+resto pelo túnel. É o comando a usar por omissão; o do UDID só serve com cabo.
+
+**Build anterior: 20 ago 2026, 02:03.** Inclui tudo o que foi feito a 19 e 20
 de agosto: modo escuro, zonas de FC e FC máxima, calorias por modalidade, os
 ecrãs que já não ficam sem saída, e a leitura de FC de ficheiros GPX/TCX.
 Verificada por inspeção do bundle — `edit_profile_zones_title`, `hr_zone_label`,
