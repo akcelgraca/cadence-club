@@ -233,9 +233,38 @@ Gradle:**
 **Não dá para reproduzir localmente:** o Mac só tem JDK 11, e o RN 0.86 precisa
 do 17.
 
-**O que falta é o log.** Os logs do EAS estão atrás da sessão do expo.dev, e não
-há comando na CLI que os traga (`eas build:view` devolve o mesmo erro genérico).
-É preciso abrir a fase **"Run gradlew"** na página do build.
+**A causa, encontrada no log:**
+
+```
+uses-sdk:minSdkVersion 24 cannot be smaller than version 26 declared in
+library [androidx.health.connect:connect-client:1.1.0]
+```
+
+O `react-native-health-connect` arrasta o `connect-client:1.1.0`, que exige
+**minSdk 26**. O projeto estava em 24, o valor por omissão do Expo. Falhou no
+`processReleaseMainManifest`, ao fim de 25 minutos de compilação — nada a ver
+com FCM, Mapbox ou o que quer que se tenha feito hoje. Estava à espera desde que
+o Health Connect entrou.
+
+**Correção:** `expo-build-properties` com `android.minSdkVersion: 26`.
+Confirmado num prebuild de teste que sai `android.minSdkVersion=26` no
+`gradle.properties` — vale a pena confirmar antes de gastar outro build de 25
+minutos.
+
+**O que se perde:** Android 7.0 e 7.1 (API 24–25). Sem consequência prática — o
+Health Connect exige 26 de qualquer forma, portanto esses telemóveis nunca
+poderiam usar a sincronização de saúde. O Android 8.0 é de 2017.
+
+**De caminho:** instalado o `expo-font` que faltava (peer do
+`@expo/vector-icons`); sem ele há risco de crash em runtime fora do Expo Go, e
+seria neste mesmo build.
+
+**Como se chega aos logs do EAS a partir do código** — porque não é óbvio e
+custou a descobrir: o `eas build:view --json` traz um campo `logFiles` com um
+URL assinado (válido 15 minutos). O conteúdo vem em **Brotli**, não em gzip: o
+`curl --compressed` desta máquina não o aceita e o Python não traz descompressor
+de Brotli, mas o `node` traz — `zlib.brotliDecompressSync`. As linhas são JSON,
+uma por linha, com a mensagem em `msg`.
 
 #### 3.2.3 Push — os cinco elos, e como saber qual partiu (20 ago)
 
