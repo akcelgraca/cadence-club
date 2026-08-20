@@ -735,7 +735,13 @@ Coisas já mordidas, para não se repetirem:
 
 ## 9. Plano de teste no iPhone físico
 
-**Build instalada: 20 ago 2026, 12:59.** Acrescenta as notificações de clubes,
+**Build instalada: 20 ago 2026, 13:34.** Acrescenta as 21 correções de i18n
+(abas do Social e do Perfil, meses, locales, tempo relativo, voz). Verificada
+por inspeção do bundle: `social_tab_clubs`, `profile_tab_summary`,
+`share_card_time`, `time_hours`, `voice_km_plural` e `localeTag` presentes, e
+`'Clubes'` e `` `há ${` `` já **não** aparecem em lado nenhum.
+
+**Build anterior: 20 ago 2026, 12:59.** Acrescenta as notificações de clubes,
 mensagens e eventos, e os interruptores das Definições que passaram a desligar
 alguma coisa. Verificada por inspeção do bundle: `settings_notif_clubs`,
 `settings_notif_messages`, `settings_notif_events`, `club_request`,
