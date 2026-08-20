@@ -36,7 +36,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 **O risco de hoje é comercial, não técnico.** A canalização de monetização está construída e desligada (4.6), a importação de ficheiros está na fase 1 (4.5), e nada disto se pode testar a sério nem lançar sem **conta paga da Apple**. A app também não tem utilizadores, por isso não há dados de retenção para decidir preços.
 
-⚠️ **A `049_push_webhook.sql` está por aplicar.** A `047` e a `048` foram aplicadas a 20 ago; a `044`, a `045` e a `046` a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
+⚠️ **A `050_push_webhook_never_raises.sql` está por aplicar.** A `049` foi aplicada a 20 ago. A `047` e a `048` foram aplicadas a 20 ago; a `044`, a `045` e a `046` a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
 
 ---
 
@@ -408,6 +408,11 @@ SELECT vault.create_secret('o-mesmo-valor-do-WEBHOOK_SECRET', 'send_push_webhook
   da transação de quem mandou a mensagem; um `RAISE` faria a mensagem não chegar
   a ser gravada. Trocar uma notificação em falta por uma mensagem perdida é um
   mau negócio. O aviso fica nos logs do Postgres.
+  ⚠️ **A 049 dizia isto e não o garantia:** tratava o segredo em falta, mas
+  qualquer outra exceção — o `net.http_post` não resolver no schema esperado, o
+  `pg_net` não estar instalado, uma falha a ler o Vault — continuava a propagar-se
+  e a derrubar a transação. A **migração 050** envolve o corpo todo num
+  `EXCEPTION WHEN OTHERS`.
 - **`net.http_post` é assíncrono.** Põe o pedido numa fila e devolve logo, para
   que ninguém fique à espera da resposta do Expo para ver a sua mensagem
   enviada.
