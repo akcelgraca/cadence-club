@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "809735065383",
+    "project_id": "cadence-club-7e32c",
+    "storage_bucket": "cadence-club-7e32c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:809735065383:android:c9649d676665ef84c0e302",
+        "android_client_info": {
+          "package_name": "com.akcelgraca.cadence"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbuEl5TV6S24gr0o7CTouqIMNWaO2N7ZY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

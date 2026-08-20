@@ -211,10 +211,19 @@ Metade feita: a que é código. A outra metade precisa de contas, e essa é tua.
   públicos e o EAS precisa dele no build — é o que a documentação do Expo diz
 - `npm run push:check` — confirma o que dá para confirmar daqui
 
+**Feito a 20 ago:** projeto Firebase `cadence-club-7e32c` criado, app Android
+registada com `com.akcelgraca.cadence`, e o `google-services.json` na raiz.
+O `npm run push:check` confirma que o pacote bate certo nos dois ficheiros.
+
+O `google-services.json` **está commitado**, apesar de o repositório ser
+público. É o que a documentação do Expo indica — o ficheiro só tem
+identificadores públicos, e a chave Android que traz é restringida pelo nome do
+pacote e pela assinatura — e é o que permite ao EAS lê-lo no build sem mais
+configuração. A alternativa (variável de ambiente do tipo ficheiro no EAS, com
+o `app.json` convertido em `app.config.js`) foi ponderada e posta de lado por
+acrescentar peças sem resolver um risco real.
+
 **Por fazer, e só tu podes:**
-1. Firebase Console → criar projeto → adicionar app **Android** com o pacote
-   `com.akcelgraca.cadence`
-2. Descarregar o `google-services.json` para a raiz de `apps/mobile`
 3. Project settings → Service accounts → **Generate new private key**
 4. `eas credentials` → Android → Google Service Account → **FCM V1** → carregar
    essa chave
