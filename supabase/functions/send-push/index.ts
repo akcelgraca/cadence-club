@@ -8,6 +8,29 @@ const TITLES: Record<string, string> = {
   follow: "Novo Seguidor!",
   streak: "Sequencia de Treinos!",
   badge: "Novo Cracha!",
+  club_request: "Pedido de adesao",
+  club_accepted: "Bem-vindo ao clube!",
+  message: "Nova mensagem",
+  event: "Novo evento",
+};
+
+/**
+ * Tipo de notificacao -> interruptor nas Definicoes.
+ *
+ * As duas do clube partilham o mesmo: quem nao quer saber de pedidos tambem
+ * nao quer saber de aceites, e dois interruptores para a mesma coisa e mais
+ * ecra para o mesmo resultado.
+ */
+const PREF_POR_TIPO: Record<string, string> = {
+  kudo: "boosts",
+  comment: "comments",
+  follow: "follows",
+  streak: "streaks",
+  badge: "badges",
+  club_request: "clubs",
+  club_accepted: "clubs",
+  message: "messages",
+  event: "events",
 };
 
 interface NotificationRecord {
@@ -29,15 +52,40 @@ function isValidExpoToken(token: string): boolean {
   return typeof token === "string" && token.startsWith("ExponentPushToken[");
 }
 
-async function getPushToken(supabase: ReturnType<typeof createClient>, userId: string): Promise<string | null> {
+interface Destinatario {
+  token: string | null;
+  prefs: Record<string, boolean>;
+}
+
+async function getDestinatario(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+): Promise<Destinatario> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("expo_push_token")
+    .select("expo_push_token, notification_prefs")
     .eq("id", userId)
     .single();
 
-  if (error || !data?.expo_push_token) return null;
-  return data.expo_push_token;
+  if (error || !data) return { token: null, prefs: {} };
+  return {
+    token: (data.expo_push_token as string | null) ?? null,
+    prefs: (data.notification_prefs as Record<string, boolean> | null) ?? {},
+  };
+}
+
+/**
+ * A ausencia de chave vale "ligado".
+ *
+ * So um `false` explicito silencia. Quem nunca abriu as Definicoes tem o
+ * objeto vazio, e um tipo novo nao pode nascer desligado para essas pessoas.
+ * O filtro e so do push: a linha na lista de notificacoes e criada na mesma,
+ * porque o interruptor promete silencio, nao esquecimento.
+ */
+function querReceber(prefs: Record<string, boolean>, tipo: string): boolean {
+  const chave = PREF_POR_TIPO[tipo];
+  if (!chave) return true;
+  return prefs[chave] !== false;
 }
 
 async function clearPushToken(supabase: ReturnType<typeof createClient>, userId: string): Promise<void> {
@@ -57,7 +105,16 @@ async function sendExpoPush(token: string, notification: NotificationRecord): Pr
     data: {
       type: notification.type,
       notificationId: notification.id,
-      ...(notification.reference_id && { activityId: notification.reference_id }),
+      // `referenceId` e o campo geral; o que significa depende do tipo (uma
+      // atividade, um clube, uma conversa) e quem o le e que decide.
+      ...(notification.reference_id && { referenceId: notification.reference_id }),
+      // `activityId` fica para tras por compatibilidade: as builds ja
+      // instaladas so sabem ler este campo, e para elas so ha tipos de
+      // atividade. Remover quando deixar de haver builds antigas por ai.
+      ...(notification.reference_id &&
+        (notification.type === "kudo" || notification.type === "comment") && {
+          activityId: notification.reference_id,
+        }),
       ...(notification.actor_id && { actorId: notification.actor_id }),
     },
   };
@@ -123,10 +180,14 @@ Deno.serve(async (req: Request) => {
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  const token = await getPushToken(supabase, notification.user_id);
+  const { token, prefs } = await getDestinatario(supabase, notification.user_id);
 
   if (!token || !isValidExpoToken(token)) {
     return new Response("No valid push token", { status: 200 });
+  }
+
+  if (!querReceber(prefs, notification.type)) {
+    return new Response("Muted by preference", { status: 200 });
   }
 
   const success = await sendExpoPush(token, notification);

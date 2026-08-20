@@ -40,20 +40,37 @@ export function usePushNotifications() {
       Notifications.addNotificationResponseReceivedListener((response: any) => {
         const data = response.notification.request.content.data;
 
-        // Navigate based on notification type
-        if (data?.type === 'kudo' || data?.type === 'comment') {
-          if (data?.activityId) {
-            router.push(`/activity/${data.activityId}`);
-          }
-        } else if (data?.type === 'follow') {
-          if (data?.actorId) {
-            router.push(`/profile/${data.actorId}`);
-          }
-        } else if (data?.type === 'badge' || data?.type === 'streak') {
-          router.push('/(tabs)/profile');
-        } else {
-          // Default: open notifications
-          router.push('/notifications');
+        // `referenceId` é o campo geral; o `activityId` só existe para as
+        // notificações antigas, enviadas antes de haver tipos que não fossem
+        // atividades. Uma delas pode estar na bandeja do telemóvel há dias.
+        const ref = data?.referenceId ?? data?.activityId;
+
+        switch (data?.type) {
+          case 'kudo':
+          case 'comment':
+            if (ref) router.push(`/activity/${ref}`);
+            else router.push('/notifications');
+            break;
+          case 'follow':
+            if (data?.actorId) router.push(`/profile/${data.actorId}`);
+            else router.push('/notifications');
+            break;
+          case 'badge':
+          case 'streak':
+            router.push('/(tabs)/profile');
+            break;
+          case 'club_request':
+          case 'club_accepted':
+          case 'event':
+            if (ref) router.push(`/club/${ref}`);
+            else router.push('/notifications');
+            break;
+          case 'message':
+            if (ref) router.push(`/messages/${ref}`);
+            else router.push('/notifications');
+            break;
+          default:
+            router.push('/notifications');
         }
       });
 

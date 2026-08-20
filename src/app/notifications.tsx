@@ -17,6 +17,10 @@ const NOTIFICATION_ICONS: Record<string, string> = {
   follow: 'person-add',
   streak: 'flame',
   badge: 'ribbon',
+  club_request: 'people',
+  club_accepted: 'people-circle',
+  message: 'mail',
+  event: 'calendar',
 };
 
 function getNotificationRoute(item: Notification): { pathname: string; params: any } | null {
@@ -33,6 +37,19 @@ function getNotificationRoute(item: Notification): { pathname: string; params: a
     case 'streak':
     case 'badge':
       return { pathname: '/(tabs)/profile', params: {} };
+    // Nos três tipos novos o `reference_id` não é uma atividade: é o clube nos
+    // dois primeiros e a conversa no terceiro. É por isso que o campo tem nome
+    // genérico e é quem lê que decide o que ele significa.
+    case 'club_request':
+    case 'club_accepted':
+    case 'event':
+      return item.reference_id
+        ? { pathname: '/club/[id]', params: { id: item.reference_id } }
+        : null;
+    case 'message':
+      return item.reference_id
+        ? { pathname: '/messages/[id]', params: { id: item.reference_id } }
+        : null;
     default:
       return null;
   }

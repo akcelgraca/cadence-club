@@ -36,7 +36,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 **O risco de hoje é comercial, não técnico.** A canalização de monetização está construída e desligada (4.6), a importação de ficheiros está na fase 1 (4.5), e nada disto se pode testar a sério nem lançar sem **conta paga da Apple**. A app também não tem utilizadores, por isso não há dados de retenção para decidir preços.
 
-✅ **Não há migrações por aplicar.** A `044`, a `045` e a `046` foram aplicadas a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
+⚠️ **A `047_more_notifications.sql` está por aplicar** (20 ago). A `044`, a `045` e a `046` foram aplicadas a 19 ago 2026. A base de dados está alinhada com o código. Confirmar com `supabase/VERIFICAR_MIGRACOES.sql`, que passou a cobrir até à 046.
 
 ---
 
@@ -74,9 +74,71 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 - Seguir / seguidores, listas de seguidores, perfis públicos
 - **Clubes** — criação, descoberta, adesão com pedido de entrada, chat de clube, eventos de clube, perfil de clube
 - Mensagens diretas (conversas 1-para-1)
-- Notificações in-app + push (edge function `send-push`)
+- Notificações in-app + push (edge function `send-push`) — **os nove tipos**, ver 3.2.1
 - Pesquisa (utilizadores, rotas, clubes)
 - Desafios (`challenges`)
+
+#### 3.2.1 Notificações — os três tipos que faltavam (20 ago) ✅
+
+Cobria seguir, boost, comentário, medalha e sequência. Faltavam os três que a
+análise original apontava, e são todos de coisas que dependem de outra pessoa
+responder:
+
+| Tipo | Quem recebe | Vai para |
+|---|---|---|
+| `club_request` | administradores e dono do clube | `/club/[id]` |
+| `club_accepted` | quem pediu | `/club/[id]` |
+| `message` | os outros participantes da conversa | `/messages/[id]` |
+| `event` | membros do clube, menos quem o criou | `/club/[id]` |
+
+**Três decisões que valem a pena registar, porque são de produto e não de
+código:**
+
+- **O chat de clube não notifica.** Numa conversa de clube com movimento, uma
+  notificação por mensagem é o caminho mais curto para a pessoa desligar as
+  notificações todas — e perde-se também as que importam. Só mensagens diretas.
+- **Recusar um pedido não gera notificação.** Só o aceite. Quem quiser saber vê
+  no clube; ninguém precisa de levar com uma recusa à mesa de jantar.
+- **A pré-visualização da mensagem vai truncada aos 80 caracteres.** O sistema
+  já corta, e a linha da lista dentro da app não se lê com uma mensagem inteira.
+
+**O `CHECK` do tipo era a armadilha.** A tabela `notifications` nasceu com cinco
+tipos fixos. Sem alargar a restrição, o `INSERT` do gatilho rebentava **dentro
+da transação de quem enviou** — ou seja, a mensagem não chegava a ser gravada.
+Uma notificação em falta é chata; uma mensagem perdida é outra coisa.
+
+**Bónus: os interruptores das Definições passaram a desligar alguma coisa.**
+Estavam lá desde sempre, guardados no AsyncStorage do telemóvel, e ninguém os
+lia — nem os gatilhos, nem a edge function. Desligar "Boosts" não desligava
+nada. Agora vivem também em `profiles.notification_prefs` e a `send-push`
+respeita-os. Silenciam o push, não a lista: a notificação continua a aparecer na
+app, porque o interruptor promete silêncio e não esquecimento. Chave ausente
+vale ligado — um tipo novo não pode nascer desligado em quem nunca abriu as
+Definições.
+
+✅ Sete testes de guarda (`notifications.test.ts`) ligam os cinco sítios que um
+tipo novo tem de tocar: o `CHECK` em SQL, o ícone, a rota, o título na edge
+function e o interruptor. Nenhum deles é apanhado pelo compilador — quatro
+vivem em ficheiros que o TypeScript não lê. O teste do SQL ignora comentários,
+porque a primeira versão passava a olhar para uma linha comentada.
+
+**Por fazer, e nenhuma destas é código:**
+1. **Aplicar a migração 047** na Supabase
+2. **Redeployar a `send-push`** (`supabase functions deploy send-push`) — sem
+   isto os tipos novos chegam com o título genérico e os interruptores não
+   filtram
+3. **Build novo** para o cliente apanhar as rotas e os interruptores
+
+**Gap conhecido, por decidir:** as mensagens são construídas em SQL, em
+português. A app é bilingue desde 19 de agosto, mas quem a tiver em inglês
+recebe os *pushes* em português na mesma — e isto vale para os nove tipos, não
+só os novos. A correção seria guardar uma chave de i18n e os parâmetros em vez
+do texto, e traduzir no cliente. Não é pequena, e mudá-la só para três tipos
+deixava a lista com dois comportamentos.
+
+**Fan-out:** um evento num clube de N membros cria N linhas e, por consequência,
+N invocações da edge function. Com os clubes que existem hoje é irrelevante;
+num clube de milhares deixa de ser.
 
 ### 3.3 Rotas e mapas
 - Descoberta e criação de rotas no mapa, filtradas por modalidade

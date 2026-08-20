@@ -266,7 +266,16 @@ export interface UserBadge {
 }
 
 // --- Notifications ---
-export type NotificationType = 'kudo' | 'comment' | 'follow' | 'streak' | 'badge';
+export type NotificationType =
+  | 'kudo' | 'comment' | 'follow' | 'streak' | 'badge'
+  /** Alguém pediu para entrar num clube que administras. */
+  | 'club_request'
+  /** O teu pedido de adesão foi aceite. */
+  | 'club_accepted'
+  /** Mensagem direta. O chat de clube não notifica — ver migração 047. */
+  | 'message'
+  /** Evento novo num clube de que fazes parte. */
+  | 'event';
 
 export interface Notification {
   id: string;
@@ -421,12 +430,23 @@ export type GpsAccuracy = 'high' | 'balanced' | 'low';
 export type ThemeMode = 'dark' | 'light' | 'system';
 
 
+/**
+ * Interruptores do push, por tipo.
+ *
+ * Guardados também em `profiles.notification_prefs`, porque quem decide enviar
+ * é o servidor — enquanto viveram só no telemóvel, não desligavam nada.
+ * Silenciam o push, não a lista: a notificação continua a aparecer na app.
+ */
 export interface NotificationPreferences {
   boosts: boolean;
   comments: boolean;
   follows: boolean;
   streaks: boolean;
   badges: boolean;
+  /** Pedidos de adesão e aceites, num interruptor só. */
+  clubs: boolean;
+  messages: boolean;
+  events: boolean;
 }
 
 export interface UserSettings {
