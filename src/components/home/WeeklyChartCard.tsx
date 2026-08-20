@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { localeTag } from '../../utils/dateHelpers';
 import { View, Text, StyleSheet, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { useColors } from '../../hooks/useColors';
 import { LineChart } from 'react-native-gifted-charts';
@@ -89,7 +90,7 @@ export function WeeklyChartCard({ userId }: WeeklyChartCardProps) {
     },
     {
       icon: 'flame-outline' as const,
-      value: estCalories > 0 ? estCalories.toLocaleString('pt-PT') : '--',
+      value: estCalories > 0 ? estCalories.toLocaleString(localeTag()) : '--',
       unit: 'kcal',
       label: t('calories_estimated'),
     },

@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import i18n from '../lib/i18n';
+import { localeTag } from '../utils/dateHelpers';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { Alert, AppState, AppStateStatus } from 'react-native';
@@ -205,8 +207,13 @@ export function useLocationTracker() {
               const paceMin = currentPace ? Math.floor(currentPace / 60) : 0;
               const paceSec = currentPace ? Math.floor(currentPace % 60) : 0;
               const paceStr = currentPace ? `${paceMin}'${paceSec.toString().padStart(2, '0')}` : '--';
-              const text = `${kmCompleted} quilometro${kmCompleted > 1 ? 's' : ''}. Ritmo ${paceStr}.`;
-              Speech.speak(text, { language: 'pt-PT' });
+              // O texto e o idioma da voz andam juntos: falar português com
+              // a app em inglês soa a erro, e o contrário lê mal os números.
+              const text = i18n.t(
+                kmCompleted > 1 ? 'voice_km_plural' : 'voice_km_singular',
+                { km: kmCompleted, pace: paceStr },
+              );
+              Speech.speak(text, { language: localeTag() });
             }
           }
         }

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { formatDate } from '../../utils/dateHelpers';
 import { useColors } from '../../hooks/useColors';
 import {
   View,
@@ -243,12 +244,8 @@ export default function RegisterScreen() {
             >
               <Text style={[styles.dateRowText, !birthDate && styles.dateRowPlaceholder]}>
                 {birthDate
-                  ? (() => {
-                      const [y, m, d] = birthDate.split('-');
-                      const months = ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-                      return `${d} de ${months[parseInt(m, 10) - 1] ?? m} de ${y}`;
-                    })()
-                  : 'Selecionar...'}
+                  ? formatDate(birthDate)
+                  : t('common_select')}
               </Text>
               <Ionicons name="chevron-forward" size={18} color={c.mutedForeground} />
             </TouchableOpacity>
@@ -269,7 +266,7 @@ export default function RegisterScreen() {
 
             <TextInput
               style={styles.input}
-              placeholder="Cidade"
+              placeholder={t('edit_profile_city')}
               placeholderTextColor={c.mutedForeground}
               value={city}
               onChangeText={setCity}

@@ -52,7 +52,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="social"
         options={{
-          title: 'Social',
+          title: t('tab_social'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'people' : 'people-outline'}

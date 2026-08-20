@@ -243,7 +243,7 @@ export default function RoutesScreen() {
                 id={`finish-${selectedRoute.id}`}
                 coordinate={selectedRoute.path[selectedRoute.path.length - 1]}
                 type="finish"
-                label="Fim"
+                label={t('segment_new_end')}
               />
             </>
           )}

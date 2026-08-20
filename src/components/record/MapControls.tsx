@@ -84,7 +84,7 @@ export function MapControls({
           style={[styles.mapControlBtn, showTerrain && styles.mapControlBtnActive]}
           onPress={onToggleTerrain}
           activeOpacity={0.7}
-          accessibilityLabel="Relevo"
+          accessibilityLabel={t('routes_terrain')}
         >
           <Ionicons
             name="triangle"

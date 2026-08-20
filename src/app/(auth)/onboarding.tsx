@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { localeTag } from '../../utils/dateHelpers';
 import { useColors } from '../../hooks/useColors';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
@@ -224,11 +225,9 @@ export default function OnboardingScreen() {
       >
         <Text style={[styles.dateRowText, !birthDate && styles.dateRowPlaceholder]}>
           {birthDate
-            ? (() => {
-                const [y, m, d] = birthDate.split('-');
-                const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                return `${d} ${months[parseInt(m, 10) - 1] ?? m} ${y}`;
-              })()
+            ? new Date(birthDate).toLocaleDateString(localeTag(), {
+                day: 'numeric', month: 'short', year: 'numeric',
+              })
             : t('onboarding_birth_date')}
         </Text>
         <Ionicons name="chevron-forward" size={18} color={c.mutedForeground} />

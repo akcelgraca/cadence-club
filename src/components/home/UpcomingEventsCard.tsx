@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { localeTag } from '../../utils/dateHelpers';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useColors } from '../../hooks/useColors';
 import { router } from 'expo-router';
@@ -54,7 +55,7 @@ export function UpcomingEventsCard() {
             <View style={{ flex: 1 }}>
               <Text style={styles.title} numberOfLines={1}>{event.title}</Text>
               <Text style={styles.meta} numberOfLines={1}>
-                {date.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
+                {date.toLocaleTimeString(localeTag(), { hour: '2-digit', minute: '2-digit' })}
                 {event.club ? ` · ${event.club.name}` : ''}
                 {event.location ? ` · ${event.location}` : ''}
               </Text>

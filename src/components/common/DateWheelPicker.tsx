@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
+import { monthNames } from '../../utils/dateHelpers';
 import { useColors } from '../../hooks/useColors';
 import {
   View,
@@ -12,10 +13,6 @@ import {
 import { typography, type Colors } from '../../lib/theme';
 import { useTranslation } from 'react-i18next';
 
-const MONTHS = [
-  'Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-];
 
 const ITEM_HEIGHT = 40;
 const VISIBLE_ITEMS = 5;
@@ -41,6 +38,8 @@ export default function DateWheelPicker({ visible, value, onConfirm, onCancel }:
   const c = useColors();
   const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
+  // Do Intl, e dentro do componente: a lista tem de mudar quando o idioma muda.
+  const MONTHS = useMemo(() => monthNames('long'), [t]);
   const parsed = useMemo(() => {
     const parts = value.split('-');
     const y = parts[0] ? parseInt(parts[0], 10) : 2000;

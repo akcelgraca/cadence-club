@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { localeTag } from '../../utils/dateHelpers';
 import { useColors } from '../../hooks/useColors';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -76,7 +77,7 @@ export function TrophyCase({ badges }: TrophyCaseProps) {
             ) : (
               <Text style={styles.modalActivity}>
                 {t('badge_earned_on')}{' '}
-                {new Date(selectedBadge?.earned_at ?? '').toLocaleDateString('pt-PT')}
+                {new Date(selectedBadge?.earned_at ?? '').toLocaleDateString(localeTag())}
               </Text>
             )}
             <TouchableOpacity

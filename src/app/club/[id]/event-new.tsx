@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { localeTag, monthNames } from '../../../utils/dateHelpers';
 import { useColors } from '../../../hooks/useColors';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
@@ -19,7 +20,6 @@ const WEEKDAY_KEYS = [
   'training_day_sun', 'training_day_mon', 'training_day_tue', 'training_day_wed',
   'training_day_thu', 'training_day_fri', 'training_day_sat',
 ];
-const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 /** Próximos 60 dias, para escolha rápida sem picker nativo. */
 function buildDays(): Date[] {
@@ -50,6 +50,7 @@ export default function NewClubEventScreen() {
   const styles = useMemo(() => makeStyles(c), [c]);
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const MONTHS = useMemo(() => monthNames('short'), [t]);
   const days = useMemo(buildDays, []);
   const times = useMemo(buildTimes, []);
 
@@ -233,7 +234,8 @@ export default function NewClubEventScreen() {
           <View style={styles.summary}>
             <Ionicons name="calendar-outline" size={16} color={c.primary} />
             <Text style={styles.summaryText}>
-              {startsAt.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })} às {time}
+              {startsAt.toLocaleDateString(localeTag(), { weekday: 'long', day: 'numeric', month: 'long' })}{' '}
+              {t('event_at_time', { time })}
             </Text>
           </View>
 

@@ -21,9 +21,9 @@ import { MessagesTab } from '../../components/social/MessagesTab';
 import { typography, type Colors } from '../../lib/theme';
 
 const TABS = [
-  { key: 'feed', label: 'Feed' },
-  { key: 'clubs', label: 'Clubes' },
-  { key: 'messages', label: 'Mensagens' },
+  { key: 'feed', i18n_key: 'tab_feed' },
+  { key: 'clubs', i18n_key: 'social_tab_clubs' },
+  { key: 'messages', i18n_key: 'social_tab_messages' },
 ] as const;
 
 type TabKey = (typeof TABS)[number]['key'];
@@ -128,7 +128,7 @@ export default function SocialScreen() {
               }}
             >
               <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
-                {tab.label}
+                {t(tab.i18n_key as any)}
               </Text>
               {badge > 0 && (
                 <View style={styles.badge}>

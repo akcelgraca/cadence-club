@@ -27,8 +27,8 @@ import { typography, withAlpha, type Colors } from '../../lib/theme';
 import type { Activity } from '../../lib/types';
 
 const TABS = [
-  { key: 'atividades', label: 'Atividades' },
-  { key: 'conquistas', label: 'Conquistas' },
+  { key: 'atividades', i18n_key: 'profile_activities' },
+  { key: 'conquistas', i18n_key: 'profile_tab_achievements' },
 ] as const;
 
 export default function UserProfileScreen() {
@@ -184,7 +184,7 @@ export default function UserProfileScreen() {
                 });
               }}
             >
-              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{tab.label}</Text>
+              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{t(tab.i18n_key as any)}</Text>
             </TouchableOpacity>
           );
         })}

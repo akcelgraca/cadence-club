@@ -62,7 +62,7 @@ export default function PrivacyZonesScreen() {
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       await createPrivacyZone({
-        label: 'Casa',
+        label: t('privacy_zone_home'),
         lat: loc.coords.latitude,
         lng: loc.coords.longitude,
         radius,

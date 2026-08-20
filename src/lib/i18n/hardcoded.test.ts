@@ -56,12 +56,13 @@ describe('texto fixo em propriedades', () => {
       const src = readFileSync(path.join(raiz, ficheiro), 'utf8');
       for (const m of src.matchAll(padrao)) {
         const valor = m[3].trim();
-        // Só interessa o que parece uma frase para uma pessoa: com acento, ou
-        // com espaço e a começar por maiúscula. Isto deixa passar chaves e
-        // identificadores, que também vivem nestas propriedades.
+        // Basta começar por maiúscula, ou ter acento. A versão anterior exigia
+        // acento OU (espaço E maiúscula), e por isso deixou passar as abas do
+        // Social e do Perfil — 'Clubes', 'Mensagens', 'Resumo' não têm acento
+        // nem espaço. Chaves e identificadores nestas propriedades são
+        // minúsculos ou camelCase, portanto a maiúscula chega para os separar.
         const pareceTextoHumano =
-          /[áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]/.test(valor) ||
-          (/\s/.test(valor) && /^[A-ZÁÉÍÓÚ]/.test(valor));
+          /[áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]/.test(valor) || /^[A-ZÁÉÍÓÚ]/.test(valor);
         if (pareceTextoHumano) encontrados.push(`${valor}  (${ficheiro})`);
       }
     }
@@ -93,5 +94,31 @@ describe('texto fixo no JSX', () => {
     }
 
     expect(encontrados).toEqual([]);
+  });
+});
+
+/**
+ * Nomes de mês e etiquetas de locale escritos à mão.
+ *
+ * Havia quatro listas de meses espalhadas pelo código — todas em português, e
+ * uma delas com "Marco" sem cedilha — e `'pt-PT'` escrito à mão em oito
+ * sítios. Nada disto passa por `t()`, portanto os outros testes de i18n não o
+ * viam: para eles, `['Jan', 'Fev', ...]` é só um array de strings.
+ */
+describe('datas e locales fixos', () => {
+  it('ninguém escreve nomes de mês à mão', () => {
+    const meses = /'(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)'\s*,\s*'/;
+    const infratores = ficheirosDeEcra().filter((f) =>
+      meses.test(readFileSync(path.join(raiz, f), 'utf8')),
+    );
+    expect(infratores).toEqual([]);
+  });
+
+  it("ninguém fixa o locale em 'pt-PT'", () => {
+    // O sítio certo é `localeTag()`, que segue o idioma da app.
+    const infratores = ficheirosDeEcra().filter((f) =>
+      /['"]pt-PT['"]/.test(readFileSync(path.join(raiz, f), 'utf8')),
+    );
+    expect(infratores).toEqual([]);
   });
 });

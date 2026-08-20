@@ -34,9 +34,9 @@ import type { Activity } from '../../lib/types';
 import { typography, withAlpha, type Colors } from '../../lib/theme';
 
 const TABS = [
-  { key: 'resumo', label: 'Resumo' },
-  { key: 'atividades', label: 'Atividades' },
-  { key: 'conquistas', label: 'Conquistas' },
+  { key: 'resumo', i18n_key: 'profile_tab_summary' },
+  { key: 'atividades', i18n_key: 'profile_activities' },
+  { key: 'conquistas', i18n_key: 'profile_tab_achievements' },
 ] as const;
 
 const RECENT_LIMIT = 6;
@@ -183,7 +183,7 @@ export default function ProfileScreen() {
                 });
               }}
             >
-              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{tab.label}</Text>
+              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{t(tab.i18n_key as any)}</Text>
             </TouchableOpacity>
           );
         })}

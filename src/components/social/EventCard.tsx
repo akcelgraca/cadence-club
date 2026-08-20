@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { localeTag } from '../../utils/dateHelpers';
 import { useColors } from '../../hooks/useColors';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { router } from 'expo-router';
@@ -97,7 +98,7 @@ export function EventCard({
           <View style={styles.metaItem}>
             <Ionicons name="time-outline" size={12} color={c.mutedForeground} />
             <Text style={styles.metaText}>
-              {date.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
+              {date.toLocaleTimeString(localeTag(), { hour: '2-digit', minute: '2-digit' })}
             </Text>
           </View>
           {!!event.location && (

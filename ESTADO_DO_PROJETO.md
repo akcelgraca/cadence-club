@@ -199,6 +199,46 @@ num clube de milhares deixa de ser.
 - ✅ Três testes protegem isto: dicionários com as mesmas chaves, mesmos marcadores `{{}}` nos dois idiomas, e todas as chamadas `t()` a apontar para chaves existentes (uma chave em falta não estoira — aparece em bruto ao utilizador)
 - Padrão: constantes com texto visível guardam `i18n_key`, nunca o texto
 
+#### 3.9.1 i18n — o que a migração deixou para trás (20 ago)
+
+O teste de guarda que existia procurava texto humano em propriedades com uma
+heurística de duas condições: **acento**, ou **espaço e maiúscula**. As abas do
+Social e do Perfil não têm nenhuma das duas — `'Clubes'`, `'Mensagens'`,
+`'Resumo'`, `'Conquistas'` — e por isso ficaram em português na app inglesa
+durante todo este tempo, com o teste a passar.
+
+A heurística passou a ser **acento, ou começar por maiúscula**. Chaves e
+identificadores nestas propriedades são minúsculos ou camelCase, portanto a
+maiúscula chega para os separar. Ao apertar, apareceram **21 strings em 12
+ficheiros**, e não as duas que tinham sido reportadas.
+
+Corrigido: as abas do Social, do Perfil e do perfil de outra pessoa (a constante
+guarda `i18n_key`, como manda o padrão do projeto), o título do separador
+Social, o `'Casa'` das zonas de privacidade, o `'Cidade'` do registo, o
+`'Relevo'` dos controlos de mapa, o `'Fim'` de dois mapas, e o `'Fechar'`,
+`'Stories'`, `'Partilhar'` e `'TEMPO'` da partilha.
+
+**Duas famílias que nenhum teste de i18n via**, porque não passam por `t()` e
+para um teste de chaves são só arrays de strings:
+
+- **Quatro listas de meses escritas à mão**, todas em português, uma delas com
+  *"Marco"* sem cedilha. Passaram a vir do `Intl` através de `monthNames()`,
+  calculado a cada chamada porque o idioma muda dentro da app sem reiniciar.
+- **`'pt-PT'` fixo em oito sítios** — datas, horas e o separador de milhares.
+  Passou a `localeTag()`, que segue o idioma.
+
+E de caminho, dois que estavam à vista de todos e ninguém via: o
+`formatRelativeTime` devolvia *"há 2h"* e *"há 3 dias"* em qualquer idioma — e
+aparece em doze ecrãs — e o **feedback de voz durante o treino** falava
+português com a app em inglês, com a voz do sistema também fixada em `pt-PT`.
+
+✅ Dois testes de guarda novos: nenhum ficheiro de ecrã escreve nomes de mês à
+mão, nem fixa `'pt-PT'`. Verificados a partir uma regressão de propósito.
+
+⚠️ **Fica por decidir:** o feedback de voz diz sempre "quilómetros", mesmo com o
+sistema imperial escolhido nas Definições. É outro bug, e de unidades, não de
+idioma.
+
 ### 3.10 Autenticação
 - Email/password, Google Sign-In, Apple Sign-In
 
