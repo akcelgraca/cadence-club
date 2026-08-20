@@ -199,6 +199,34 @@ num clube de milhares deixa de ser.
 - ✅ Três testes protegem isto: dicionários com as mesmas chaves, mesmos marcadores `{{}}` nos dois idiomas, e todas as chamadas `t()` a apontar para chaves existentes (uma chave em falta não estoira — aparece em bruto ao utilizador)
 - Padrão: constantes com texto visível guardam `i18n_key`, nunca o texto
 
+#### 3.2.5 Emulador Android — o que já existe nesta máquina (20 ago)
+
+Não é preciso instalar nada. O SDK está em `~/Library/Android/sdk` (sem Android
+Studio) e já tem emulador e imagens.
+
+**AVD existente: `Pixel_4`** — API 29 (Android 10), `google_apis_playstore`,
+`arm64-v8a`. Nativo no Apple Silicon, portanto rápido.
+
+**O detalhe que decide se serve para testar push:** a imagem tem de trazer os
+Google Play services. Confirmado neste AVD (`com.google.android.gms` e
+`com.android.vending` instalados). Uma imagem **AOSP** — sem `google_apis` nem
+`playstore` no nome — **não recebe FCM**, e o sintoma seria o
+`getExpoPushTokenAsync()` a devolver null sem explicação.
+
+```bash
+~/Library/Android/sdk/emulator/emulator -list-avds
+~/Library/Android/sdk/emulator/emulator -avd Pixel_4 &
+~/Library/Android/sdk/platform-tools/adb install -r caminho/para.apk
+```
+
+APK de 20 ago instalado e a app confirmada a arrancar (ecrã de login, em inglês,
+que é o idioma do emulador — serve também de prova do i18n).
+
+**Limitação deste AVD:** Android 10 não traz Health Connect (só é nativo a
+partir do Android 14). Para testar a sincronização de saúde é preciso instalar a
+app Health Connect pela Play Store, ou criar um AVD de API 34 — a imagem
+`android-34/google_apis` já está descarregada, falta só o AVD.
+
 #### 3.2.4 Build Android — falhou, corrigido, e passou (20 ago) ✅
 
 Primeiro build Android desde 1 de agosto. **Falhou no Gradle**, com o erro
