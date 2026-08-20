@@ -758,6 +758,28 @@ Coisas já mordidas, para não se repetirem:
 2. ✅ Migrações verificadas — **042 e 043 aplicadas e completas**; a **025** é só um salto na numeração
 3. ✅ Meta App ID metido, e build com ele instalada no iPhone
 
+### ✅ Analytics a recolher (20 ago)
+A `EXPO_PUBLIC_POSTHOG_KEY` está preenchida, validada contra o `eu.i.posthog.com`
+(`npm run analytics:check` devolve OK), presente no `eas.json` para os perfis
+`preview` e `production`, **e dentro da build instalada no iPhone**. O relógio
+dos 30 dias de retenção está a contar a partir de hoje.
+
+### O que bloqueia mais coisas ao mesmo tempo
+**A conta Apple Developer paga (99 USD/ano)** deixou de ser uma decisão isolada
+e passou a ser o único item com semanas de espera. Bloqueia, em simultâneo:
+
+- **push remoto no iOS** — sem `aps-environment` não há entrega, e é por isso
+  que as notificações da migração 047 não se conseguem testar no telemóvel
+- **HealthKit no iPhone físico** — logo, a frequência cardíaca vinda do Watch
+- **produtos nas lojas** — logo, toda a monetização
+- **builds que não expiram em 7 dias** — a atual expira a **25 ago**
+
+Tudo o resto é código, e código faz-se a qualquer momento. Isto não.
+
+**Alternativa barata e imediata para testar push:** montar o **FCM** (projeto
+Firebase, `google-services.json`, chave de serviço no Expo) e um build Android
+via EAS. Não custa dinheiro e não depende da Apple. Ver 3.2.1.
+
 ### Curto prazo (validação)
 4. **Testar a app instalada no iPhone** — tudo o que foi construído desde 1 de agosto (segments, zonas de privacidade, fila offline, fotos, analytics, partilha) está pela primeira vez num telemóvel
 5. **Testar a sincronização de saúde no simulador iOS** — repor o entitlement, `npx expo run:ios` (Debug), e usar o `devSeed` pelas Definições. Cobre os casos 1, 2, 3, 5 e 6 do README do módulo, sem custar nada (ver secção 4.1)
