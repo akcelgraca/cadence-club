@@ -289,6 +289,16 @@ o mesmo — o telemóvel não toca — por isso vale a pena saber distingui-los.
 | 4 | A função aceita e envia | Os mesmos logs: `Muted by preference`, `No valid push token`, ou erro do Expo |
 | 5 | Expo → FCM → telemóvel | Se 1–4 estão bem e não chega nada, é credencial de plataforma |
 
+**Ficheiro de diagnóstico:** `supabase/VERIFICAR_PUSH.sql`. Colar no SQL Editor.
+Responde pelos elos 1, 2 e 3 sem depender de encontrar nada no painel — os
+"Database Webhooks" do Supabase são, por baixo, um gatilho que chama
+`supabase_functions.http_request`, portanto vê-se em `pg_trigger`. Os elos 4 e 5
+só se veem nos logs da edge function.
+
+**No painel, a opção mudou de sítio:** deixou de estar em *Database → Webhooks*.
+Nas versões recentes está em **Integrations → Database Webhooks** (ou pela
+pesquisa do painel, `Ctrl/Cmd + K` → "webhook").
+
 **⚠️ O elo 3 nunca foi documentado como configurado.** A função está publicada,
 mas quem a chama é um *Database Webhook* do Supabase em `INSERT` na tabela
 `notifications` — e não há registo de esse webhook alguma vez ter sido criado.
