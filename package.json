@@ -77,7 +77,8 @@
     "test:watch": "jest --watchAll",
     "test:coverage": "jest --coverage",
     "typecheck": "tsc --noEmit",
-    "analytics:check": "node scripts/check-analytics.mjs"
+    "analytics:check": "node scripts/check-analytics.mjs",
+    "push:check": "node scripts/check-push-android.mjs"
   },
   "jest": {
     "preset": "jest-expo",

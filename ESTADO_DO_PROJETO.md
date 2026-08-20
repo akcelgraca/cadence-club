@@ -199,6 +199,39 @@ num clube de milhares deixa de ser.
 - ✅ Três testes protegem isto: dicionários com as mesmas chaves, mesmos marcadores `{{}}` nos dois idiomas, e todas as chamadas `t()` a apontar para chaves existentes (uma chave em falta não estoira — aparece em bruto ao utilizador)
 - Padrão: constantes com texto visível guardam `i18n_key`, nunca o texto
 
+#### 3.2.2 FCM — push no Android (20 ago) 🚧
+
+Metade feita: a que é código. A outra metade precisa de contas, e essa é tua.
+
+**Feito:**
+- `app.json` → `android.googleServicesFile: "./google-services.json"`
+- `.gitignore` → a **chave da conta de serviço** fica de fora
+  (`*-firebase-adminsdk-*.json`, `service-account*.json`); o
+  `google-services.json` **não** é ignorado, porque só tem identificadores
+  públicos e o EAS precisa dele no build — é o que a documentação do Expo diz
+- `npm run push:check` — confirma o que dá para confirmar daqui
+
+**Por fazer, e só tu podes:**
+1. Firebase Console → criar projeto → adicionar app **Android** com o pacote
+   `com.akcelgraca.cadence`
+2. Descarregar o `google-services.json` para a raiz de `apps/mobile`
+3. Project settings → Service accounts → **Generate new private key**
+4. `eas credentials` → Android → Google Service Account → **FCM V1** → carregar
+   essa chave
+5. `eas build --platform android --profile preview`
+
+**O erro que o `push:check` existe para apanhar** não dá erro nenhum: se o
+pacote no `app.json` não for o mesmo que está registado no
+`google-services.json`, o Firebase não reconhece a app, o
+`getExpoPushTokenAsync()` devolve `null`, e a app corre sem se queixar. Só se
+descobre a olhar para um telemóvel que nunca recebe nada. Verificado com um
+ficheiro de pacote trocado — o script apanha e diz quais são os dois valores.
+
+⚠️ **Atenção ao `expo prebuild`:** o `app.json` já aponta para o
+`google-services.json`. Enquanto o ficheiro não existir, um `prebuild` falha a
+dizer que não o encontra. Os builds de iPhone não passam por lá (vão direitos ao
+`xcodebuild` sobre a pasta `ios/`), portanto não são afetados.
+
 #### 3.9.2 i18n — histórico e desafios (20 ago)
 
 **Histórico.** A lista de meses estava **meio migrada**: `'month_jan'` a
