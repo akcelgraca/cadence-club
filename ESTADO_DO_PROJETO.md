@@ -199,7 +199,7 @@ num clube de milhares deixa de ser.
 - ✅ Três testes protegem isto: dicionários com as mesmas chaves, mesmos marcadores `{{}}` nos dois idiomas, e todas as chamadas `t()` a apontar para chaves existentes (uma chave em falta não estoira — aparece em bruto ao utilizador)
 - Padrão: constantes com texto visível guardam `i18n_key`, nunca o texto
 
-#### 3.2.4 Build Android falhou — o que já está descartado (20 ago) ❌
+#### 3.2.4 Build Android — falhou, corrigido, e passou (20 ago) ✅
 
 Primeiro build Android desde 1 de agosto. **Falhou no Gradle**, com o erro
 inútil do EAS: `EAS_BUILD_UNKNOWN_GRADLE_ERROR`.
@@ -258,6 +258,16 @@ poderiam usar a sincronização de saúde. O Android 8.0 é de 2017.
 **De caminho:** instalado o `expo-font` que faltava (peer do
 `@expo/vector-icons`); sem ele há risco de crash em runtime fora do Expo Go, e
 seria neste mesmo build.
+
+**✅ Build seguinte passou.** `c286e71a-651c-4819-a8f7-6b50b3244502`, perfil
+`preview`. APK:
+https://expo.dev/artifacts/eas/f2OVWUQLqHN6pjtmzGZSM_rDRAxaTdzdZ5FhFbMwy7Y.apk
+
+É o **primeiro build Android desde 1 de agosto**, e o primeiro de sempre com
+push a funcionar. Traz tudo o que se fez a 19 e 20 de agosto: modo escuro,
+notificações de clubes/mensagens/eventos, frequência cardíaca (incluindo a
+leitura do Health Connect), calorias por modalidade, as 21 correções de i18n, as
+unidades da voz, e os ecrãs que já não ficam sem saída.
 
 **Como se chega aos logs do EAS a partir do código** — porque não é óbvio e
 custou a descobrir: o `eas build:view --json` traz um campo `logFiles` com um
