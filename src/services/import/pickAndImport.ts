@@ -1,5 +1,6 @@
 import { detectFormat, importTrackFile } from './importFile';
-import type { ImportOutcome } from './types';
+import { importStravaArchive, type ArchiveOptions } from './importArchive';
+import type { ArchiveOutcome, ImportOutcome } from './types';
 
 /**
  * Abre o seletor de ficheiros e importa o que o utilizador escolher.
@@ -72,4 +73,42 @@ export async function pickAndImportTrackFile(): Promise<ImportOutcome | null> {
       : await ficheiroFS.text();
 
   return importTrackFile(nome, conteudo);
+}
+
+/**
+ * Abre o seletor e importa um arquivo inteiro (o `.zip` do Strava).
+ *
+ * Separado do `pickAndImportTrackFile` de propósito: são dois gestos
+ * diferentes — "traz esta corrida" e "traz o meu histórico todo" — e o
+ * segundo demora minutos, precisa de progresso e pode ser interrompido.
+ */
+export async function pickAndImportArchive(
+  opcoes: ArchiveOptions = {},
+): Promise<ArchiveOutcome | null> {
+  const DocumentPicker = carregar(() => require('expo-document-picker'));
+  const FS = carregar(() => require('expo-file-system'));
+
+  if (!DocumentPicker || !FS?.File) {
+    return {
+      total: 0, imported: 0, skipped: 0, failed: 0, failures: {}, cancelled: false,
+      error: 'seletor de ficheiros indisponível',
+    };
+  }
+
+  const resultado = await DocumentPicker.getDocumentAsync({
+    // Alguns gestores de ficheiros do Android não conhecem `application/zip`
+    // e mostram o ficheiro a cinzento; o `octet-stream` cobre esses.
+    type: ['application/zip', 'application/x-zip-compressed', 'application/octet-stream'],
+    copyToCacheDirectory: true,
+    multiple: false,
+  });
+
+  if (resultado?.canceled) return null;
+
+  const ficheiro = resultado?.assets?.[0];
+  if (!ficheiro?.uri) return null;
+
+  // Um zip é binário: tem de ser lido como bytes, pelas mesmas razões do FIT.
+  const bytes = new Uint8Array(await new FS.File(ficheiro.uri).arrayBuffer());
+  return importStravaArchive(bytes, opcoes);
 }

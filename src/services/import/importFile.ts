@@ -86,15 +86,34 @@ async function lerJanelas(inicio: string, fim: string): Promise<ActivityWindow[]
 }
 
 /**
+ * Contexto que quem importa em lote já tem, e não vale a pena voltar a buscar.
+ *
+ * Sem isto, importar um arquivo do Strava com 2000 atividades fazia 2000
+ * consultas de janela e 2000 chamadas ao `getUser()` — uma por ficheiro,
+ * em série. Passar o que já se sabe transforma isso numa consulta só.
+ */
+export interface ImportContext {
+  /** Atividades já existentes, para a defesa da sobreposição temporal. */
+  janelas: ActivityWindow[];
+  userId: string;
+}
+
+/**
  * Importa um ficheiro de treino já lido para memória.
  *
- * Recebe o conteúdo em texto, não um caminho: quem chama é que sabe de onde
- * veio (seletor de ficheiros, partilha, mais tarde um zip), e assim isto
- * fica testável sem tocar no sistema de ficheiros.
+ * Recebe o conteúdo, não um caminho: quem chama é que sabe de onde veio
+ * (seletor de ficheiros, partilha, um zip), e assim isto fica testável sem
+ * tocar no sistema de ficheiros.
+ *
+ * Devolve também a janela da atividade criada. Quem importa em lote junta-a às
+ * que já tinha, para que o ficheiro seguinte do mesmo arquivo seja
+ * deduplicado contra este — um arquivo do Strava traz duplicados dentro de si
+ * com frequência, e sem isto passariam todos.
  */
 export async function importTrackFile(
   fileName: string,
   conteudo: string | Uint8Array,
+  contexto?: ImportContext,
 ): Promise<ImportOutcome> {
   const vazio: ImportOutcome = { imported: 0, skipped: 0 };
 
@@ -127,21 +146,26 @@ export async function importTrackFile(
   if (!treino) return { ...vazio, failure: 'no_timestamps' };
 
   try {
-    const janelas = await lerJanelas(treino.startTime, treino.endTime);
+    const janelas = contexto?.janelas
+      ?? (await lerJanelas(treino.startTime, treino.endTime));
     const { toImport, skipped } = planImport([treino], janelas, formato);
     const descartados = Object.values(skipped).reduce((a, b) => a + b, 0);
 
     if (toImport.length === 0) return { imported: 0, skipped: descartados };
 
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) return { ...vazio, error: 'sessão expirada' };
+    let userId = contexto?.userId;
+    if (!userId) {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return { ...vazio, error: 'sessão expirada' };
+      userId = user.user.id;
+    }
 
     const { workout, type } = toImport[0];
 
     const { data: atividade, error } = await supabase
       .from('activities')
       .insert({
-        user_id: user.user.id,
+        user_id: userId,
         type,
         distance: workout.distance,
         duration: workout.duration,
@@ -189,7 +213,18 @@ export async function importTrackFile(
       has_photos: false,
     });
 
-    return { imported: 1, skipped: descartados };
+    return {
+      imported: 1,
+      skipped: descartados,
+      // Para quem está a importar em lote deduplicar o ficheiro seguinte
+      // contra este, sem voltar à base de dados.
+      janela: {
+        startTime: workout.startTime,
+        endTime: workout.endTime,
+        source: formato,
+        externalId: workout.externalId,
+      },
+    };
   } catch (err: any) {
     return { ...vazio, error: err?.message ?? 'erro desconhecido' };
   }

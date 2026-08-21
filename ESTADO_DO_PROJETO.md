@@ -825,7 +825,54 @@ npx expo run:ios
 
 Em **Android não há bloqueio nenhum** — o Health Connect testa-se com o APK do EAS num telemóvel real.
 
-### 4.5 Importação de ficheiros — fase 1 feita (18 ago 2026) 🚧
+### 4.5 Importação de ficheiros — completa (20 ago 2026) ✅
+
+**Fase 2 feita:** FIT e o arquivo `.zip` do Strava. A fase 1 (GPX e TCX, um
+ficheiro de cada vez) é de 18 ago.
+
+**FIT.** É o que o Strava exporta para tudo o que foi gravado num dispositivo —
+e, num arquivo, a maioria dos ficheiros. Lido com o SDK oficial da Garmin, que
+trabalha sobre `Uint8Array` e não puxa nada do Node.
+
+⚠️ **A armadilha:** ler um FIT com `text()` corrompe-o em silêncio, porque os
+seus bytes não são UTF-8 válido, e o sintoma é "ficheiro malformado" sem pista
+da causa. É por isso que o `importTrackFile` passou a aceitar `string |
+Uint8Array` e que existem os motivos de falha `needs_bytes` / `needs_text`. Há
+um teste com o mesmo ficheiro lido das duas formas.
+
+Coordenadas vêm em **semicírculos**, não em graus — o teste ancora a conversão
+em Lisboa, para um erro de fator qualquer cair no oceano. Registos sem posição
+são ignorados: um relógio grava batimento entre fixes de GPS.
+
+**Arquivo do Strava.** Cada atividade vem **comprimida duas vezes**:
+`activities/1234.fit.gz`, gzip dentro do zip. Um leitor de zip normal devolve
+bytes ainda gzipados e o parser recebe lixo.
+
+Duas restrições reais, e como foram resolvidas:
+
+- **Memória.** Expandir 2000 atividades de uma vez rebenta num telemóvel. O
+  `unzipSync` do fflate aceita um filtro, e é usado **em lotes de 25** — o que
+  está expandido a cada momento são 25 ficheiros, e o resto continua comprimido.
+- **Rede.** Uma consulta de janela por ficheiro seriam 2000 consultas em série.
+  Passou a ser **uma só**: as janelas são lidas uma vez e crescem em memória à
+  medida que as atividades entram — o que também faz a deduplicação funcionar
+  *dentro* do próprio arquivo, onde os duplicados são comuns.
+
+Um ficheiro estragado no meio de 2000 não para a importação, e as falhas são
+contadas **por motivo** — num arquivo do Strava é normal haver dezenas sem
+traçado (treinos de ginásio à mão), e isso é informação, não erro.
+
+Dá para interromper: o que já entrou fica.
+
+✅ 12 testes novos (`importArchive.test.ts`), com o zip construído no próprio
+teste — incluindo o duplo gzip, a pasta `__MACOSX` e a deduplicação dentro do
+arquivo. Mais 6 do FIT. **392 no total.**
+
+**Por testar num dispositivo:** um arquivo do Strava a sério. Os testes usam
+zips de três ficheiros; o comportamento com centenas, e o consumo de memória a
+segurar o zip inteiro, só se vê com um arquivo real.
+
+### 4.5.1 Fase 1 — o que já existia (18 ago 2026)
 
 `src/services/import/` lê **GPX e TCX**, um ficheiro de cada vez.
 **Definições → Rastreamento e dispositivos → Importar ficheiro.**

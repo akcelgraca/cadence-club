@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Switch, Modal, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -12,7 +12,7 @@ import { useColors } from '../../hooks/useColors';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useHealthSync } from '../../hooks/useHealthSync';
 import { usePremium } from '../../hooks/usePremium';
-import { pickAndImportTrackFile } from '../../services/import/pickAndImport';
+import { pickAndImportArchive, pickAndImportTrackFile } from '../../services/import/pickAndImport';
 import { setPickerConfig } from './settings/picker';
 import type {
   IntensityPreference,
@@ -152,6 +152,50 @@ export default function SettingsScreen() {
   };
 
   // --- Importação de ficheiro ---
+
+  // --- Importação de arquivo (o .zip do Strava) ---
+  //
+  // Estado próprio, separado do `importando`: um arquivo demora minutos e a
+  // linha tem de mostrar quantas já entraram, não só um indicador a rodar.
+  const [arquivo, setArquivo] = useState<{ done: number; total: number; imported: number } | null>(null);
+  // Ref e não estado: é lida dentro do ciclo de importação, que não volta a
+  // renderizar — um estado aqui seria sempre o valor de quando começou.
+  const pararArquivo = useRef(false);
+
+  const handleImportArchivePress = async () => {
+    if (arquivo) {
+      // Segundo toque enquanto corre: interrompe.
+      pararArquivo.current = true;
+      return;
+    }
+
+    pararArquivo.current = false;
+    setArquivo({ done: 0, total: 0, imported: 0 });
+    try {
+      const r = await pickAndImportArchive({
+        onProgress: (p) => setArquivo(p),
+        deveParar: () => pararArquivo.current,
+      });
+
+      if (!r) return;
+      if (r.error) {
+        Alert.alert(t('import_error_title'),
+          r.total === 0 ? t('import_archive_none') : r.error);
+        return;
+      }
+
+      Alert.alert(
+        t('import_result_title'),
+        t('import_archive_result', {
+          imported: r.imported, skipped: r.skipped, failed: r.failed,
+        }) + (r.cancelled ? `\n\n${t('import_archive_cancelled')}` : ''),
+      );
+    } catch (err: any) {
+      Alert.alert(t('import_error_title'), err?.message ?? '');
+    } finally {
+      setArquivo(null);
+    }
+  };
 
   const handleImportPress = async () => {
     setImportando(true);
@@ -363,6 +407,23 @@ export default function SettingsScreen() {
             <Text style={styles.linkSub}>{t('import_file_hint')}</Text>
           </View>
           {importando && <ActivityIndicator size="small" color={c.primary} />}
+        </TouchableOpacity>
+        <Separator styles={styles} />
+
+        <TouchableOpacity
+          style={styles.linkRow}
+          onPress={handleImportArchivePress}
+          activeOpacity={0.6}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.linkLabel}>{t('import_archive_label')}</Text>
+            <Text style={styles.linkSub}>
+              {arquivo
+                ? t('import_archive_progress', arquivo)
+                : t('import_archive_hint')}
+            </Text>
+          </View>
+          {arquivo && <ActivityIndicator size="small" color={c.primary} />}
         </TouchableOpacity>
         <Separator styles={styles} />
 

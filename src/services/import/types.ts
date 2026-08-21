@@ -74,5 +74,41 @@ export interface ImportOutcome {
   skipped: number;
   /** Motivo, quando o ficheiro não chegou sequer a ser considerado. */
   failure?: ImportFailure;
+  /**
+   * A janela da atividade criada, quando houve uma.
+   *
+   * Serve a quem importa em lote: junta-a às janelas conhecidas e o ficheiro
+   * seguinte passa a ser deduplicado contra esta, sem ir à base de dados.
+   */
+  janela?: import('../health/types').ActivityWindow;
+  error?: string;
+}
+
+/** Como vai a importação de um arquivo, para a interface mostrar. */
+export interface ArchiveProgress {
+  /** Ficheiros já processados (importados, descartados ou falhados). */
+  done: number;
+  total: number;
+  imported: number;
+}
+
+/**
+ * Resultado de importar um arquivo inteiro.
+ *
+ * Ao contrário de um ficheiro só, aqui interessa a contagem por motivo: num
+ * arquivo do Strava é normal haver dezenas de ficheiros sem traçado (treinos
+ * de ginásio introduzidos à mão), e isso não é um erro — é informação.
+ */
+export interface ArchiveOutcome {
+  /** Entradas de atividade encontradas no arquivo. */
+  total: number;
+  imported: number;
+  /** Descartadas pelas defesas: já lá estavam, ou sobrepõem-se. */
+  skipped: number;
+  failed: number;
+  /** Quantas falharam por cada motivo. */
+  failures: Partial<Record<ImportFailure, number>>;
+  /** O utilizador interrompeu a meio. O que entrou até aí fica. */
+  cancelled: boolean;
   error?: string;
 }
