@@ -1,7 +1,14 @@
 # Cadence Club — Estado do Projeto
 
 **Data:** 21 de agosto de 2026
-**Commit:** `15aa881` — `main`, com as alterações do SMTP próprio por commitar
+**Commit:** `aa864b7` — `main`, sincronizado com `origin/main`, working tree limpo
+
+> **Branches (21 ago):** o trabalho vivia em `feat/dark-mode`, 47 commits à
+> frente da `main` — o cabeçalho deste documento dizia `main` e estava errado.
+> A `main` foi avançada por *fast-forward* (nada se perdeu) e a `feat/dark-mode`
+> apagada. **A partir daqui trabalha-se só na `main`.** Continua a existir a
+> `backup-pre-rewrite`, de 14 ago, com 21 commits que a `main` nunca teve —
+> é a cópia do estado anterior à reescrita, e fica.
 **Objetivo do produto:** app de fitness social para rivalizar com o Strava, focada no mercado português e em atletas casuais.
 
 > Sobre este documento: o que está marcado ✅ foi verificado a correr nesta máquina (testes, typecheck, build, inspeção do código). O que está marcado ⚠️ ou ❌ é pendência conhecida. A secção "Lacunas face ao Strava" é análise de produto, não facto verificado.
