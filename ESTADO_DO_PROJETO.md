@@ -1,7 +1,7 @@
 # Cadence Club — Estado do Projeto
 
-**Data:** 19 de agosto de 2026
-**Commit:** `ddecc45` — `main`, sincronizado com `origin/main`, working tree limpo
+**Data:** 21 de agosto de 2026
+**Commit:** `15aa881` — `main`, com as alterações do SMTP próprio por commitar
 **Objetivo do produto:** app de fitness social para rivalizar com o Strava, focada no mercado português e em atletas casuais.
 
 > Sobre este documento: o que está marcado ✅ foi verificado a correr nesta máquina (testes, typecheck, build, inspeção do código). O que está marcado ⚠️ ou ❌ é pendência conhecida. A secção "Lacunas face ao Strava" é análise de produto, não facto verificado.
@@ -14,7 +14,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 | Indicador | Estado |
 |---|---|
-| Testes | ✅ 339 testes, 24 suites, todos a passar |
+| Testes | ✅ 392 testes, 30 suites, todos a passar |
 | Typecheck (`tsc --noEmit`) | ✅ limpo |
 | Ecrãs (expo-router) | 44 |
 | Componentes | 67 |
@@ -199,7 +199,7 @@ num clube de milhares deixa de ser.
 - ✅ Três testes protegem isto: dicionários com as mesmas chaves, mesmos marcadores `{{}}` nos dois idiomas, e todas as chamadas `t()` a apontar para chaves existentes (uma chave em falta não estoira — aparece em bruto ao utilizador)
 - Padrão: constantes com texto visível guardam `i18n_key`, nunca o texto
 
-#### 3.2.7 `POST /auth/v1/signup` a devolver 500 (20 ago) 🔎
+#### 3.2.7 `POST /auth/v1/signup` a devolver 500 (20 ago) — ✅ RESOLVIDO a 21 ago
 
 O erro que aparecia no ecrã das preferências de treino **não era desse ecrã**: o
 passo do questionário no onboarding só faz `setStep('profile')`, sem um único
@@ -217,18 +217,81 @@ coluna `notification_prefs` da 047 tem `DEFAULT`, portanto não interfere.
 
 **Hipótese principal, por confirmar nos *Auth logs*:** o serviço de email
 embutido do Supabase tem um limite baixo de envios por hora nos projetos
-gratuitos, e com a confirmação de email ligada o GoTrue devolve **500** quando o
-limite é excedido. Foram criadas várias contas de teste hoje, entre o iPhone e o
+gratuitos — a documentação fala em **2 por hora e por projeto** — e com a
+confirmação de email ligada o GoTrue devolve **500** quando o limite é
+excedido. Foram criadas várias contas de teste hoje, entre o iPhone e o
 emulador.
 
 **Como confirmar:** *Logs → Auth*. A mensagem do GoTrue distingue os casos —
 `Error sending confirmation email` (limite/SMTP) de `Database error saving new
 user` (gatilho ou restrição).
 
-**Desbloqueio para testar:** *Authentication → Providers → Email* e desligar
-**Confirm email** enquanto se testa; ou configurar SMTP próprio, que é preciso
-de qualquer forma antes de lançar — o serviço embutido do Supabase é
-explicitamente só para desenvolvimento.
+#### Resolvido com SMTP próprio (21 ago) ✅
+
+O embutido não serve para lançar de qualquer forma — a Supabase diz
+explicitamente que é só para desenvolvimento. A 21 de agosto ficou preparado
+tudo o que se consegue preparar daqui; o que falta é conta, domínio e painel,
+que são passos manuais. **Guia completo: `supabase/SMTP.md`.**
+
+| | |
+|---|---|
+| `npm run smtp:check` | liga-se ao servidor, negoceia TLS, autentica-se e envia uma mensagem real. Existe porque o painel do Supabase **aceita credenciais erradas sem as testar** — guarda-as, diz *Settings saved*, e só se descobre no registo seguinte. **✅ Passa contra o Resend com o domínio real (21 ago)** |
+| `supabase/email-templates/` | Confirm signup, Reset Password e Change Email, PT/EN, com a marca da app |
+| `lang` no `user_metadata` | o `signUp` passa o idioma da app e as Definições atualizam-no; é assim que um template só consegue ser bilingue |
+| bloco SMTP no `.env.example` | **sem** `EXPO_PUBLIC_` — com esse prefixo a palavra-passe ia dentro do bundle |
+
+**A prova, contra o projeto a sério (21 ago).** Cinco `POST /auth/v1/signup`
+seguidos, direitos ao GoTrue com a chave anónima — sem app pelo meio, para
+separar o que era incógnita do que não era. **Os cinco em HTTP 200**, todos com
+`confirmation_sent_at` preenchido, os últimos três em 20 segundos, que é
+precisamente o ritmo que fazia o embutido rebentar.
+
+Isto fechou as duas dúvidas que ficaram por confirmar de manhã:
+
+- ✅ **O campo *Site URL* aceita `cadence://`** — não é preciso passar
+  `emailRedirectTo` no código
+- ✅ **O motor de templates aceita a condição do idioma.** Testado nos dois
+  casos que interessam: com `lang: "en"` e **sem `lang` nenhum**, que era o
+  arriscado — comparar nil com uma string rebenta o template, e um template que
+  rebenta é um email que não sai, ou seja o 500 outra vez. O
+  `printf "%v"` aguenta. O plano B do §7 do guia não é preciso
+
+🧹 Ficaram cinco utilizadores `akcelmedico+smtp-*@gmail.com` em
+*Authentication → Users*, para apagar.
+
+⚠️ **Testar no emulador Android, não no iPhone.** O link do email precisa do
+`cadence://`, que só passou a estar registado no `app.json` a 20 de agosto e
+**exige rebuild** (secção 12). A build que está no iPhone ainda não o sabe abrir.
+
+#### O fornecedor e o domínio (21 ago) ✅
+
+| | |
+|---|---|
+| Fornecedor | **Resend**, região Irlanda (`eu-west-1`) |
+| Domínio | **`cadenceclub.pt`** (Amen), verificado |
+| Remetente | `no-reply@cadenceclub.pt` |
+| DNS | DKIM, SPF+MX em `send`, DMARC — os quatro confirmados propagados |
+| `npm run smtp:check` | ✅ autentica e entrega |
+| Entregabilidade | ✅ Caixa de entrada do Gmail, `spf=pass` e `dkim=pass` |
+
+O `cadenceclub.site` também é nosso; **não se envia de lá** — o `.site` é dos
+TLDs baratos que os filtros de spam olham de lado, e um domínio novo já parte
+sem histórico de envio. Fica para redireccionamento ou staging.
+
+⚠️ **A raiz do `cadenceclub.pt` já tinha correio da Amen** (`MX
+mail-pt.securemail.pro`, `TXT v=spf1 include:spf.webapps.net ~all`). Não
+conflitua com o Resend — o SPF dele vive em `send.cadenceclub.pt` e o DKIM
+alinha pela raiz — mas **não mexer em nenhum dos dois**. Em troca há caixa de
+correio no domínio, que resolve o endereço de suporte que a App Store exige.
+
+**Painel feito a 21 ago:** SMTP, rate limit a 100/hora, os três templates e a
+configuração de URLs (`cadence://` + `cadence://*`). **Falta só** validar o
+link do email a abrir a app — teste de dispositivo, no emulador Android; no
+iOS precisa do rebuild da secção 12.
+
+**Desbloqueio imediato enquanto o painel não está feito:** *Authentication →
+Providers → Email* e desligar **Confirm email**. Não subir só o rate limit sem
+SMTP próprio — o embutido não tem entregabilidade nenhuma.
 
 #### 3.2.6 Os builds do EAS saíam sem credenciais (20 ago) ✅
 
@@ -1175,6 +1238,7 @@ Ver 3.2.1.
 10. Ligar a **monetização**: escolher IAP/RevenueCat, escrever a migração de gating, trocar o `can()` por `state.isPremium`
 
 ### Antes de qualquer lançamento
+10b. ✅ **SMTP próprio — feito a 21 ago.** Resend + `cadenceclub.pt`, cinco registos seguidos em 200. Ver 3.2.7 e `supabase/SMTP.md`. Sobra uma ponta: confirmar no emulador Android que o link do email abre a app
 11. **Criar o projeto PostHog (EU Cloud) e colar a chave no `.env` e no `eas.json`.** É o passo mais barato da lista e o que mais custa adiar: a retenção a 30 dias precisa de 30 dias de calendário, e o relógio só arranca no dia em que o primeiro evento chega. Confirmar com `npm run analytics:check`. Tudo o resto do lado do código já está feito (ver 3.11)
 12. Recolher dados de retenção com o PostHog **antes** de decidir preços — a instrumentação já está lá, falta o tempo a correr
 
@@ -1373,6 +1437,16 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ---
 
 ## 11. Registo de alterações
+
+**21 ago 2026 (12.ª sessão)**
+- 📧 **SMTP próprio — tudo o que se consegue fazer daqui.** O 500 no `/auth/v1/signup` (3.2.7) é o serviço de email embutido a bater no limite. Guia completo em **`supabase/SMTP.md`**: fornecedor, domínio, SPF/DKIM/DMARC, campos exatos do painel, rate limit, e uma tabela de sintoma → causa
+- **`npm run smtp:check`** — cliente SMTP mínimo (sem dependências novas): liga, faz STARTTLS ou TLS direto conforme a porta, autentica-se e envia uma mensagem real. Existe porque **o painel do Supabase aceita credenciais erradas sem as testar**, que é a forma de repetir exatamente o erro que estamos a corrigir. Verificado contra um servidor real nos dois modos; as mensagens de erro apontam a causa (utilizador errado, domínio por verificar, porta bloqueada)
+- **Três templates de email PT/EN** em `supabase/email-templates/` — o Supabase só tem um template por tipo de mensagem, por isso o bilinguismo passa pelo `user_metadata`: o `signUp` guarda lá o `lang` e o template escolhe o ramo. Mudar o idioma nas Definições atualiza-o, senão quem se registasse em português e passasse a app para inglês continuava a receber os emails em português
+- **`.env.example` com o bloco SMTP sem `EXPO_PUBLIC_`** — com esse prefixo a palavra-passe do servidor de email ia dentro do bundle da app, legível por quem abrisse o `.apk`. O `smtp:check` recusa-se a correr se alguém lhe puser o prefixo
+- ✅ **O 500 no registo acabou.** Cinco `POST /auth/v1/signup` seguidos contra o projeto a sério, os cinco em 200, os últimos três em 20 segundos — o ritmo que fazia o serviço embutido rebentar. Testado sem app pelo meio, direito ao GoTrue, para separar as incógnitas. Fechou também as duas dúvidas de manhã: o *Site URL* aceita `cadence://`, e o motor de templates aceita a condição do idioma **incluindo quando o `lang` não existe**, que era o caso arriscado
+- ✅ **Resend + `cadenceclub.pt` a funcionar (fim do dia).** Domínio verificado na Irlanda, os quatro registos DNS confirmados propagados, e o `smtp:check` a autenticar e a entregar — a mensagem chega à **Caixa de entrada** do Gmail com `spf=pass` e `dkim=pass`, ou seja o DNS está completo e o domínio assina. Descoberto de passagem que o domínio já tinha correio da Amen na raiz — não conflitua, e dá a caixa de suporte que a App Store vai exigir
+- ⚠️ **Duas coisas ficam por confirmar no painel** e estão assinaladas no guia: o `cadence://` no campo *Site URL*, e o motor de templates a aceitar a condição do idioma — não há Go nesta máquina para a correr
+- 392 testes, 30 suites, `tsc --noEmit` limpo
 
 **19 ago 2026 (11.ª sessão)**
 - ❤️ **FC máxima editável no perfil** — campo em Editar perfil → Treino, ao lado do peso (mesma categoria: dado fisiológico para calcular, não para descrever). O marcador mostra **o valor que a app usa agora**, e por baixo aparecem as cinco zonas em bpm, que atualizam ao escrever — sem elas "187 bpm" não diz nada a ninguém

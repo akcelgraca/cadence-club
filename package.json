@@ -83,6 +83,7 @@
     "typecheck": "tsc --noEmit",
     "analytics:check": "node scripts/check-analytics.mjs",
     "push:check": "node scripts/check-push-android.mjs",
+    "smtp:check": "node scripts/check-smtp.mjs",
     "env:check": "node scripts/check-env.mjs"
   },
   "jest": {

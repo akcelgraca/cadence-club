@@ -7,6 +7,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useAuthStore } from '../../store/authStore';
 import { supabase } from '../../services/supabase';
+import { syncLanguagePreference } from '../../services/auth';
 import { typography } from '../../lib/theme';
 import { useColors } from '../../hooks/useColors';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
@@ -690,7 +691,12 @@ export default function SettingsScreen() {
               t('settings_language'),
               LANGUAGE_OPTIONS,
               settings.language,
-              (val) => updateSettings({ language: val as 'pt' | 'en' }),
+              (val) => {
+                const idioma = val as 'pt' | 'en';
+                updateSettings({ language: idioma });
+                // Para os emails de autenticação saírem no mesmo idioma que a app.
+                syncLanguagePreference(idioma);
+              },
             )
           }
           colors={c}

@@ -3,12 +3,50 @@ import * as WebBrowser from 'expo-web-browser';
 import { makeRedirectUri } from 'expo-auth-session';
 import { Platform } from 'react-native';
 import { supabase } from './supabase';
+import i18n from '../lib/i18n';
 import type { Profile, ActivityGoal } from '../lib/types';
 
+/**
+ * O idioma em que os emails de autenticação devem sair.
+ *
+ * Os templates do Supabase são um só por tipo de mensagem — não há forma de ter
+ * um em português e outro em inglês. O que há é o `user_metadata`, que o
+ * template consegue ler: guardando aqui o idioma, o template escolhe o ramo
+ * certo (ver `supabase/email-templates/`). Sem isto, quem usa a app em inglês
+ * recebia a confirmação de conta em português.
+ */
+function idiomaDosEmails(): 'pt' | 'en' {
+  return i18n.language?.startsWith('en') ? 'en' : 'pt';
+}
+
 export async function signUp(email: string, password: string) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { lang: idiomaDosEmails() } },
+  });
   if (error) throw error;
   return data;
+}
+
+/**
+ * Acompanha a mudança de idioma nas Definições.
+ *
+ * O `lang` é escrito no registo e nunca mais mexido — quem se registasse em
+ * português e passasse a app para inglês continuaria a receber os emails de
+ * recuperação de palavra-passe em português. Falha em silêncio de propósito:
+ * mudar o idioma da app não pode ficar dependente da rede.
+ */
+export async function syncLanguagePreference(idioma?: 'pt' | 'en') {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return;
+    // O idioma vem por parâmetro porque o `i18n` só muda no efeito seguinte à
+    // escolha: lido aqui, seria ainda o anterior.
+    await supabase.auth.updateUser({ data: { lang: idioma ?? idiomaDosEmails() } });
+  } catch {
+    // sem rede, ou sessão expirada — fica para a próxima mudança
+  }
 }
 
 export async function signIn(email: string, password: string) {
