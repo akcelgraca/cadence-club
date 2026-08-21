@@ -5,6 +5,7 @@ import { planImport } from '../health/dedup';
 import type { ActivityWindow } from '../health/types';
 import { parseGpx } from './parseGpx';
 import { parseTcx } from './parseTcx';
+import { parseFit } from './parseFit';
 import { routeSummary, trackToWorkout } from './track';
 import type { ImportFormat, ImportOutcome, ParsedTrack } from './types';
 
@@ -26,6 +27,7 @@ export function detectFormat(fileName: string): ImportFormat | null {
   const nome = fileName.toLowerCase();
   if (nome.endsWith('.gpx')) return 'gpx';
   if (nome.endsWith('.tcx')) return 'tcx';
+  if (nome.endsWith('.fit')) return 'fit';
   return null;
 }
 
@@ -37,11 +39,20 @@ export function detectFormat(fileName: string): ImportFormat | null {
  * muda com facilidade — o Strava numera as exportações, e o mesmo treino
  * descarregado duas vezes sai com nomes diferentes.
  */
-export async function fileFingerprint(conteudo: string): Promise<string> {
-  const hash = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    conteudo,
-  );
+export async function fileFingerprint(conteudo: string | Uint8Array): Promise<string> {
+  // Bytes e texto têm de passar por caminhos diferentes: o `digestStringAsync`
+  // recebe uma string, e passar-lhe um FIT convertido a texto perderia bytes.
+  let hash: string;
+  if (typeof conteudo === 'string') {
+    hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, conteudo);
+  } else {
+    // A cópia é para o tipo: um `Uint8Array` genérico não satisfaz o
+    // `BufferSource` do TypeScript, e o `.buffer` de uma cópia é um
+    // `ArrayBuffer` a sério.
+    const bytes = new Uint8Array(conteudo);
+    const digerido = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, bytes.buffer as ArrayBuffer);
+    hash = [...new Uint8Array(digerido)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
   // Prefixo para não colidir com ids vindos do HealthKit, que são UUIDs.
   return `file:${hash.slice(0, 32)}`;
 }
@@ -83,16 +94,26 @@ async function lerJanelas(inicio: string, fim: string): Promise<ActivityWindow[]
  */
 export async function importTrackFile(
   fileName: string,
-  conteudo: string,
+  conteudo: string | Uint8Array,
 ): Promise<ImportOutcome> {
   const vazio: ImportOutcome = { imported: 0, skipped: 0 };
 
   const formato = detectFormat(fileName);
   if (!formato) return { ...vazio, failure: 'unsupported_format' };
 
+  // Cada leitor quer o conteúdo na forma certa. Um FIT lido como texto vem
+  // corrompido — os seus bytes não são UTF-8 válido — e um XML entregue como
+  // bytes não é lido por parser nenhum.
+  const ehTexto = typeof conteudo === 'string';
+  if (formato === 'fit' && ehTexto) return { ...vazio, failure: 'needs_bytes' };
+  if (formato !== 'fit' && !ehTexto) return { ...vazio, failure: 'needs_text' };
+
   let traçado: ParsedTrack | null;
   try {
-    traçado = formato === 'gpx' ? parseGpx(conteudo) : parseTcx(conteudo);
+    traçado =
+      formato === 'gpx' ? parseGpx(conteudo as string)
+      : formato === 'tcx' ? parseTcx(conteudo as string)
+      : parseFit(conteudo as Uint8Array);
   } catch (err: any) {
     return { ...vazio, failure: 'malformed', error: err?.message };
   }

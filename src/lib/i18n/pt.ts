@@ -1054,11 +1054,13 @@ const pt = {
 
   // Importação de ficheiros de treino
   import_file_label: 'Importar ficheiro',
-  import_file_hint: 'GPX ou TCX, do Strava, Garmin ou outra app',
+  import_file_hint: 'GPX, TCX ou FIT, do Strava, Garmin ou outra app',
   import_result_title: 'Importação',
   import_ok: 'Atividade importada.',
   import_skipped: 'Nada importado — esta atividade já existe aqui.',
-  import_fail_unsupported_format: 'Formato não suportado. Por agora só GPX e TCX.',
+  import_fail_unsupported_format: 'Formato não suportado. Por agora só GPX, TCX e FIT.',
+  import_fail_needs_bytes: 'Não foi possível ler o ficheiro FIT.',
+  import_fail_needs_text: 'Não foi possível ler o ficheiro.',
   import_fail_malformed: 'Não foi possível ler o ficheiro. Pode estar corrompido.',
   import_fail_no_points: 'O ficheiro não tem pontos de percurso.',
   import_fail_no_timestamps: 'O ficheiro é um percurso planeado, não um treino gravado — não tem horas.',

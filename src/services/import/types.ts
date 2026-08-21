@@ -1,5 +1,5 @@
 /**
- * Importação de ficheiros de treino (GPX, TCX).
+ * Importação de ficheiros de treino (GPX, TCX, FIT).
  *
  * PORQUÊ ISTO EXISTE: sem importar histórico, mudar do Strava custa ao
  * utilizador todas as atividades que já tem. É a barreira número um à adoção.
@@ -48,15 +48,24 @@ export interface ParsedTrack {
   declaredDistance: number | null;
 }
 
-/** Formatos que sabemos ler. */
-export type ImportFormat = 'gpx' | 'tcx';
+/**
+ * Formatos que sabemos ler.
+ *
+ * O `fit` é binário e os outros dois são XML — quem lê tem de saber a
+ * diferença, e é por isso que o `importTrackFile` aceita bytes além de texto.
+ */
+export type ImportFormat = 'gpx' | 'tcx' | 'fit';
 
 /** Porque é que um ficheiro não deu atividade nenhuma. */
 export type ImportFailure =
   | 'unsupported_format'  // extensão que não conhecemos
   | 'malformed'           // não é XML válido, ou não tem a estrutura esperada
   | 'no_points'           // ficheiro válido mas sem pontos de traçado
-  | 'no_timestamps';      // pontos sem tempo: é uma rota, não um treino
+  | 'no_timestamps'       // pontos sem tempo: é uma rota, não um treino
+  // Os dois seguintes são erros de quem chama, não do ficheiro: entregar um
+  // FIT como texto (vem corrompido) ou um XML como bytes.
+  | 'needs_bytes'
+  | 'needs_text';
 
 export interface ImportOutcome {
   /** Quantas atividades entraram. Hoje é sempre 0 ou 1. */

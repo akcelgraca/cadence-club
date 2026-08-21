@@ -1054,11 +1054,13 @@ const en = {
 
   // Workout file import
   import_file_label: 'Import a file',
-  import_file_hint: 'GPX or TCX, from Strava, Garmin or another app',
+  import_file_hint: 'GPX, TCX or FIT, from Strava, Garmin or another app',
   import_result_title: 'Import',
   import_ok: 'Activity imported.',
   import_skipped: 'Nothing imported — this activity is already here.',
-  import_fail_unsupported_format: 'Unsupported format. GPX and TCX only, for now.',
+  import_fail_unsupported_format: 'Unsupported format. GPX, TCX and FIT only, for now.',
+  import_fail_needs_bytes: 'Could not read the FIT file.',
+  import_fail_needs_text: 'Could not read the file.',
   import_fail_malformed: 'The file could not be read. It may be corrupted.',
   import_fail_no_points: 'The file has no track points.',
   import_fail_no_timestamps: 'This is a planned route, not a recorded workout — it has no timestamps.',

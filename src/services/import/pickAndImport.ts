@@ -1,4 +1,4 @@
-import { importTrackFile } from './importFile';
+import { detectFormat, importTrackFile } from './importFile';
 import type { ImportOutcome } from './types';
 
 /**
@@ -28,6 +28,9 @@ function carregar(loader: () => any): any | null {
 const TIPOS = [
   'application/gpx+xml',
   'application/vnd.garmin.tcx+xml',
+  // O FIT não tem tipo MIME registado. Os gestores de ficheiros classificam-no
+  // quase sempre como `octet-stream`, que já estava na lista pelo mesmo motivo.
+  'application/vnd.ant.fit',
   'application/xml',
   'text/xml',
   'application/octet-stream',
@@ -54,8 +57,19 @@ export async function pickAndImportTrackFile(): Promise<ImportOutcome | null> {
   const ficheiro = resultado?.assets?.[0];
   if (!ficheiro?.uri) return null;
 
+  const nome: string = ficheiro.name ?? 'ficheiro';
+  const ficheiroFS = new FS.File(ficheiro.uri);
+
   // `readAsStringAsync` foi removido no SDK 57 — não é só um aviso, lança em
   // tempo de execução. A API nova é a classe File.
-  const conteudo: string = await new FS.File(ficheiro.uri).text();
-  return importTrackFile(ficheiro.name ?? 'ficheiro', conteudo);
+  //
+  // O FIT é binário e tem de ser lido como bytes: passá-lo por `text()`
+  // corrompe-o em silêncio, porque os seus bytes não são UTF-8 válido, e o
+  // resultado seria "ficheiro malformado" sem pista nenhuma da causa.
+  const conteudo: string | Uint8Array =
+    detectFormat(nome) === 'fit'
+      ? new Uint8Array(await ficheiroFS.arrayBuffer())
+      : await ficheiroFS.text();
+
+  return importTrackFile(nome, conteudo);
 }

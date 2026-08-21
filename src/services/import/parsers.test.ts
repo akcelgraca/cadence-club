@@ -1,3 +1,5 @@
+import { Encoder, Profile } from '@garmin/fitsdk';
+import { parseFit } from './parseFit';
 import { detectFormat } from './importFile';
 import { parseGpx } from './parseGpx';
 import { parseTcx } from './parseTcx';
@@ -60,10 +62,11 @@ describe('detectFormat', () => {
     expect(detectFormat('corrida.gpx')).toBe('gpx');
     expect(detectFormat('CORRIDA.GPX')).toBe('gpx');
     expect(detectFormat('treino.tcx')).toBe('tcx');
+    expect(detectFormat('treino.fit')).toBe('fit');
+    expect(detectFormat('TREINO.FIT')).toBe('fit');
   });
 
   it('devolve null para o que não sabemos ler', () => {
-    expect(detectFormat('treino.fit')).toBeNull();
     expect(detectFormat('foto.jpg')).toBeNull();
     expect(detectFormat('sem-extensao')).toBeNull();
   });
@@ -247,5 +250,93 @@ describe('frequência cardíaca nos ficheiros', () => {
 </trkseg></trk></gpx>`;
 
     expect(parseGpx(gpx)!.points[0].heartRate).toBeNull();
+  });
+});
+
+describe('parseFit', () => {
+  /**
+   * O ficheiro de teste é gerado com o codificador do próprio SDK.
+   *
+   * É melhor do que um binário guardado no repositório: fica legível no
+   * teste o que lá está dentro, e não há um blob que ninguém sabe reproduzir.
+   */
+  function fitDeTeste(opcoes: {
+    pontos?: number;
+    comPosicao?: boolean;
+    sport?: string;
+    distancia?: number;
+  } = {}): Uint8Array {
+    const { pontos = 3, comPosicao = true, sport = 'running', distancia = 250 } = opcoes;
+    const enc = new Encoder();
+    const t0 = new Date('2026-07-15T08:00:00.000Z');
+
+    enc.onMesg(Profile.MesgNum.FILE_ID, {
+      type: 'activity', manufacturer: 'garmin', product: 1,
+      timeCreated: t0, serialNumber: 1,
+    } as any);
+
+    for (let i = 0; i < pontos; i++) {
+      enc.onMesg(Profile.MesgNum.RECORD, {
+        timestamp: new Date(t0.getTime() + i * 10_000),
+        // O FIT guarda coordenadas em semicírculos, não em graus.
+        ...(comPosicao ? {
+          positionLat: Math.round(38.72 / (180 / 2 ** 31)),
+          positionLong: Math.round(-9.14 / (180 / 2 ** 31)),
+        } : {}),
+        altitude: 30 + i,
+        heartRate: 140 + i,
+      } as any);
+    }
+
+    enc.onMesg(Profile.MesgNum.SESSION, {
+      timestamp: new Date(t0.getTime() + pontos * 10_000),
+      startTime: t0, totalElapsedTime: pontos * 10,
+      totalDistance: distancia, sport,
+    } as any);
+
+    return enc.close();
+  }
+
+  it('lê os pontos, com altitude e batimento', () => {
+    const t = parseFit(fitDeTeste())!;
+    expect(t.points).toHaveLength(3);
+    expect(t.points[0].elevation).toBe(30);
+    expect(t.points[0].heartRate).toBe(140);
+    expect(t.points[0].time).toBe('2026-07-15T08:00:00.000Z');
+  });
+
+  it('converte semicírculos em graus', () => {
+    // 38,72 / -9,14 é Lisboa. Se a conversão estivesse errada por qualquer
+    // fator, o ponto cairia no oceano — ou fora do planeta.
+    const t = parseFit(fitDeTeste())!;
+    expect(t.points[0].lat).toBeCloseTo(38.72, 4);
+    expect(t.points[0].lng).toBeCloseTo(-9.14, 4);
+  });
+
+  it('traz a modalidade e a distância que o dispositivo mediu', () => {
+    const t = parseFit(fitDeTeste({ sport: 'cycling', distancia: 12345 }))!;
+    expect(t.rawType).toBe('cycling');
+    expect(t.declaredDistance).toBe(12345);
+  });
+
+  it('ignora registos sem posição', () => {
+    // Um relógio grava batimento e cadência entre pontos de GPS. São
+    // registos a sério, mas não são pontos de traçado.
+    const t = parseFit(fitDeTeste({ comPosicao: false }))!;
+    expect(t.points).toHaveLength(0);
+  });
+
+  it('devolve null para o que não é um FIT', () => {
+    expect(parseFit(new Uint8Array([1, 2, 3, 4]))).toBeNull();
+    expect(parseFit(new TextEncoder().encode('<gpx></gpx>'))).toBeNull();
+  });
+
+  it('não confunde bytes com texto', () => {
+    // O engano que este formato convida: ler um FIT como string corrompe-o,
+    // porque os seus bytes não são UTF-8 válido.
+    const bytes = fitDeTeste();
+    const comoTexto = new TextEncoder().encode(new TextDecoder().decode(bytes));
+    expect(parseFit(bytes)).not.toBeNull();
+    expect(parseFit(comoTexto)).toBeNull();
   });
 });
