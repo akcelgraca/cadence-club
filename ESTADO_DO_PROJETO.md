@@ -1182,7 +1182,26 @@ Ver 3.2.1.
 
 ## 9. Plano de teste no iPhone físico
 
-**Build instalada: 20 ago 2026, 14:41.** Acrescenta os meses do histórico e os
+**Build instalada: 21 ago 2026, 16:07.** Traz a importação FIT e o arquivo do
+Strava. Verificada por inspeção do bundle: `import_archive_label`, `parseFit`,
+`gunzipSync` e `unzipSync` presentes.
+
+⚠️ **Lição: instalar um pacote com código nativo obriga a `pod install`.** Este
+build falhou primeiro com `'React/RCTImageSource.h' file not found` no
+`react-native-svg` — sintoma de Pods dessincronizados, e nada a ver com o
+`react-native-svg`. A causa foi o **`expo-font`**, instalado horas antes para o
+build Android: acrescenta um pod, e o projeto nativo ficou a meio. O `fflate` e
+o `@garmin/fitsdk` são JS puro e não contribuíram.
+
+⚠️ **E o `pod install` precisa de locale UTF-8.** Sem ele rebenta em
+`String#unicode_normalize`, com um aviso quase escondido no meio do *stack
+trace*. O comando que funciona:
+
+```bash
+cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install
+```
+
+**Build anterior: 20 ago 2026, 14:41.** Acrescenta os meses do histórico e os
 desafios traduzidos. **Precisa da migração 048 aplicada** — sem ela os nomes dos
 desafios continuam a vir em português da base de dados, e o `is_collective`
 chega `undefined`, o que faz o desafio da comunidade mostrar progresso
