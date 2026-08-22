@@ -1,7 +1,7 @@
 # Cadence Club — Estado do Projeto
 
-**Data:** 21 de agosto de 2026
-**Commit:** `b800b36` — `main`, sincronizado com `origin/main`, working tree limpo
+**Data:** 22 de agosto de 2026
+**Commit:** `3447532` — `main`, sincronizado com `origin/main`, working tree limpo
 
 > **Branches (21 ago):** o trabalho vivia em `feat/dark-mode`, 47 commits à
 > frente da `main` — o cabeçalho deste documento dizia `main` e estava errado.
