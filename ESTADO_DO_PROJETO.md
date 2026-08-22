@@ -900,9 +900,11 @@ foram compilados contra a 19.2.3.
 bytecode Hermes. Esta última é a que conta — o Jest não usa o Metro, portanto
 uma resolução de módulos partida passaria despercebida aos testes.
 
-⚠️ **Por confirmar em dispositivo.** Um bundle que gera não é uma app que
-arranca. Como o `react-native` mudou de patch e há módulos nativos pelo meio,
-o próximo build de EAS é que fecha esta secção.
+✅ **Confirmado a arrancar (22 ago).** O build `08a2fac8` (perfil `preview`,
+commit `e31093b`, 26 minutos) foi instalado no emulador Android 10 e **abre no
+ecrã de login sem um único erro fatal no logcat**. Era o que faltava: um bundle
+que gera não é uma app que arranca, e o `react-native` mudou de patch com
+módulos nativos pelo meio.
 
 ---
 
@@ -1549,6 +1551,18 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ## 11. Registo de alterações
 
 **22 ago 2026 (13.ª sessão)**
+- 📦 **Build `08a2fac8`** (Android, `preview`, commit `e31093b`, 26 min) — [APK](https://expo.dev/artifacts/eas/U2OC1ZEJIJSJxi_msbC1UjANgZtIKTO8eDvenISmKj8.apk). Verificado por inspeção do próprio APK, não por confiança no processo:
+
+  | Verificação | Resultado |
+  |---|---|
+  | Credenciais a sério no bundle | ✅ `oygedlkjvshcforoklbr.supabase.co` presente; **zero** ocorrências de `YOUR_PROJECT`, `your-anon-key`, `your-mapbox-token` |
+  | Chaves `notif_*` da 051 | ✅ no bundle, com o texto inglês |
+  | `minSdkVersion` | ✅ 26 (era 24 e partia o Gradle a 20 ago) |
+  | Esquema `cadence://` no manifesto | ✅ |
+  | Arranca no emulador | ✅ ecrã de login, sem nada fatal no logcat |
+  | IDs do Google no bundle | ✅ **zero** — confirmação independente de que ninguém os lia |
+
+- **O `eas.json` não tem bloco `env`, e está certo assim.** As variáveis vivem nos servidores do EAS desde 20 ago, porque este repositório é público; o que o ficheiro faz é declarar `"environment"` em cada perfil, sem o que as variáveis do EAS **não são aplicadas de todo**. O `npm run env:check` confirma os três lados e os quatro perfis
 - 🧹 **Os IDs do Google eram peso morto** — `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` e `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` estavam no `.env`, no `.env.example`, no `README` e no ambiente `preview` do EAS, e **não eram lidos por ninguém**. O login com Google vai pelo `signInWithOAuth` do Supabase, cuja configuração vive no painel do Supabase, não na app. Apagados dos quatro sítios
 - **`configureGoogleSignIn()` era uma função vazia** desde o commit inicial, chamada a cada arranque no `_layout.tsx`. Removida com a chamada e o import. O comentário do `check-env.mjs` afirmava que os IDs eram lidos lá dentro — nunca foram
 - ⚠️ **O pacote `@react-native-google-signin/google-signin` continua instalado e no `app.json`, sem ninguém o importar.** É um módulo nativo: removê-lo muda o build, por isso fica para depois do APK validado
