@@ -1549,6 +1549,9 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ## 11. Registo de alterações
 
 **22 ago 2026 (13.ª sessão)**
+- 🧹 **Os IDs do Google eram peso morto** — `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` e `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` estavam no `.env`, no `.env.example`, no `README` e no ambiente `preview` do EAS, e **não eram lidos por ninguém**. O login com Google vai pelo `signInWithOAuth` do Supabase, cuja configuração vive no painel do Supabase, não na app. Apagados dos quatro sítios
+- **`configureGoogleSignIn()` era uma função vazia** desde o commit inicial, chamada a cada arranque no `_layout.tsx`. Removida com a chamada e o import. O comentário do `check-env.mjs` afirmava que os IDs eram lidos lá dentro — nunca foram
+- ⚠️ **O pacote `@react-native-google-signin/google-signin` continua instalado e no `app.json`, sem ninguém o importar.** É um módulo nativo: removê-lo muda o build, por isso fica para depois do APK validado
 - 🌍 **Notificações traduzíveis — migração 051.** Os nove tipos guardavam a frase em português, construída em SQL; passam a guardar **chave + parâmetros**, como a 041 fez nos planos de treino. Ver 3.2.1
 - **A parte que não era óbvia:** o push não se traduz no cliente. O texto é desenhado pelo sistema operativo a partir do que a edge function enviou, e o sistema não traduz nada — por isso a tradução tem de existir **duas vezes**, e o servidor precisa de saber o idioma de cada pessoa. Daí `profiles.language`, lida na consulta que a `send-push` já fazia
 - A data do evento passa a ir em **ISO** nos parâmetros em vez de formatada. Hoje não muda nada visível (o inglês da app é en-GB, que também escreve DD/MM); o que muda é o formato deixar de estar congelado na base de dados

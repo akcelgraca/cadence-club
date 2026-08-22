@@ -21,7 +21,6 @@ import {
 } from '@expo-google-fonts/barlow-condensed';
 import { DMMono_400Regular } from '@expo-google-fonts/dm-mono';
 import Mapbox from '@rnmapbox/maps';
-import { configureGoogleSignIn } from '../services/auth';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { usePushNotifications } from '../hooks/usePushNotifications';
@@ -301,10 +300,6 @@ export default function RootLayout() {
 
   useEffect(() => {
     initialize();
-  }, []);
-
-  useEffect(() => {
-    configureGoogleSignIn();
   }, []);
 
   // As definições guardadas — entre elas o tema — só eram lidas ao abrir o

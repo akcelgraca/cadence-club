@@ -52,8 +52,6 @@ Create a `.env` file in the project root:
 EXPO_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 EXPO_PUBLIC_MAPBOX_TOKEN=pk.<token>
-EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=<web-client-id>.apps.googleusercontent.com
-EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=<ios-client-id>.apps.googleusercontent.com
 EXPO_PUBLIC_POSTHOG_KEY=<posthog-key>
 EXPO_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 ```

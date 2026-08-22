@@ -20,8 +20,14 @@ const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
  * Os nomes que o código realmente lê — em todo o `src`, não só no
- * `constants.ts`. Os IDs do Google são lidos no `configureGoogleSignIn`, e a
- * primeira versão deste script não os via.
+ * `constants.ts`; as chaves do RevenueCat, por exemplo, vivem no
+ * `services/purchases`.
+ *
+ * Varrer o código em vez de manter uma lista à mão é o que apanhou, a 22 de
+ * agosto, os dois `EXPO_PUBLIC_GOOGLE_*_CLIENT_ID`: estavam no `.env` e no
+ * ambiente do EAS, e não eram lidos por ninguém. O login com Google vai pelo
+ * `signInWithOAuth` do Supabase, cuja configuração está no painel do Supabase
+ * e não na app.
  */
 const usadas = [
   ...new Set(

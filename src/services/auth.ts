@@ -153,9 +153,6 @@ export async function uploadAvatar(userId: string, uri: string, mimeType?: strin
 
 // ---- Social Sign-In ----
 
-// No-op kept for backwards compatibility with _layout.tsx import
-export function configureGoogleSignIn() {}
-
 export async function signInWithGoogle() {
   const redirectUri = makeRedirectUri({ scheme: 'cadence' });
 
