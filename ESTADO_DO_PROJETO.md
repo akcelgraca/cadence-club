@@ -195,14 +195,24 @@ por mutação:** apagar uma chave do `en.ts`, apagar uma entrada da edge
 function, trocar `{{club}}` por `{{clube}}` e deixar uma entrada só com
 português — os quatro foram apanhados.
 
-⚠️ **Por aplicar e por fazer:**
-1. **Aplicar a `051_notification_i18n.sql`** no SQL Editor. O
-   `VERIFICAR_MIGRACOES.sql` foi alargado e cobre-a — incluindo a verificação
-   de que **as nove funções** foram mesmo substituídas, porque as colunas
-   existirem sem as funções escreverem nelas é uma falha silenciosa
-2. **Redeployar a `send-push`** — sem isto o push continua em português
-3. **Build novo** para a app começar a escrever `profiles.language` e a ler as
-   chaves
+✅ **Aplicada a 22 ago**, e verificada dos dois lados:
+- As colunas existem — sondadas pelo PostgREST com a chave anónima (uma coluna
+  inventada devolve `42703`, portanto a sonda distingue)
+- **As nove funções foram substituídas** — a verificação 32 do
+  `VERIFICAR_MIGRACOES.sql` devolveu 9. É a que interessa: as colunas podiam
+  existir com as funções antigas a ignorá-las, e nesse caso nada dava erro e as
+  colunas ficavam vazias para sempre
+- A `send-push` foi redeployada e responde 401 sem o segredo (uma função
+  inexistente dá 404)
+
+⚠️ **Falta o build novo, e até lá o push continua em português.** A app
+instalada ainda não escreve `profiles.language`, portanto toda a gente fica no
+`'pt'` por omissão. Não é defeito — é a ordem natural das coisas.
+
+⚠️ **A versão da edge function não foi confirmada.** O 401 prova que está lá e
+protegida, não prova que é o código novo. Só um push a sério o mostra, e
+provocá-lo daqui exigia sessão iniciada, que a confirmação de email impede.
+Fica para o teste no Android físico.
 
 ⚠️ **O nome dos crachás não traduz.** Vem da tabela `badges`, em português, e
 vai como parâmetro: um inglês recebe *"You unlocked the badge: Madrugador!"*. A
