@@ -7,7 +7,7 @@ import i18n from '../lib/i18n';
 import type { Profile, ActivityGoal } from '../lib/types';
 
 /**
- * O idioma em que os emails de autenticação devem sair.
+ * O idioma da pessoa, para tudo o que é desenhado fora da app.
  *
  * Os templates do Supabase são um só por tipo de mensagem — não há forma de ter
  * um em português e outro em inglês. O que há é o `user_metadata`, que o
@@ -43,7 +43,16 @@ export async function syncLanguagePreference(idioma?: 'pt' | 'en') {
     if (!data.session) return;
     // O idioma vem por parâmetro porque o `i18n` só muda no efeito seguinte à
     // escolha: lido aqui, seria ainda o anterior.
-    await supabase.auth.updateUser({ data: { lang: idioma ?? idiomaDosEmails() } });
+    const escolhido = idioma ?? idiomaDosEmails();
+
+    // Dois sítios, dois consumidores diferentes: o `user_metadata` é o que os
+    // templates de email do Supabase conseguem ler, e o `profiles.language` é
+    // o que a edge function das notificações lê. Nenhum dos dois consegue ver
+    // o outro.
+    await Promise.all([
+      supabase.auth.updateUser({ data: { lang: escolhido } }),
+      supabase.from('profiles').update({ language: escolhido }).eq('id', data.session.user.id),
+    ]);
   } catch {
     // sem rede, ou sessão expirada — fica para a próxima mudança
   }
@@ -104,6 +113,10 @@ export async function createProfile(profile: {
     .insert({
       ...profile,
       is_public: true,
+      // O idioma fica no perfil porque o servidor precisa dele: a edge function
+      // `send-push` traduz o push, e o sistema operativo mostra o texto tal
+      // como chega. Ver a migração 051.
+      language: idiomaDosEmails(),
     })
     .select()
     .single();

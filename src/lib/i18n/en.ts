@@ -439,6 +439,18 @@ const en = {
   notifications_empty: 'No notifications',
   notifications_empty_subtext: 'Notifications about your activity will appear here.',
 
+  // Notification text. The database stores the key and the parameters
+  // (migration 051), never the sentence.
+  notif_follow: '{{actor}} started following you!',
+  notif_kudo: '{{actor}} gave you a boost!',
+  notif_comment: '{{actor}} commented on your activity.',
+  notif_badge: 'You unlocked the badge: {{badge}}!',
+  notif_streak: '{{days}}-day streak! Keep it up!',
+  notif_club_request: '{{actor}} asked to join {{club}}.',
+  notif_club_accepted: "You're now part of {{club}}.",
+  notif_message: '{{actor}}: {{preview}}',
+  notif_event: '{{club}}: {{title}} · {{date}}',
+
   // Errors extra
   error_loading: 'Error loading',
 

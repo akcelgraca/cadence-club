@@ -103,3 +103,76 @@ describe('interruptores de notificação', () => {
     expect(push).toMatch(/notification_prefs/);
   });
 });
+
+/**
+ * O texto das notificações vive em três dicionários que ninguém obriga a
+ * concordar: `pt.ts`, `en.ts` e — porque o push é desenhado no servidor — a
+ * tabela `CORPOS` dentro da edge function.
+ *
+ * Divergirem falha em silêncio, e de maneiras diferentes conforme o sítio: uma
+ * chave que falte no `en.ts` mostra português a um inglês; uma que falte na
+ * edge function manda o push em português na mesma; uma que falte no SQL não
+ * chega a existir. Nenhuma delas estoira, e nenhuma aparece nos testes de
+ * ecrã — por isso são estes que as apanham.
+ */
+describe('texto traduzido das notificações', () => {
+  const migracao = ler('supabase/migrations/051_notification_i18n.sql');
+  const chaves = [...new Set([...migracao.matchAll(/'(notif_\w+)'/g)].map((m) => m[1]))];
+
+  it('a migração 051 define uma chave por tipo de notificação', () => {
+    expect(chaves).toHaveLength(tiposDeclarados().length);
+  });
+
+  it('cada chave existe nos dois dicionários da app', () => {
+    const pt = ler('src/lib/i18n/pt.ts');
+    const en = ler('src/lib/i18n/en.ts');
+    expect(chaves.filter((k) => !pt.includes(`${k}:`))).toEqual([]);
+    expect(chaves.filter((k) => !en.includes(`${k}:`))).toEqual([]);
+  });
+
+  it('cada chave existe também na edge function, nos dois idiomas', () => {
+    const fn = ler('supabase/functions/send-push/index.ts');
+    const corpos = fn.slice(fn.indexOf('const CORPOS'), fn.indexOf('function formatarData'));
+    expect(chaves.filter((k) => !corpos.includes(`${k}:`))).toEqual([]);
+    // Uma entrada com um idioma só passaria no teste de cima e mandava
+    // `undefined` para metade das pessoas.
+    // Delimitar cada entrada pela chave seguinte, e não por `}`: os próprios
+    // marcadores `{{club}}` trazem chavetas, e um regex ingénuo corta a meio.
+    const posicoes = chaves.map((k) => [k, corpos.indexOf(`${k}:`)] as const);
+    const semIdioma = posicoes.filter(([, i]) => {
+      const seguintes = posicoes.map(([, j]) => j).filter((j) => j > i);
+      const bloco = corpos.slice(i, seguintes.length ? Math.min(...seguintes) : corpos.length);
+      return !/\bpt:/.test(bloco) || !/\ben:/.test(bloco);
+    });
+    expect(semIdioma.map(([k]) => k)).toEqual([]);
+  });
+
+  it('os marcadores {{}} batem certo entre os três sítios', () => {
+    // Um `{{club}}` que em inglês fosse `{{clube}}` aparecia em bruto ao
+    // utilizador — o i18next não interpola o que não reconhece.
+    const marcadores = (s: string) =>
+      [...s.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]).sort().join(',');
+
+    const ptSrc = ler('src/lib/i18n/pt.ts');
+    const enSrc = ler('src/lib/i18n/en.ts');
+    const fnSrc = ler('supabase/functions/send-push/index.ts');
+
+    const linha = (src: string, chave: string, idioma?: string) => {
+      const re = idioma
+        ? new RegExp(`${chave}:[\\s\\S]{0,200}?${idioma}:\\s*(['"\`])(.*?)\\1`)
+        : new RegExp(`${chave}:\\s*(['"\`])(.*?)\\1`);
+      return src.match(re)?.[2] ?? '';
+    };
+
+    const divergentes = chaves.filter((k) => {
+      const esperado = marcadores(linha(ptSrc, k));
+      return [
+        marcadores(linha(enSrc, k)),
+        marcadores(linha(fnSrc, k, 'pt')),
+        marcadores(linha(fnSrc, k, 'en')),
+      ].some((m) => m !== esperado);
+    });
+
+    expect(divergentes).toEqual([]);
+  });
+});

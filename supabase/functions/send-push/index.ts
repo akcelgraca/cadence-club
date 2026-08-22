@@ -2,17 +2,107 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
-const TITLES: Record<string, string> = {
-  kudo: "Novo Boost!",
-  comment: "Novo Comentario",
-  follow: "Novo Seguidor!",
-  streak: "Sequencia de Treinos!",
-  badge: "Novo Cracha!",
-  club_request: "Pedido de adesao",
-  club_accepted: "Bem-vindo ao clube!",
-  message: "Nova mensagem",
-  event: "Novo evento",
+/**
+ * O push tem de ser traduzido AQUI.
+ *
+ * A lista dentro da app traduz-se no cliente, com o i18next. O push nao: o
+ * texto e desenhado pelo sistema operativo no ecra bloqueado, a partir do que
+ * esta funcao enviou, e o sistema nao traduz nada. Por isso o dicionario vive
+ * em dois sitios — `src/lib/i18n/` para a lista, este ficheiro para o push — e
+ * um teste confirma que nao divergem.
+ *
+ * O idioma vem de `profiles.language`, que ja e lido na mesma consulta que vai
+ * buscar o token e as preferencias. Nao custa uma consulta a mais.
+ */
+type Idioma = "pt" | "en";
+
+const TITLES: Record<string, Record<Idioma, string>> = {
+  kudo: { pt: "Novo Boost!", en: "New Boost!" },
+  comment: { pt: "Novo Comentário", en: "New Comment" },
+  follow: { pt: "Novo Seguidor!", en: "New Follower!" },
+  streak: { pt: "Sequência de Treinos!", en: "Training Streak!" },
+  badge: { pt: "Novo Crachá!", en: "New Badge!" },
+  club_request: { pt: "Pedido de adesão", en: "Join request" },
+  club_accepted: { pt: "Bem-vindo ao clube!", en: "Welcome to the club!" },
+  message: { pt: "Nova mensagem", en: "New message" },
+  event: { pt: "Novo evento", en: "New event" },
 };
+
+/** As mesmas frases que estao em `src/lib/i18n/`, com os mesmos marcadores. */
+const CORPOS: Record<string, Record<Idioma, string>> = {
+  notif_follow: {
+    pt: "{{actor}} começou a seguir-te!",
+    en: "{{actor}} started following you!",
+  },
+  notif_kudo: {
+    pt: "{{actor}} deu-te um boost!",
+    en: "{{actor}} gave you a boost!",
+  },
+  notif_comment: {
+    pt: "{{actor}} comentou na tua atividade.",
+    en: "{{actor}} commented on your activity.",
+  },
+  notif_badge: {
+    pt: "Desbloqueaste o crachá: {{badge}}!",
+    en: "You unlocked the badge: {{badge}}!",
+  },
+  notif_streak: {
+    pt: "{{days}} dias de sequência! Continua assim!",
+    en: "{{days}}-day streak! Keep it up!",
+  },
+  notif_club_request: {
+    pt: "{{actor}} pediu para entrar em {{club}}.",
+    en: "{{actor}} asked to join {{club}}.",
+  },
+  notif_club_accepted: {
+    pt: "Já fazes parte de {{club}}.",
+    en: "You're now part of {{club}}.",
+  },
+  notif_message: {
+    pt: "{{actor}}: {{preview}}",
+    en: "{{actor}}: {{preview}}",
+  },
+  notif_event: {
+    pt: "{{club}}: {{title}} · {{date}}",
+    en: "{{club}}: {{title}} · {{date}}",
+  },
+};
+
+/** Dia, mes e hora. A data chega em ISO — ver o comentario da migracao 051. */
+function formatarData(iso: string, idioma: Idioma): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return new Intl.DateTimeFormat(idioma === "en" ? "en-GB" : "pt-PT", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
+}
+
+/**
+ * O corpo do push, no idioma de quem o recebe.
+ *
+ * Recorre a `message` — o texto portugues que o gatilho tambem grava — em dois
+ * casos: linhas anteriores a migracao 051, que nao tem chave, e uma chave que
+ * este dicionario nao conheca. O segundo caso acontece se alguem acrescentar um
+ * tipo em SQL e se esquecer daqui; um push em portugues e mau, um push a dizer
+ * `notif_qualquer_coisa` e pior.
+ */
+function corpoDoPush(n: NotificationRecord, idioma: Idioma): string {
+  const modelo = n.message_key ? CORPOS[n.message_key]?.[idioma] : undefined;
+  if (!modelo) return n.message;
+
+  const params: Record<string, unknown> = { ...(n.message_params ?? {}) };
+  if (typeof params.starts_at === "string") {
+    params.date = formatarData(params.starts_at, idioma);
+  }
+
+  return modelo.replace(
+    /\{\{(\w+)\}\}/g,
+    (bruto, chave) => (params[chave] === undefined ? bruto : String(params[chave])),
+  );
+}
 
 /**
  * Tipo de notificacao -> interruptor nas Definicoes.
@@ -39,7 +129,10 @@ interface NotificationRecord {
   type: string;
   actor_id: string | null;
   reference_id: string | null;
+  /** Texto portugues. Recurso — ver `corpoDoPush`. */
   message: string;
+  message_key: string | null;
+  message_params: Record<string, unknown> | null;
 }
 
 interface WebhookPayload {
@@ -55,6 +148,7 @@ function isValidExpoToken(token: string): boolean {
 interface Destinatario {
   token: string | null;
   prefs: Record<string, boolean>;
+  idioma: Idioma;
 }
 
 async function getDestinatario(
@@ -63,14 +157,17 @@ async function getDestinatario(
 ): Promise<Destinatario> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("expo_push_token, notification_prefs")
+    .select("expo_push_token, notification_prefs, language")
     .eq("id", userId)
     .single();
 
-  if (error || !data) return { token: null, prefs: {} };
+  if (error || !data) return { token: null, prefs: {}, idioma: "pt" };
   return {
     token: (data.expo_push_token as string | null) ?? null,
     prefs: (data.notification_prefs as Record<string, boolean> | null) ?? {},
+    // Portugues por omissao: e o mercado da app, e e o que a coluna tem por
+    // defeito para quem nunca abriu a versao nova.
+    idioma: data.language === "en" ? "en" : "pt",
   };
 }
 
@@ -95,13 +192,18 @@ async function clearPushToken(supabase: ReturnType<typeof createClient>, userId:
     .eq("id", userId);
 }
 
-async function sendExpoPush(token: string, notification: NotificationRecord): Promise<boolean> {
-  const title = TITLES[notification.type] ?? "Nova Notificacao";
+async function sendExpoPush(
+  token: string,
+  notification: NotificationRecord,
+  idioma: Idioma,
+): Promise<boolean> {
+  const title = TITLES[notification.type]?.[idioma] ??
+    (idioma === "en" ? "New notification" : "Nova Notificacao");
 
   const body: Record<string, unknown> = {
     to: token,
     title,
-    body: notification.message,
+    body: corpoDoPush(notification, idioma),
     data: {
       type: notification.type,
       notificationId: notification.id,
@@ -193,7 +295,7 @@ Deno.serve(async (req: Request) => {
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  const { token, prefs } = await getDestinatario(supabase, notification.user_id);
+  const { token, prefs, idioma } = await getDestinatario(supabase, notification.user_id);
 
   if (!token || !isValidExpoToken(token)) {
     return new Response("No valid push token", { status: 200 });
@@ -203,7 +305,7 @@ Deno.serve(async (req: Request) => {
     return new Response("Muted by preference", { status: 200 });
   }
 
-  const success = await sendExpoPush(token, notification);
+  const success = await sendExpoPush(token, notification, idioma);
 
   if (!success) {
     await clearPushToken(supabase, notification.user_id);

@@ -1,4 +1,4 @@
--- Diagnóstico: as migrações 042 a 048 estão aplicadas e completas?
+-- Diagnóstico: as migrações 042 a 051 estão aplicadas e completas?
 --
 -- Correr no SQL Editor do Supabase. É UMA só instrução de propósito: o editor
 -- do Supabase só mostra o resultado da última instrução, por isso um ficheiro
@@ -165,6 +165,41 @@ SELECT * FROM (
   -- Deve haver exatamente um coletivo entre os desafios de arranque.
   UNION ALL SELECT 29, '048_challenge_i18n', 'desafio coletivo marcado',
     CASE WHEN (SELECT count(*) FROM public.challenges WHERE is_collective) >= 1
+         THEN 'APLICADA' ELSE 'EM FALTA' END
+
+  -- ── 051: notificações traduzíveis ────────────────────────────────────────
+  UNION ALL SELECT 30, '051_notification_i18n', 'coluna profiles.language',
+    CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns
+                      WHERE table_schema='public' AND table_name='profiles'
+                        AND column_name='language')
+         THEN 'APLICADA' ELSE 'EM FALTA' END
+
+  UNION ALL SELECT 31, '051_notification_i18n', 'colunas message_key e message_params',
+    CASE WHEN (SELECT count(*) FROM information_schema.columns
+               WHERE table_schema='public' AND table_name='notifications'
+                 AND column_name IN ('message_key','message_params')) = 2
+         THEN 'APLICADA' ELSE 'EM FALTA' END
+
+  -- As colunas existirem não chega: se as funções não tiverem sido
+  -- substituídas, continuam a gravar só o texto português e as colunas ficam
+  -- vazias para sempre — sem erro nenhum, que é o pior tipo de falha.
+  -- Verificam-se as nove pelo corpo da função.
+  UNION ALL SELECT 32, '051_notification_i18n', 'as 9 funções gravam message_key',
+    CASE WHEN (
+      SELECT count(*) FROM pg_proc
+      WHERE proname IN ('notify_on_follow','after_kudo_insert','notify_on_comment',
+                        'notify_on_badge_earned','update_streak',
+                        'notify_on_club_join_request','notify_on_club_request_resolved',
+                        'notify_on_message','notify_on_club_event')
+        AND prosrc ILIKE '%message_key%'
+    ) = 9 THEN 'APLICADA' ELSE 'EM FALTA' END
+
+  -- O evento tem de guardar a data em ISO, não formatada: se ficou o
+  -- `to_char(... 'DD/MM HH24:MI')` dentro dos parâmetros, o formato português
+  -- fica congelado na base de dados para toda a gente.
+  UNION ALL SELECT 33, '051_notification_i18n', 'evento guarda starts_at em ISO',
+    CASE WHEN EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'notify_on_club_event'
+                        AND prosrc ILIKE '%starts_at%' AND prosrc ILIKE '%YYYY-MM-DD%')
          THEN 'APLICADA' ELSE 'EM FALTA' END
 ) t
 ORDER BY ord;

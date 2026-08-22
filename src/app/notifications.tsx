@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { formatRelativeTime } from '../utils/dateHelpers';
 import { typography, withAlpha, type Colors } from '../lib/theme';
 import type { Notification } from '../lib/types';
+import { notificationText } from '../lib/notificationText';
 
 const NOTIFICATION_ICONS: Record<string, string> = {
   kudo: 'heart',
@@ -58,7 +59,7 @@ function getNotificationRoute(item: Notification): { pathname: string; params: a
 export default function NotificationsScreen() {
   const c = useColors();
   const styles = useMemo(() => makeStyles(c), [c]);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const {
     data,
@@ -111,7 +112,7 @@ export default function NotificationsScreen() {
       </View>
       <View style={styles.notificationContent}>
         <Text style={[styles.notificationMessage, !item.is_read && styles.notificationMessageUnread]}>
-          {item.message}
+          {notificationText(item, t, i18n.language)}
         </Text>
         <Text style={styles.notificationTime}>{formatRelativeTime(item.created_at)}</Text>
       </View>

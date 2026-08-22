@@ -57,6 +57,12 @@ export interface Profile {
   weight_kg?: number;
   /** Máximo medido, indicado pelo utilizador. Null = estimar pela idade. */
   max_heart_rate?: number | null;
+  /**
+   * Idioma da app. Existe no perfil — e não só nas definições locais — porque
+   * a edge function `send-push` precisa dele para traduzir o push: o sistema
+   * operativo mostra o texto tal como chega e não traduz nada.
+   */
+  language?: 'pt' | 'en';
   height_cm?: number;
   main_sport?: MainSport;
   // Questionnaire
@@ -283,7 +289,16 @@ export interface Notification {
   type: NotificationType;
   actor_id: string | null;
   reference_id: string | null;
+  /**
+   * Texto em português, escrito pelo gatilho. Recurso, não fonte de verdade:
+   * existe para as builds anteriores à 051, que só sabem ler isto, e para as
+   * linhas antigas, que não têm chave. Preferir sempre `message_key`.
+   */
   message: string;
+  /** Chave de tradução (`notif_kudo`, ...). NULL nas linhas anteriores à 051. */
+  message_key: string | null;
+  /** Parâmetros da interpolação. Conteúdo do utilizador — nomes, títulos, contagens. */
+  message_params: Record<string, string | number>;
   is_read: boolean;
   created_at: string;
 }

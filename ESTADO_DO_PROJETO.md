@@ -21,7 +21,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 | Indicador | Estado |
 |---|---|
-| Testes | ✅ 392 testes, 30 suites, todos a passar |
+| Testes | ✅ 403 testes, 31 suites, todos a passar |
 | Typecheck (`tsc --noEmit`) | ✅ limpo |
 | Ecrãs (expo-router) | 44 |
 | Componentes | 67 |
@@ -30,7 +30,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 | Hooks | 17 |
 | Linhas em `src/` | ~40 800 |
 | Chaves i18n | 1188 PT + 1188 EN (equilibradas ✅) |
-| Migrações Supabase | 45 ficheiros (`001` → `046`; não existe `025`) |
+| Migrações Supabase | 50 ficheiros (`001` → `051`; não existe `025`) |
 | Edge functions | 2 (`send-push`, `revenuecat-webhook`) |
 | Build iOS em dispositivo | ✅ iPhone 15, 18 ago — ⏰ expira **25 ago 2026** |
 | Build iOS em simulador | ✅ Debug, com Metro |
@@ -160,12 +160,54 @@ verifica hoje.
    filtram
 3. **Build novo** para o cliente apanhar as rotas e os interruptores
 
-**Gap conhecido, por decidir:** as mensagens são construídas em SQL, em
-português. A app é bilingue desde 19 de agosto, mas quem a tiver em inglês
-recebe os *pushes* em português na mesma — e isto vale para os nove tipos, não
-só os novos. A correção seria guardar uma chave de i18n e os parâmetros em vez
-do texto, e traduzir no cliente. Não é pequena, e mudá-la só para três tipos
-deixava a lista com dois comportamentos.
+**✅ Resolvido a 22 ago — migração 051.** As mensagens dos nove tipos eram
+construídas em SQL, em português, e quem tinha a app em inglês recebia
+português na mesma. Passam a guardar **chave + parâmetros**, como a 041 fez nos
+planos de treino.
+
+**O que torna isto diferente da 041:** um plano de treino só se vê dentro da
+app, portanto bastava traduzir no cliente. Uma notificação aparece em dois
+sítios, e o segundo é o ecrã bloqueado, desenhado pelo **sistema operativo** a
+partir do que a edge function enviou. O sistema não traduz nada. Por isso são
+precisas duas traduções e o servidor tem de saber o idioma de cada pessoa — daí
+a coluna `profiles.language`, que a `send-push` lê na mesma consulta que já
+fazia para ir buscar o token. Zero consultas a mais.
+
+| Onde | O quê |
+|---|---|
+| `051_notification_i18n.sql` | `profiles.language`, `notifications.message_key` + `message_params`, e as **nove** funções reescritas |
+| `src/lib/notificationText.ts` | resolve o texto na lista, com dois recursos |
+| `send-push/index.ts` | títulos e corpos nos dois idiomas, e formatação da data |
+| `src/lib/i18n/pt.ts` e `en.ts` | as nove chaves `notif_*` |
+
+**A coluna `message` continua a ser escrita**, com o português de sempre. Não é
+esquecimento: há builds instaladas que só sabem ler `message`, e as linhas
+criadas antes da 051 não têm chave. Passa a ser o recurso — a app nova prefere
+`message_key`, a antiga continua a funcionar, e ninguém regride. Mesmo critério
+da 041.
+
+**Protegido por 11 testes** em `src/lib/notifications.test.ts` e 7 em
+`notificationText.test.ts`. O dicionário vive em **três** sítios que ninguém
+obriga a concordar (`pt.ts`, `en.ts` e a tabela `CORPOS` da edge function), e
+divergirem falha em silêncio de três maneiras diferentes. Os testes cobrem as
+chaves, os dois idiomas em cada entrada, e os marcadores `{{}}`. **Verificado
+por mutação:** apagar uma chave do `en.ts`, apagar uma entrada da edge
+function, trocar `{{club}}` por `{{clube}}` e deixar uma entrada só com
+português — os quatro foram apanhados.
+
+⚠️ **Por aplicar e por fazer:**
+1. **Aplicar a `051_notification_i18n.sql`** no SQL Editor. O
+   `VERIFICAR_MIGRACOES.sql` foi alargado e cobre-a — incluindo a verificação
+   de que **as nove funções** foram mesmo substituídas, porque as colunas
+   existirem sem as funções escreverem nelas é uma falha silenciosa
+2. **Redeployar a `send-push`** — sem isto o push continua em português
+3. **Build novo** para a app começar a escrever `profiles.language` e a ler as
+   chaves
+
+⚠️ **O nome dos crachás não traduz.** Vem da tabela `badges`, em português, e
+vai como parâmetro: um inglês recebe *"You unlocked the badge: Madrugador!"*. A
+frase traduz, o nome não. Traduzir os crachás é o mesmo trabalho que a 041 fez
+nos planos e fica para depois.
 
 **Fan-out:** um evento num clube de N membros cria N linhas e, por consequência,
 N invocações da edge function. Com os clubes que existem hoje é irrelevante;
@@ -1497,6 +1539,11 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ## 11. Registo de alterações
 
 **22 ago 2026 (13.ª sessão)**
+- 🌍 **Notificações traduzíveis — migração 051.** Os nove tipos guardavam a frase em português, construída em SQL; passam a guardar **chave + parâmetros**, como a 041 fez nos planos de treino. Ver 3.2.1
+- **A parte que não era óbvia:** o push não se traduz no cliente. O texto é desenhado pelo sistema operativo a partir do que a edge function enviou, e o sistema não traduz nada — por isso a tradução tem de existir **duas vezes**, e o servidor precisa de saber o idioma de cada pessoa. Daí `profiles.language`, lida na consulta que a `send-push` já fazia
+- A data do evento passa a ir em **ISO** nos parâmetros em vez de formatada. Hoje não muda nada visível (o inglês da app é en-GB, que também escreve DD/MM); o que muda é o formato deixar de estar congelado na base de dados
+- 🐛 **Os títulos do push estavam sem acentos** desde sempre — "Novo Comentario", "Sequencia", "Cracha". Não era limitação nenhuma: o `message` acentuado do SQL já passava por ali e chegava bem ao telemóvel. Corrigidos
+- +18 testes (403). O dicionário vive em três sítios que ninguém obriga a concordar, e divergirem falha em silêncio — os testes cobrem chaves, idiomas e marcadores, e **foram verificados por mutação**
 - ⬆️ **Alinhamento com o SDK 57** — `expo-doctor` a **21/21**, vindo de 19 pacotes fora das versões e da regressão de memória do Hermes V1. O `expo` foi ao `57.0.15` (o `57.0.9` que estava escrito aqui já era passado), e o **`react` desceu** de 19.2.8 para 19.2.3, que é a que o SDK fixa. Zero alterações de código da app. Ver 3.13
 - 🪤 Duas armadilhas que vão voltar no SDK 58, documentadas: o `expo install --fix` estoira à primeira porque substitui o CLI a meio (é correr outra vez), e o `react-dom` ficou preso numa versão que já não existia, resolvido com `npx expo install react-dom` em vez de forçar com `--legacy-peer-deps`
 - Verificado com `expo export --platform android` além dos testes — o Jest não passa pelo Metro, portanto sozinho não provava que a app ainda empacota

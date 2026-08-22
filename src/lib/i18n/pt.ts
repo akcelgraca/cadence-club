@@ -439,6 +439,20 @@ const pt = {
   notifications_empty: 'Sem notificações',
   notifications_empty_subtext: 'As notificações sobre a tua atividade aparecerão aqui.',
 
+  // Texto das notificações. A base de dados guarda a chave e os parâmetros
+  // (migração 051), nunca a frase — senão quem tem a app em inglês recebia
+  // português. Os parâmetros são conteúdo do utilizador: nomes, títulos,
+  // contagens. Nada aqui dentro se traduz.
+  notif_follow: '{{actor}} começou a seguir-te!',
+  notif_kudo: '{{actor}} deu-te um boost!',
+  notif_comment: '{{actor}} comentou na tua atividade.',
+  notif_badge: 'Desbloqueaste o crachá: {{badge}}!',
+  notif_streak: '{{days}} dias de sequência! Continua assim!',
+  notif_club_request: '{{actor}} pediu para entrar em {{club}}.',
+  notif_club_accepted: 'Já fazes parte de {{club}}.',
+  notif_message: '{{actor}}: {{preview}}',
+  notif_event: '{{club}}: {{title}} · {{date}}',
+
   // Errors extra
   error_loading: 'Erro ao carregar',
 
