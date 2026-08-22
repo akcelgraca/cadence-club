@@ -410,13 +410,11 @@ Build: `746617dc-3d52-4fbb-8252-36d73c741e74`, perfil `preview`.
   `classpath 'com.google.gms:google-services:4.4.4'` e aplica o plugin. Está
   tudo onde devia.
 
-**Encontrado pelo `expo-doctor`, e por resolver — mas nenhum explica um erro de
-Gradle:**
-- falta o peer `expo-font`, exigido pelo `@expo/vector-icons` (risco de crash em
-  runtime, não de build)
-- `expo@57.0.8` apanhado pela regressão de memória do Hermes V1; a correção é o
-  `57.0.9`
-- 19 pacotes fora das versões do SDK 57
+**Encontrado pelo `expo-doctor` — nenhum explicava o erro de Gradle, e ✅ todos
+resolvidos a 22 ago (ver 3.13):**
+- ~~falta o peer `expo-font`~~ — já estava no `package.json`, a nota era falsa
+- ~~`expo@57.0.8` apanhado pela regressão de memória do Hermes V1~~
+- ~~19 pacotes fora das versões do SDK 57~~
 
 **Não dá para reproduzir localmente:** o Mac só tem JDK 11, e o RN 0.86 precisa
 do 17.
@@ -802,6 +800,59 @@ que mais misturam cor de marca com fotografia.
 do mínimo AA (4,5:1 para texto, 3:1 para elementos). O modo escuro não tem esse
 problema porque o verde subiu. Corrigir no claro é mexer na cor da marca, e isso
 não é decisão técnica.
+
+### 3.13 Alinhamento com o SDK 57 (22 ago) ✅
+
+`expo-doctor` a **21/21**, vindo de 19 pacotes fora das versões do SDK e da
+regressão de memória do Hermes V1. Manutenção pura — zero alterações de código
+da app.
+
+O alvo já não era o `57.0.9` que estava aqui escrito a 20 de agosto: entretanto
+passou a **`57.0.15`**.
+
+| | antes | depois |
+|---|---|---|
+| `expo` | 57.0.7 | **57.0.15** |
+| `expo-router` | 57.0.7 | 57.0.15 |
+| `expo-notifications` | 57.0.7 | 57.0.13 |
+| `expo-location` / `expo-task-manager` | 57.0.5 | 57.0.12 |
+| `expo-image-picker` | 57.0.6 | 57.0.12 |
+| `expo-dev-client` / `expo-sharing` | 57.0.9 / 57.0.8 | 57.0.14 |
+| `expo-auth-session` | 57.0.4 | 57.0.8 |
+| `expo-linking` | 57.0.3 | 57.0.7 |
+| `react-native` | 0.86.0 | 0.86.2 |
+| `react-native-reanimated` | 4.5.0 | 4.5.1 |
+| `react-native-worklets` | 0.10.0 | 0.10.1 |
+| `jest-expo` | 57.0.3 | 57.0.4 |
+| **`react`** | 19.2.8 | **19.2.3 — desceu** |
+| `react-dom` | (transitivo) | 19.2.3, agora direto |
+
+**O `react` desceu de propósito.** O Expo fixa o React ao SDK; ter uma versão
+mais alta não é estar à frente, é estar fora do combinado — os módulos nativos
+foram compilados contra a 19.2.3.
+
+**Duas armadilhas, para quando isto se repetir no SDK 58:**
+
+1. **O `expo install --fix` estoira à primeira.** Atualiza o próprio `expo`, o
+   CLI é substituído a meio da execução e deixa de se encontrar a si mesmo
+   (`applyPlugins.js`, erro de resolução de módulo). Não é o projeto — **é
+   correr outra vez**, agora com o CLI novo.
+2. **O `react-dom` fica para trás e bloqueia o npm.** Era transitivo, preso no
+   19.2.8, e passou a exigir um `react` que já não existia — `ERESOLVE`. Como o
+   projeto também tem alvo web (`npm run web`), a solução certa não é forçar com
+   `--legacy-peer-deps`, é `npx expo install react-dom`, que o promove a
+   dependência direta com a versão do SDK.
+
+**Verificado, e não só com testes:** `expo-doctor` 21/21, `tsc --noEmit` limpo,
+392 testes a passar, e um `expo export --platform android` a gerar 8,6 MB de
+bytecode Hermes. Esta última é a que conta — o Jest não usa o Metro, portanto
+uma resolução de módulos partida passaria despercebida aos testes.
+
+⚠️ **Por confirmar em dispositivo.** Um bundle que gera não é uma app que
+arranca. Como o `react-native` mudou de patch e há módulos nativos pelo meio,
+o próximo build de EAS é que fecha esta secção.
+
+---
 
 ### 3.12 Infraestrutura de subscrição
 - Migração `042_subscriptions.sql` cria a canalização (tabelas + `has_entitlement()` no servidor)
@@ -1444,6 +1495,12 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ---
 
 ## 11. Registo de alterações
+
+**22 ago 2026 (13.ª sessão)**
+- ⬆️ **Alinhamento com o SDK 57** — `expo-doctor` a **21/21**, vindo de 19 pacotes fora das versões e da regressão de memória do Hermes V1. O `expo` foi ao `57.0.15` (o `57.0.9` que estava escrito aqui já era passado), e o **`react` desceu** de 19.2.8 para 19.2.3, que é a que o SDK fixa. Zero alterações de código da app. Ver 3.13
+- 🪤 Duas armadilhas que vão voltar no SDK 58, documentadas: o `expo install --fix` estoira à primeira porque substitui o CLI a meio (é correr outra vez), e o `react-dom` ficou preso numa versão que já não existia, resolvido com `npx expo install react-dom` em vez de forçar com `--legacy-peer-deps`
+- Verificado com `expo export --platform android` além dos testes — o Jest não passa pelo Metro, portanto sozinho não provava que a app ainda empacota
+- 392 testes, 30 suites, `tsc --noEmit` limpo
 
 **21 ago 2026 (12.ª sessão)**
 - 📧 **SMTP próprio — tudo o que se consegue fazer daqui.** O 500 no `/auth/v1/signup` (3.2.7) é o serviço de email embutido a bater no limite. Guia completo em **`supabase/SMTP.md`**: fornecedor, domínio, SPF/DKIM/DMARC, campos exatos do painel, rate limit, e uma tabela de sintoma → causa
