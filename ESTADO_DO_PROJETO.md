@@ -315,8 +315,10 @@ Isto fechou as duas dúvidas que ficaram por confirmar de manhã:
   rebenta é um email que não sai, ou seja o 500 outra vez. O
   `printf "%v"` aguenta. O plano B do §7 do guia não é preciso
 
-🧹 Ficaram cinco utilizadores `akcelmedico+smtp-*@gmail.com` em
-*Authentication → Users*, para apagar.
+🧹 As cinco contas `akcelmedico+smtp-*@gmail.com` usadas nesta prova foram
+apagadas a 24 ago. A cascata trata do resto: `profiles.id` referencia
+`auth.users(id) ON DELETE CASCADE`, e 26 tabelas referenciam `profiles` da mesma
+maneira — apagar o utilizador leva tudo atrás.
 
 ⚠️ **Testar no emulador Android, não no iPhone.** O link do email precisa do
 `cadence://`, que só passou a estar registado no `app.json` a 20 de agosto e
