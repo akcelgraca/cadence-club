@@ -87,3 +87,91 @@ describe('analytics', () => {
     expect(/^phc_[A-Za-z0-9_-]{20,}$/.test(linha![1].trim())).toBe(false);
   });
 });
+
+/**
+ * O `isNovoRegisto` é a única coisa que separa um registo de uma entrada no
+ * Google e na Apple. Enganar-se aqui não estoira nada: ou a métrica de
+ * ativação por método fica vazia, ou fica inflacionada — e nos dois casos só
+ * se descobre semanas depois, a olhar para um gráfico que mente.
+ */
+describe('isNovoRegisto', () => {
+  const { isNovoRegisto } = require('./analytics') as typeof import('./analytics');
+
+  it('conta acabada de criar: os dois carimbos no mesmo pedido', () => {
+    expect(isNovoRegisto({
+      created_at: '2026-08-24T10:00:00.000Z',
+      last_sign_in_at: '2026-08-24T10:00:00.412Z',
+    })).toBe(true);
+  });
+
+  it('quem já existia entra outra vez e não conta como registo', () => {
+    expect(isNovoRegisto({
+      created_at: '2026-07-01T09:00:00.000Z',
+      last_sign_in_at: '2026-08-24T10:00:00.000Z',
+    })).toBe(false);
+  });
+
+  it('sem entrada registada, a conta só pode ter nascido agora', () => {
+    expect(isNovoRegisto({ created_at: '2026-08-24T10:00:00.000Z', last_sign_in_at: null })).toBe(true);
+  });
+
+  it('sem created_at não se inventa um registo', () => {
+    expect(isNovoRegisto({})).toBe(false);
+    expect(isNovoRegisto({ created_at: null, last_sign_in_at: '2026-08-24T10:00:00.000Z' })).toBe(false);
+  });
+
+  it('datas ilegíveis não contam como registo', () => {
+    expect(isNovoRegisto({ created_at: 'ontem', last_sign_in_at: 'hoje' })).toBe(false);
+  });
+
+  it('um minuto de diferença já é uma entrada, não um registo', () => {
+    // A margem é de 10s: cobre o vaivém do OAuth, não cobre voltar a entrar.
+    expect(isNovoRegisto({
+      created_at: '2026-08-24T10:00:00.000Z',
+      last_sign_in_at: '2026-08-24T10:01:00.000Z',
+    })).toBe(false);
+  });
+});
+
+/**
+ * O `session.test.ts` já impede que um caminho de entrada se esqueça dos
+ * serviços externos. Este faz o mesmo para o `signed_up`: o projeto já
+ * acrescentou o Google e a Apple uma vez e deixou-os de fora — foi assim que a
+ * métrica de ativação por método ficou só com email.
+ */
+describe('signed_up cobre todos os métodos de entrada', () => {
+  const raiz = path.resolve(__dirname, '../..');
+  const authStore = readFileSync(path.join(raiz, 'src/store/authStore.ts'), 'utf8');
+
+  it('os três métodos do EventMap disparam o evento em algum lado', () => {
+    const analytics = readFileSync(path.join(raiz, 'src/lib/analytics.ts'), 'utf8');
+    const linha = analytics.match(/signed_up:\s*\{\s*method:\s*([^}]+)\}/)?.[1] ?? '';
+    const metodos = [...linha.matchAll(/'(\w+)'/g)].map((m) => m[1]);
+    expect(metodos.sort()).toEqual(['apple', 'email', 'google']);
+
+    // O email é certeza — tem `signUp` próprio. Os outros dois passam pela
+    // deteção, porque a chamada é a mesma para entrar e para registar.
+    expect(authStore).toMatch(/track\('signed_up',\s*\{\s*method:\s*'email'/);
+    for (const m of ['google', 'apple']) {
+      expect(authStore).toMatch(new RegExp(`trackSignUpIfNew\\([^)]*'${m}'\\)`));
+    }
+  });
+
+  it('o restauro de sessão no arranque não dispara registo nenhum', () => {
+    // Quem se registou pelo Google e nunca mais entrou fica com os dois
+    // carimbos iguais para sempre — aplicar a deteção ao arranque somava um
+    // registo por cada abertura da app.
+    // Âncoras na *implementação*, não na declaração do tipo lá em cima: com
+    // `indexOf('initialize:')` a fatia caía entre duas linhas da interface e
+    // ficava vazia — o teste passava com a falha lá dentro. Apanhado por
+    // mutação, que é para isso que ela serve.
+    const inicio = authStore.indexOf('initialize: async');
+    const fim = authStore.indexOf('signUp: async');
+    expect(inicio).toBeGreaterThan(0);
+    expect(fim).toBeGreaterThan(inicio);
+
+    const inicializa = authStore.slice(inicio, fim);
+    expect(inicializa).toMatch(/onSessionStarted\(/); // a fatia é mesmo o corpo
+    expect(inicializa).not.toMatch(/trackSignUpIfNew|signed_up/);
+  });
+});

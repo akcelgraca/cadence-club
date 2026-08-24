@@ -112,6 +112,60 @@ export function track<K extends keyof EventMap>(
 }
 
 /**
+ * Foi agora que esta conta nasceu?
+ *
+ * Com email a pergunta não se põe: há um `signUp` e um `signIn`, e sabe-se qual
+ * é qual. Com o Google e a Apple é a **mesma chamada** para entrar e para se
+ * registar — o `signInWithOAuth` devolve uma sessão nos dois casos, sem dizer
+ * qual foi. Sem responder a isto, o `signed_up` só existia para o email, e a
+ * ativação por método de registo não se conseguia medir.
+ *
+ * **Comparam-se dois carimbos do servidor, nunca o relógio do telemóvel.** Numa
+ * conta acabada de criar, o GoTrue escreve `created_at` e `last_sign_in_at` no
+ * mesmo pedido, com milissegundos de diferença; numa entrada de quem já existia,
+ * o `created_at` é de outro dia. A tentação era comparar o `created_at` com
+ * `Date.now()`, mas o relógio de um telemóvel pode estar horas ao lado — e aí
+ * ou se perdiam registos ou se inventavam.
+ *
+ * ⚠️ **Só serve em entradas interativas.** Quem se registou pelo Google e nunca
+ * mais voltou a entrar fica com os dois carimbos iguais **para sempre**: aplicar
+ * isto ao restauro de sessão no arranque dispararia um `signed_up` de cada vez
+ * que abrisse a app. Por isso o `initialize` não lhe toca.
+ */
+const MARGEM_MESMO_PEDIDO_MS = 10_000;
+
+export function isNovoRegisto(user: {
+  created_at?: string | null;
+  last_sign_in_at?: string | null;
+}): boolean {
+  if (!user.created_at) return false;
+  // Antes da primeira entrada ficar registada não há com que comparar, e uma
+  // conta sem entrada nenhuma só pode ter acabado de nascer.
+  if (!user.last_sign_in_at) return true;
+
+  const criada = Date.parse(user.created_at);
+  const entrou = Date.parse(user.last_sign_in_at);
+  // Uma data que não se percebe não é motivo para inventar um registo.
+  if (Number.isNaN(criada) || Number.isNaN(entrou)) return false;
+
+  return Math.abs(entrou - criada) < MARGEM_MESMO_PEDIDO_MS;
+}
+
+/**
+ * O `signed_up` do Google e da Apple, disparado só quando a conta é mesmo nova.
+ *
+ * Existe como função em vez de um `if` em cada sítio pela mesma razão que o
+ * `onSessionStarted` existe: acrescentar um método de entrada e esquecer um
+ * deles é o erro que este projeto já cometeu uma vez.
+ */
+export function trackSignUpIfNew(
+  user: { created_at?: string | null; last_sign_in_at?: string | null },
+  method: 'google' | 'apple',
+): void {
+  if (isNovoRegisto(user)) track('signed_up', { method });
+}
+
+/**
  * Liga os eventos a uma pessoa. Sem isto não há retenção — cada abertura da
  * app parecia um utilizador novo.
  *

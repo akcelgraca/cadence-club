@@ -1,6 +1,6 @@
 # Cadence Club — Estado do Projeto
 
-**Data:** 22 de agosto de 2026
+**Data:** 24 de agosto de 2026
 **Commit:** `57e5a6b` — `main`, sincronizado com `origin/main`, working tree limpo
 
 > **Branches (21 ago):** o trabalho vivia em `feat/dark-mode`, 47 commits à
@@ -21,7 +21,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 | Indicador | Estado |
 |---|---|
-| Testes | ✅ 403 testes, 31 suites, todos a passar |
+| Testes | ✅ 411 testes, 31 suites, todos a passar |
 | Typecheck (`tsc --noEmit`) | ✅ limpo |
 | Ecrãs (expo-router) | 44 |
 | Componentes | 67 |
@@ -1154,10 +1154,22 @@ O que falta concretamente:
   (99 USD/ano), que continua por decidir — ver passo 7 da secção 8
 - ⏸️ **Flag `premium_gating` a `false`**, de propósito. É o último interruptor,
   e liga-se com um UPDATE — sem migração nem versão nova da app
-- ⚠️ **`signed_up` só dispara com `method: 'email'`.** O Google e a Apple não o
-  registam, apesar de o tipo os prever. Distinguir registo de entrada nesses
-  fluxos exige uma heurística (não há perfil = é novo), por isso ficou por
-  decidir em vez de ficar por adivinhar
+- ✅ **`signed_up` cobre os três métodos** (24 ago). O Google e a Apple não o
+  registavam, e sem isso a ativação por método de registo não existia como
+  métrica. **A dificuldade não era o `track`** — era distinguir registo de
+  entrada quando `signInWithOAuth` usa a mesma chamada para as duas coisas e
+  devolve sessão nos dois casos.
+  - A heurística que estava aqui apontada — *"não há perfil = é novo"* — teria
+    contado duas vezes quem abandonasse o onboarding e voltasse
+  - **O que se faz:** comparar `created_at` com `last_sign_in_at`, **os dois
+    carimbos do servidor**. Numa conta acabada de criar o GoTrue escreve-os no
+    mesmo pedido, com milissegundos de diferença. Comparar o `created_at` com o
+    `Date.now()` do telemóvel era a via óbvia e está errada — um relógio pode
+    estar horas ao lado
+  - ⚠️ **Só vale em entradas interativas.** Quem se registou pelo Google e nunca
+    mais entrou fica com os dois carimbos iguais **para sempre**; aplicar isto ao
+    restauro de sessão somaria um registo por cada abertura da app. O
+    `initialize` não lhe toca, e há um teste a impor isso
 
 **Já feito, ao contrário do que esta secção dizia antes:** a migração de gating
 existe (`045_premium_gating.sql`, com tendências, troços e fotos impostos no
@@ -1549,6 +1561,12 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ---
 
 ## 11. Registo de alterações
+
+**24 ago 2026 (14.ª sessão)**
+- 📊 **`signed_up` passa a cobrir o Google e a Apple**, não só o email — sem isso a ativação por método de registo não se conseguia medir. A parte difícil é que o `signInWithOAuth` usa a mesma chamada para entrar e para registar; a resposta é comparar `created_at` com `last_sign_in_at`, dois carimbos **do servidor**, e nunca o relógio do telemóvel. Ver 3.11
+- 🪤 **A armadilha que quase passou:** quem se regista pelo Google e nunca mais entra fica com os dois carimbos iguais para sempre. Aplicar a deteção ao restauro de sessão no arranque somava um `signed_up` por cada abertura da app
+- 🐛 **Um dos testes novos era decorativo, e foi a mutação que o apanhou.** Procurava o corpo do `initialize` por `indexOf('initialize:')`, que casa primeiro com a *declaração do tipo* — a fatia analisada ficava vazia e o teste passava com a falha lá dentro. Corrigido para ancorar em `initialize: async`, e passou a confirmar que a fatia é mesmo o corpo antes de a examinar
+- +8 testes (411)
 
 **22 ago 2026 (13.ª sessão)**
 - 📦 **Build `08a2fac8`** (Android, `preview`, commit `e31093b`, 26 min) — [APK](https://expo.dev/artifacts/eas/U2OC1ZEJIJSJxi_msbC1UjANgZtIKTO8eDvenISmKj8.apk). Verificado por inspeção do próprio APK, não por confiança no processo:

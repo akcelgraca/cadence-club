@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Profile, ActivityGoal } from '../lib/types';
 import { supabase } from '../services/supabase';
 import * as authService from '../services/auth';
-import { track } from '../lib/analytics';
+import { track, trackSignUpIfNew } from '../lib/analytics';
 import { onSessionStarted, onSessionEnded } from '../services/session';
 
 const PROFILE_KEY = 'auth-profile';
@@ -189,6 +189,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signInWithGoogle: async () => {
     const data = await authService.signInWithGoogle();
     if (data.session) {
+      // O Google e a Apple usam a mesma chamada para entrar e para registar;
+      // quem distingue é o `trackSignUpIfNew`, pelos carimbos do servidor.
+      trackSignUpIfNew(data.session.user, 'google');
+
       const profile = await authService.getProfile(data.session.user.id);
       if (profile) {
         await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
@@ -206,6 +210,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signInWithApple: async () => {
     const data = await authService.signInWithApple();
     if (data.session) {
+      // O Google e a Apple usam a mesma chamada para entrar e para registar;
+      // quem distingue é o `trackSignUpIfNew`, pelos carimbos do servidor.
+      trackSignUpIfNew(data.session.user, 'apple');
+
       const profile = await authService.getProfile(data.session.user.id);
       if (profile) {
         await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
