@@ -1114,8 +1114,8 @@ WHERE key = 'premium_gating';
 
 | Peça | Onde | Estado |
 |---|---|---|
-| Limites impostos no servidor | `migrations/045_premium_gating.sql` | ⚠️ por aplicar |
-| Webhook do RevenueCat | `functions/revenuecat-webhook/` | por publicar |
+| Limites impostos no servidor | `migrations/045_premium_gating.sql` | ✅ aplicada (confirmado a 24 ago: `app_flags` e `subscriptions` respondem) |
+| Webhook do RevenueCat | `functions/revenuecat-webhook/` | ❌ **não publicado** — confirmado a 24 ago, o endpoint devolve 404 |
 | SDK de compras | `src/services/purchases/` | inerte sem chaves |
 | Paywall | `src/app/premium.tsx` | pronto |
 | `can()` a ler o estado real | `src/hooks/usePremium.ts` | ✅ ligado à flag |
@@ -1233,6 +1233,60 @@ Nota: as migrações **não são idempotentes**. `CREATE TYPE` e `CREATE POLICY`
 
 ---
 
+### 4.7 Bloqueadores de loja — encontrados a 24 ago 2026 🚨
+
+Nenhum destes estava listado, e os dois primeiros são **causa de rejeição
+direta**, não observações de qualidade.
+
+#### 4.7.1 "Apagar conta" finge que funciona ❌
+
+`settings.tsx` pergunta se tens a certeza, tu carregas em **Apagar**, e a app
+responde *"Funcionalidade em desenvolvimento."* Nada é apagado.
+
+É pior do que não ter o botão: o fluxo inteiro parece o de uma eliminação a
+sério até à última linha.
+
+**Porque é que isto rejeita:** a diretriz **5.1.1(v)** da Apple obriga qualquer
+app com criação de conta a permitir **apagar a conta de dentro da app**. O
+Google Play tem exigência equivalente. Um botão que não apaga não cumpre.
+
+**O que é preciso:** uma edge function com a service role que apague o
+utilizador de `auth.users` — a cascata trata do resto, `profiles.id` referencia
+`auth.users(id) ON DELETE CASCADE` e 26 tabelas referenciam `profiles` da mesma
+maneira (verificado a 24 ago). A app não pode fazê-lo sozinha: apagar
+utilizadores exige a service role, que nunca pode estar no cliente.
+
+#### 4.7.2 Os quatro links das Definições estão mortos ❌
+
+Privacidade, Termos, Ajuda e Feedback apontam para **`cadenceclub.app`** — um
+domínio que **não é nosso e não resolve**. Os quatro devolvem erro de ligação.
+
+```
+https://cadenceclub.app/privacy   → sem resposta
+https://cadenceclub.app/terms     → sem resposta
+https://cadenceclub.app/help      → sem resposta
+https://cadenceclub.app/feedback  → sem resposta
+```
+
+**Porque é que isto rejeita:** a App Store exige um **URL de política de
+privacidade acessível** na ficha da app, e a Apple verifica-o. Um link morto
+dentro da app é o mesmo problema visto de outro ângulo.
+
+Os domínios que temos são o **`cadenceclub.pt`** (onde o email já está a
+funcionar) e o `cadenceclub.site`. O `.app` nunca foi registado — em algum
+momento escreveu-se um domínio que não existe.
+
+**O que é preciso:** apontar para `cadenceclub.pt` e pôr lá as páginas. A de
+privacidade não é opcional, e tem de dizer o que a app recolhe — GPS, saúde,
+fotos, analytics — e para onde vai.
+
+#### 4.7.3 Três itens das Definições são `handleStub` ⚠️
+
+Não rejeitam, mas mostram alertas de "em desenvolvimento" a quem estiver a
+avaliar a app. Decidir para cada um: implementar ou esconder até existir.
+
+---
+
 ## 5. Build para iPhone — como se faz (17 ago 2026)
 
 Ficou a funcionar, mas o caminho óbvio (`npx expo run:ios`) **não chega lá sozinho**. Registo do que foi preciso.
@@ -1329,65 +1383,80 @@ Coisas já mordidas, para não se repetirem:
 
 ## 8. Próximos passos, por ordem
 
-### Imediato (limpeza, minutos) — ✅ CONCLUÍDO
-1. ✅ `src/services/healthSync.ts` apagado
-2. ✅ Migrações verificadas — **042 e 043 aplicadas e completas**; a **025** é só um salto na numeração
-3. ✅ Meta App ID metido, e build com ele instalada no iPhone
+> Reescrito a 24 ago 2026. O que aqui estava tinha itens já feitos a ocupar os
+> primeiros lugares — a importação de ficheiros, o PostHog, o SMTP. Cada linha
+> abaixo foi confirmada contra o código ou contra o servidor, não contra o que
+> este documento dizia.
 
-### ✅ Analytics a recolher (20 ago)
-A `EXPO_PUBLIC_POSTHOG_KEY` está preenchida, validada contra o `eu.i.posthog.com`
-(`npm run analytics:check` devolve OK), presente no `eas.json` para os perfis
-`preview` e `production`, **e dentro da build instalada no iPhone**. O relógio
-dos 30 dias de retenção está a contar a partir de hoje.
+### O que está mesmo pronto
 
-### O que bloqueia mais coisas ao mesmo tempo
-**A conta Apple Developer paga (99 USD/ano)** deixou de ser uma decisão isolada
-e passou a ser o único item com semanas de espera. Bloqueia, em simultâneo:
+Base de dados alinhada (`001`→`051`, todas aplicadas), 419 testes, `tsc` limpo,
+`expo-doctor` 21/21, SMTP próprio a entregar na Caixa de entrada, notificações
+traduzíveis, importação de ficheiros completa, analytics a recolher.
 
-- **push remoto no iOS** — sem `aps-environment` não há entrega, e é por isso
-  que as notificações da migração 047 não se conseguem testar no telemóvel
-- **HealthKit no iPhone físico** — logo, a frequência cardíaca vinda do Watch
-- **produtos nas lojas** — logo, toda a monetização
-- **builds que não expiram em 7 dias** — a atual expira a **25 ago**
-
-Tudo o resto é código, e código faz-se a qualquer momento. Isto não.
-
-**O FCM não é alternativa à conta Apple — é a outra metade.** Os documentos do
-Expo são explícitos: *"For Android, you need to configure Firebase Cloud
-Messaging (FCM)"* e *"A paid Apple Developer Account is required to generate
-credentials"* (iOS). Uma por plataforma, e nenhuma substitui a outra:
-
-| Plataforma | Credencial | Custo |
-|---|---|---|
-| iOS | conta Apple Developer paga + chave APNs | 99 USD/ano |
-| Android | projeto Firebase + `google-services.json` + chave de serviço no Expo | grátis |
-
-Como esta app se destina às duas lojas — e todos os builds anteriores foram
-Android APK via EAS — **as duas vão ser precisas**. A conta Apple não dispensa
-o FCM.
-
-Onde o FCM é de facto alternativa é **só para testar agora**: serve para provar
-que o encadeamento funciona (gatilho → linha em `notifications` → edge function
-→ Expo → telemóvel) sem esperar pela Apple. Prova-o num Android, não no iPhone.
-Ver 3.2.1.
-
-### Curto prazo (validação)
-4. **Testar a app instalada no iPhone** — tudo o que foi construído desde 1 de agosto (segments, zonas de privacidade, fila offline, fotos, analytics, partilha) está pela primeira vez num telemóvel
-5. **Testar a sincronização de saúde no simulador iOS** — repor o entitlement, `npx expo run:ios` (Debug), e usar o `devSeed` pelas Definições. Cobre os casos 1, 2, 3, 5 e 6 do README do módulo, sem custar nada (ver secção 4.1)
-6. **Build Android via EAS** e correr os mesmos casos no Health Connect, num telemóvel real
-7. Decidir sobre a **conta Apple Developer paga** (99 USD/ano). Obrigatória apenas para: HealthKit **no iPhone físico**, push remoto, TestFlight, e builds que não expiram em 7 dias. **Não** é precisa para validar a lógica de saúde — o simulador chega
-
-### Médio prazo (produto)
-8. **Importação de ficheiros** — 🚧 **fase 1 feita (GPX + TCX, um ficheiro)**, ver 4.5. Falta FIT e importação em lote do `.zip` do Strava, que é o que cumpre mesmo a migração
-9. ✅ **Frequência cardíaca** feita (19 ago). Falta a **distância no Health Connect**, que tem o mesmo problema: vive num registo à parte
-10. Ligar a **monetização**: escolher IAP/RevenueCat, escrever a migração de gating, trocar o `can()` por `state.isPremium`
-
-### Antes de qualquer lançamento
-10b. ✅ **SMTP próprio — feito a 21 ago.** Resend + `cadenceclub.pt`, cinco registos seguidos em 200. Ver 3.2.7 e `supabase/SMTP.md`. Sobra uma ponta: confirmar no emulador Android que o link do email abre a app
-11. **Criar o projeto PostHog (EU Cloud) e colar a chave no `.env` e no `eas.json`.** É o passo mais barato da lista e o que mais custa adiar: a retenção a 30 dias precisa de 30 dias de calendário, e o relógio só arranca no dia em que o primeiro evento chega. Confirmar com `npm run analytics:check`. Tudo o resto do lado do código já está feito (ver 3.11)
-12. Recolher dados de retenção com o PostHog **antes** de decidir preços — a instrumentação já está lá, falta o tempo a correr
+**Não há funcionalidade base por construir.** O que falta divide-se em quatro
+coisas muito diferentes umas das outras.
 
 ---
+
+### 1. Bloqueadores de loja — semanas de atraso se ficarem para o fim 🚨
+
+| | Porquê |
+|---|---|
+| **Apagar conta a sério** | Rejeição direta (Apple 5.1.1(v)). Hoje o botão mente. Precisa de uma edge function com a service role — ver 4.7.1 |
+| **Páginas de privacidade e termos** | Rejeição direta. Os quatro links apontam para `cadenceclub.app`, que não existe. Temos o `cadenceclub.pt` — ver 4.7.2 |
+| **Conta Apple Developer, 99 USD/ano** | Único item com semanas de espera. Bloqueia push iOS, HealthKit em iPhone, TestFlight, toda a monetização, e builds que não expiram em 7 dias |
+
+Estes três não são código difícil. São o tipo de coisa que se descobre no dia
+da submissão e custa duas semanas.
+
+### 2. Validação em dispositivo — código escrito, nunca corrido a sério
+
+O APK e a build do iPhone estão instalados. Falta correr:
+
+| | Onde |
+|---|---|
+| Link do email a abrir a app | iPhone — **instalado hoje, testável já** |
+| Google Sign-In | iPhone — o emulador Android nunca conseguiu (Chrome de 2022) |
+| Push em inglês, ponta a ponta | Android físico |
+| Health Connect | Android físico |
+| App + relógio a gravar o mesmo treino | Exige relógio a sério; é o caso 4 do README da saúde |
+| Arquivo `.zip` do Strava verdadeiro | Os testes usam arquivos sintéticos |
+
+### 3. Monetização — construída, desligada, e a faltar-lhe uma peça
+
+O `can()` já lê a flag, a 045 está aplicada, o paywall está pronto. Falta:
+
+- **Publicar a `revenuecat-webhook`** — confirmado a 24 ago: devolve **404**, nunca foi publicada. Sem ela, ninguém recebe o que paga
+- Chaves do RevenueCat no `.env` e no EAS
+- Produtos criados nas lojas (bloqueado pela conta Apple)
+- `UPDATE app_flags SET enabled = true WHERE key = 'premium_gating'`
+
+E a questão de produto que continua por responder desde agosto: **o premium
+acordado é quase todo funcionalidade que já existe e já é grátis.** Decidir isso
+antes de ligar seja o que for.
+
+### 4. Lacunas de produto — trabalho a sério, por ordem de peso
+
+| | Estado verificado |
+|---|---|
+| 🔴 **Exportar GPX** | **Não existe.** A importação está feita; a saída não. Prende o utilizador, que é exatamente a crítica que se faz ao Strava |
+| 🟠 **Classificações de troços (KOM/QOM)** | Só existe `getMySegmentEfforts` — os teus tempos contra ti próprio. A competição é o que vicia no Strava |
+| 🟠 **Distância no Health Connect** | Fica a zero; vive num registo separado do `ExerciseSession` |
+| 🟠 **Escrever treinos de volta na Saúde** | A app lê e nunca devolve |
+| 🟠 **Garmin, Wahoo, Coros** | Hoje só pela app de Saúde / Health Connect |
+| 🟡 **Nome dos crachás traduzível** | Vem da tabela `badges` em português; a frase traduz, o nome não (ver 3.2.1) |
+| 🟡 **Web app** | O Strava vive tanto no browser como no telemóvel |
+
+---
+
+### Se fosse eu a escolher a ordem
+
+1. **Testar no iPhone o que já lá está** — é grátis e responde a três perguntas de uma vez
+2. **Apagar conta + páginas de privacidade** — os dois bloqueadores que não dependem de ninguém
+3. **Decidir a conta Apple** — quanto mais cedo, menos espera
+4. **Exportar GPX** — a maior lacuna de produto, e das mais baratas de fazer
+5. Monetização, quando houver retenção medida para decidir preço
 
 ## 9. Plano de teste no iPhone físico
 
