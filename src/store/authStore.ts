@@ -80,6 +80,8 @@ interface AuthState {
   }) => Promise<void>;
   completeOnboarding: () => void;
   signOut: () => Promise<void>;
+  /** Apaga a conta no servidor e limpa tudo o que ficou no telemóvel. */
+  deleteAccount: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -286,6 +288,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   completeOnboarding: () => {
     set({ isOnboarded: true });
+  },
+
+  deleteAccount: async () => {
+    // O servidor apaga primeiro. Só depois se limpa o telemóvel: se a chamada
+    // falhar, a pessoa continua com sessão e pode voltar a tentar, em vez de
+    // ficar deslogada de uma conta que continua a existir.
+    await authService.deleteAccount();
+    await get().signOut();
   },
 
   signOut: async () => {

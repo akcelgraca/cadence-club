@@ -297,7 +297,15 @@ const en = {
   settings_terms: 'Terms of Service',
   settings_privacy_policy: 'Privacy Policy',
   settings_delete_confirm_title: 'Delete account',
-  settings_delete_confirm_message: 'Are you sure you want to delete your account? This action is irreversible.',
+  settings_delete_confirm_message: 'You will lose your activities, photos, segments, clubs and messages. None of it can be recovered.',
+  settings_delete_second_title: 'No way back',
+  settings_delete_second_message: 'Last confirmation: your account and everything in it will be deleted now.',
+  settings_delete_confirm_action: 'Delete permanently',
+  settings_delete_in_progress: 'Deleting…',
+  settings_delete_done_title: 'Account deleted',
+  settings_delete_done_message: 'We no longer hold anything of yours. Thanks for giving it a try.',
+  settings_delete_error_title: "Couldn't delete",
+  settings_delete_error_message: 'Your account is still active. Check your connection and try again.',
 
   // Settings - New sections
   settings_profile_account: 'Profile & Account',

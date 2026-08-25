@@ -297,7 +297,15 @@ const pt = {
   settings_terms: 'Termos de Serviço',
   settings_privacy_policy: 'Política de Privacidade',
   settings_delete_confirm_title: 'Eliminar conta',
-  settings_delete_confirm_message: 'Tens a certeza que queres eliminar a tua conta? Esta ação é irreversível.',
+  settings_delete_confirm_message: 'Vais perder as atividades, as fotos, os troços, os clubes e as mensagens. Não há como recuperar nada disto.',
+  settings_delete_second_title: 'Não há volta atrás',
+  settings_delete_second_message: 'Última confirmação: a conta e tudo o que lhe pertence vão ser eliminados agora.',
+  settings_delete_confirm_action: 'Eliminar definitivamente',
+  settings_delete_in_progress: 'A eliminar…',
+  settings_delete_done_title: 'Conta eliminada',
+  settings_delete_done_message: 'Já não guardamos nada teu. Obrigado por teres experimentado.',
+  settings_delete_error_title: 'Não foi possível eliminar',
+  settings_delete_error_message: 'A conta continua ativa. Verifica a ligação e tenta outra vez.',
 
   // Settings - New sections
   settings_profile_account: 'Perfil & Conta',

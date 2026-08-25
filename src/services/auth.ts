@@ -71,6 +71,24 @@ export async function signIn(email: string, password: string) {
   return data;
 }
 
+/**
+ * Apaga a conta de quem está com sessão iniciada.
+ *
+ * Quem apaga é a edge function `delete-account`: apagar um utilizador exige a
+ * service role, e essa chave nunca pode estar dentro da app — quem a extraísse
+ * do bundle apagava a conta de qualquer pessoa.
+ *
+ * Não leva o id a lado nenhum de propósito. O servidor tira-o do JWT que o
+ * `invoke` envia; mandá-lo daqui seria dar a escolher a conta a apagar.
+ */
+export async function deleteAccount() {
+  const { data, error } = await supabase.functions.invoke('delete-account', {
+    method: 'POST',
+  });
+  if (error) throw error;
+  if (!data?.ok) throw new Error('delete_failed');
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;

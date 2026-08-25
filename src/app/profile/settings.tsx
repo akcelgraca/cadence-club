@@ -32,7 +32,8 @@ export default function SettingsScreen() {
   const c = useColors();
   const { t } = useAppTranslation();
   const { settings, loadSettings, updateSettings } = useSettingsStore();
-  const { profile, updateProfile, session } = useAuthStore();
+  const { profile, updateProfile, session, deleteAccount } = useAuthStore();
+  const [deleting, setDeleting] = useState(false);
   const [isPublic, setIsPublic] = useState(profile?.is_public ?? true);
   const [emailModalVisible, setEmailModalVisible] = useState(false);
   const [newEmail, setNewEmail] = useState('');
@@ -275,6 +276,14 @@ export default function SettingsScreen() {
     }
   };
 
+  /**
+   * Duas confirmações, de propósito.
+   *
+   * A Apple exige (5.1.1(v)) que dê para apagar a conta de dentro da app, e uma
+   * eliminação irreversível a um toque de distância de um menu de definições é
+   * o tipo de coisa que se faz sem querer. A primeira diz o que se perde, a
+   * segunda diz que é agora.
+   */
   const handleDeleteAccount = () => {
     Alert.alert(
       t('settings_delete_confirm_title'),
@@ -285,11 +294,38 @@ export default function SettingsScreen() {
           text: t('delete'),
           style: 'destructive',
           onPress: () => {
-            Alert.alert(t('settings_delete_info'), t('settings_delete_wip'));
+            Alert.alert(
+              t('settings_delete_second_title'),
+              t('settings_delete_second_message'),
+              [
+                { text: t('cancel'), style: 'cancel' },
+                {
+                  text: t('settings_delete_confirm_action'),
+                  style: 'destructive',
+                  onPress: apagarConta,
+                },
+              ],
+            );
           },
         },
       ]
     );
+  };
+
+  const apagarConta = async () => {
+    setDeleting(true);
+    try {
+      await deleteAccount();
+      // O `deleteAccount` do store já termina a sessão; o router leva daqui
+      // para o ecrã de entrada sozinho.
+      Alert.alert(t('settings_delete_done_title'), t('settings_delete_done_message'));
+    } catch (err: any) {
+      // A conta continua de pé — dizê-lo é importante, senão a pessoa fica sem
+      // saber se foi apagada ou não.
+      Alert.alert(t('settings_delete_error_title'), t('settings_delete_error_message'));
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const openLink = (url: string) => {
@@ -761,7 +797,12 @@ export default function SettingsScreen() {
 
         <LinkRow label={t('settings_export_data')} onPress={handleStub} colors={c} />
         <Separator styles={styles} />
-        <LinkRow label={t('settings_delete_account')} onPress={handleDeleteAccount} destructive colors={c} />
+        <LinkRow
+          label={deleting ? t('settings_delete_in_progress') : t('settings_delete_account')}
+          onPress={deleting ? () => {} : handleDeleteAccount}
+          destructive
+          colors={c}
+        />
       </View>
 
       {/* Section 6: Suporte & Sobre */}

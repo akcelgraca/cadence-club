@@ -21,7 +21,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 | Indicador | Estado |
 |---|---|
-| Testes | ✅ 419 testes, 32 suites, todos a passar |
+| Testes | ✅ 427 testes, 33 suites, todos a passar |
 | Typecheck (`tsc --noEmit`) | ✅ limpo |
 | Ecrãs (expo-router) | 44 |
 | Componentes | 67 |
@@ -1238,7 +1238,7 @@ Nota: as migrações **não são idempotentes**. `CREATE TYPE` e `CREATE POLICY`
 Nenhum destes estava listado, e os dois primeiros são **causa de rejeição
 direta**, não observações de qualidade.
 
-#### 4.7.1 "Apagar conta" finge que funciona ❌
+#### 4.7.1 "Apagar conta" — ✅ implementado a 24 ago 2026
 
 `settings.tsx` pergunta se tens a certeza, tu carregas em **Apagar**, e a app
 responde *"Funcionalidade em desenvolvimento."* Nada é apagado.
@@ -1250,11 +1250,40 @@ sério até à última linha.
 app com criação de conta a permitir **apagar a conta de dentro da app**. O
 Google Play tem exigência equivalente. Um botão que não apaga não cumpre.
 
-**O que é preciso:** uma edge function com a service role que apague o
-utilizador de `auth.users` — a cascata trata do resto, `profiles.id` referencia
-`auth.users(id) ON DELETE CASCADE` e 26 tabelas referenciam `profiles` da mesma
-maneira (verificado a 24 ago). A app não pode fazê-lo sozinha: apagar
-utilizadores exige a service role, que nunca pode estar no cliente.
+**Feito:** `supabase/functions/delete-account/`. A app não pode apagar sozinha —
+apagar utilizadores exige a service role, e essa chave nunca pode estar no
+cliente.
+
+**A decisão que mais importa:** o id de quem vai ser apagado sai do **JWT
+verificado**, nunca do corpo do pedido. Aceitar um `user_id` de fora era
+entregar um botão de apagar contas alheias a quem descobrisse o URL — e o URL de
+uma edge function deriva-se do projeto, que é público.
+
+**O Storage é apagado antes do utilizador.** A cascata trata das linhas
+(`profiles.id` → `auth.users(id) ON DELETE CASCADE`, e 26 tabelas para
+`profiles`), mas **ficheiros não são linhas**: os avatares e as fotos ficariam
+onde estão, e os dois buckets são **públicos**. Um URL que continuasse a servir
+a foto de quem pediu para apagar a conta é uma falha de privacidade. Pela ordem
+inversa ficavam órfãos e públicos, sem sequer se saber de quem eram.
+
+**No telemóvel só se limpa depois de o servidor confirmar** — ao contrário,
+alguém ficava deslogado de uma conta que continuava a existir, sem forma de
+voltar a entrar para tentar outra vez.
+
+**Duas confirmações no ecrã:** a primeira diz o que se perde, a segunda diz que
+é agora. Uma eliminação irreversível a um toque de um menu de definições faz-se
+sem querer.
+
+**8 testes** em `src/lib/deleteAccount.test.ts`, verificados por mutação —
+aceitar o id do corpo, deixar de apagar ficheiros, desligar a guarda de
+autenticação e inverter a ordem são todos apanhados. **Dois deles só passaram a
+apanhar depois de a mutação mostrar que as asserções eram fracas:** procurar as
+palavras `Authorization` e `401` algures no ficheiro passava com a guarda
+trocada por `if (false)`, e verificar os nomes dos buckets passava com a chamada
+a `apagarFicheiros` removida, porque a função continuava definida.
+
+⚠️ **Falta publicar:** `supabase functions deploy delete-account`. Até lá o botão
+chama um endpoint que devolve 404.
 
 #### 4.7.2 Os quatro links das Definições estão mortos ❌
 
@@ -1403,7 +1432,7 @@ coisas muito diferentes umas das outras.
 
 | | Porquê |
 |---|---|
-| **Apagar conta a sério** | Rejeição direta (Apple 5.1.1(v)). Hoje o botão mente. Precisa de uma edge function com a service role — ver 4.7.1 |
+| ~~**Apagar conta a sério**~~ | ✅ feito a 24 ago (4.7.1). **Falta publicar a edge function** — `supabase functions deploy delete-account` |
 | **Páginas de privacidade e termos** | Rejeição direta. Os quatro links apontam para `cadenceclub.app`, que não existe. Temos o `cadenceclub.pt` — ver 4.7.2 |
 | **Conta Apple Developer, 99 USD/ano** | Único item com semanas de espera. Bloqueia push iOS, HealthKit em iPhone, TestFlight, toda a monetização, e builds que não expiram em 7 dias |
 
@@ -1653,6 +1682,9 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ## 11. Registo de alterações
 
 **24 ago 2026 (14.ª sessão)**
+- 🗑️ **Apagar conta passa a apagar mesmo.** O botão pedia confirmação, aceitava o toque e dizia "Funcionalidade em desenvolvimento" — pior do que não existir, porque o fluxo parecia real até ao fim. É rejeição direta na App Store (5.1.1(v)). Edge function `delete-account`, com o id a sair do JWT verificado e nunca do corpo do pedido
+- **Os ficheiros são apagados antes do utilizador.** A cascata trata das linhas, mas os dois buckets são públicos e ficheiros não são linhas: pela ordem inversa ficavam órfãos e públicos, sem se saber de quem eram
+- +8 testes (427). **A mutação apanhou duas asserções minhas que eram decorativas** — uma passava com a guarda de autenticação trocada por `if (false)`, outra passava com a chamada que apaga os ficheiros removida
 - 🪤 **Um ficheiro de teste dentro de `src/app/` parte a build, e nenhum teste o diz.** Pus o `profileName.test.ts` ali; o expo-router faz `require.context` sobre essa pasta e trata tudo o que lá está como rota, incluindo testes. O `node:fs` que o teste importa não existe no telemóvel e o Metro falha com `Unable to resolve module node:fs` — **419 testes verdes e o `xcodebuild` a falhar** na fase de empacotamento, 25 minutos depois de começar. Movido para `src/lib/`, que é onde os outros testes estruturais sempre viveram
 - Teste novo a impor a regra, verificado a reincidir: copiar um teste para `src/app/` fá-lo reprovar
 - **Lição para builds nativas:** `npx expo export --platform ios` reproduz a fase do Metro em ~10 segundos. Vale sempre a pena antes de gastar 25 minutos de `xcodebuild`
