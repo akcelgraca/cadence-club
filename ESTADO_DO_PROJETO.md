@@ -350,6 +350,25 @@ configuração de URLs (`cadence://` + `cadence://*`). **Falta só** validar o
 link do email a abrir a app — teste de dispositivo, no emulador Android; no
 iOS precisa do rebuild da secção 12.
 
+#### Decisão: a confirmação de email fica ligada (24 ago)
+
+O fluxo desejado era entrar logo ao registar e ter a confirmação como passo de
+"concluir perfil", ao lado da foto e da descrição. **O Supabase não tem
+meio-termo:** com *Confirm email* ligado não há sessão até confirmar; desligado,
+a sessão vem logo mas ele marca o email como confirmado na hora — não sobra nada
+por confirmar para pôr numa lista de passos.
+
+Ficou a **opção A: manter ligado**. Com o bug do deep link corrigido, tocar no
+link do email passa a entrar direto na app — sem ecrã de login e sem reescrever
+credenciais, que era o que incomodava. Desligar dava o fluxo pedido mas ao preço
+de **perder a verificação**: qualquer endereço inventado criaria conta, a lista
+encheria de lixo e os bounces estragariam a reputação do `cadenceclub.pt`.
+
+**Se um dia se quiser mesmo o fluxo original** (entrar logo *com* verificação a
+sério), é a opção C: desligar a do Supabase e construir a nossa — tabela de
+tokens, edge function a enviar pelo Resend, e um deep link novo. Meio dia. Não
+se fez agora porque a correção do deep link já resolve a queixa.
+
 **Desbloqueio imediato enquanto o painel não está feito:** *Authentication →
 Providers → Email* e desligar **Confirm email**. Não subir só o rate limit sem
 SMTP próprio — o embutido não tem entregabilidade nenhuma.
