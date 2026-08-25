@@ -30,7 +30,6 @@ export default function OnboardingScreen() {
   const [username, setUsername] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [fullName, setFullName] = useState('');
   const [countryCode, setCountryCode] = useState('+351');
   const [phone, setPhone] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -43,7 +42,7 @@ export default function OnboardingScreen() {
   const { createProfile, profile } = useAuthStore();
 
   const handleFinish = async () => {
-    if (!username.trim() || !fullName.trim()) {
+    if (!username.trim() || !firstName.trim() || !lastName.trim()) {
       Alert.alert(t('onboarding_error_title'), t('onboarding_fill_fields'));
       return;
     }
@@ -52,10 +51,14 @@ export default function OnboardingScreen() {
     try {
       await createProfile({
         username: username.trim(),
-        full_name: fullName.trim(),
+        // Derivado, nunca pedido: pedi-lo à parte era a mesma informação duas
+        // vezes, e abria a porta a um perfil onde o nome completo não bate
+        // certo com o nome e o apelido. É o que o `register.tsx` e o
+        // `profile/edit.tsx` já faziam — este ecrã é que tinha ficado para trás.
+        full_name: [firstName.trim(), lastName.trim()].join(' ').trim(),
         goal: goal ?? undefined,
-        first_name: firstName.trim() || undefined,
-        last_name: lastName.trim() || undefined,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
         phone: phone.trim() ? `${countryCode}${phone.trim()}` : undefined,
         birth_date: birthDate.trim() || undefined,
         gender: gender || undefined,
@@ -188,15 +191,7 @@ export default function OnboardingScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder={t('edit_name') + ' *'}
-        placeholderTextColor={c.mutedForeground}
-        value={fullName}
-        onChangeText={setFullName}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder={t('onboarding_first_name')}
+        placeholder={t('onboarding_first_name') + ' *'}
         placeholderTextColor={c.mutedForeground}
         value={firstName}
         onChangeText={setFirstName}
@@ -204,7 +199,7 @@ export default function OnboardingScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder={t('onboarding_last_name')}
+        placeholder={t('onboarding_last_name') + ' *'}
         placeholderTextColor={c.mutedForeground}
         value={lastName}
         onChangeText={setLastName}

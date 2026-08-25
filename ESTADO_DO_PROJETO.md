@@ -21,7 +21,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 | Indicador | Estado |
 |---|---|
-| Testes | ✅ 411 testes, 31 suites, todos a passar |
+| Testes | ✅ 416 testes, 32 suites, todos a passar |
 | Typecheck (`tsc --noEmit`) | ✅ limpo |
 | Ecrãs (expo-router) | 44 |
 | Componentes | 67 |
@@ -1565,6 +1565,11 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ## 11. Registo de alterações
 
 **24 ago 2026 (14.ª sessão)**
+- ✂️ **O onboarding pedia o nome duas vezes.** Quem entrava pela primeira vez com Google ou Apple preenchia um campo de *nome completo* e, logo a seguir, *nome* e *apelido*. O `register.tsx` e o `profile/edit.tsx` **já derivavam** o `full_name` de nome + apelido — só este ecrã tinha ficado para trás. Campo removido, nome e apelido passam a obrigatórios (com `*`), e o `full_name` é montado a partir deles
+- Não era só um incómodo: com dois sítios a guardar a mesma coisa, ficava um perfil onde o `full_name` podia não bater certo com o `first_name` e o `last_name` — e é o `full_name` que aparece no feed, na pesquisa e nos clubes
+- +5 testes (416) em `src/app/profileName.test.ts`, a cobrir os **três** ecrãs que escrevem um perfil. Verificados por mutação: repor o campo, deixar de derivar o nome, e tornar os campos opcionais — os três foram apanhados
+- 🧹 **`@react-native-google-signin/google-signin` removido** — nunca foi importado. Pods regenerados com `pod install`, não com `expo prebuild` (que repõe o entitlement do HealthKit e parte a assinatura). Descoberto de caminho que o projeto iOS estava preso aos pods **anteriores** à subida do SDK 57: o alinhamento de 22 ago só tinha chegado ao lado JS
+- 📱 **Build nova no iPhone 15 físico** — a de 18 ago expirou aos 7 dias, como previsto. Assinada com Personal Team, entitlements esvaziados (sem HealthKit, push remoto nem Sign in with Apple). **Expira a 31 ago**
 - 📊 **`signed_up` passa a cobrir o Google e a Apple**, não só o email — sem isso a ativação por método de registo não se conseguia medir. A parte difícil é que o `signInWithOAuth` usa a mesma chamada para entrar e para registar; a resposta é comparar `created_at` com `last_sign_in_at`, dois carimbos **do servidor**, e nunca o relógio do telemóvel. Ver 3.11
 - 🪤 **A armadilha que quase passou:** quem se regista pelo Google e nunca mais entra fica com os dois carimbos iguais para sempre. Aplicar a deteção ao restauro de sessão no arranque somava um `signed_up` por cada abertura da app
 - 🐛 **Um dos testes novos era decorativo, e foi a mutação que o apanhou.** Procurava o corpo do `initialize` por `indexOf('initialize:')`, que casa primeiro com a *declaração do tipo* — a fatia analisada ficava vazia e o teste passava com a falha lá dentro. Corrigido para ancorar em `initialize: async`, e passou a confirmar que a fatia é mesmo o corpo antes de a examinar
