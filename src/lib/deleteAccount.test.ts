@@ -88,3 +88,45 @@ describe('apagar conta', () => {
     expect(bloco).toMatch(/settings_delete_second_title/);
   });
 });
+
+/**
+ * Os links legais das Definições.
+ *
+ * Até 24 de agosto apontavam os quatro para `cadenceclub.app` — um domínio que
+ * não é nosso e não resolve. A App Store exige um URL de política de privacidade
+ * **acessível** e verifica-o; um link morto dentro da app é o mesmo problema
+ * visto de outro ângulo, e nada no código o denunciava.
+ */
+describe('links legais', () => {
+  const ecra = ler('src/app/profile/settings.tsx');
+
+  it('nenhum link aponta para um domínio que não temos', () => {
+    expect(ecra).not.toMatch(/cadenceclub\.app/);
+    expect(ecra).not.toMatch(/cadenceclub\.site/);
+  });
+
+  it('privacidade e termos apontam para páginas que existem no repositório', () => {
+    const paginas: Record<string, string> = {
+      'https://cadenceclub.pt/privacidade.html': 'web/privacidade.html',
+      'https://cadenceclub.pt/termos.html': 'web/termos.html',
+    };
+    for (const [url, ficheiro] of Object.entries(paginas)) {
+      expect(ecra).toContain(url);
+      // Se o ficheiro for renomeado sem mexer na app, o link morre em silêncio.
+      expect(() => ler(ficheiro)).not.toThrow();
+    }
+  });
+
+  // Os espaços por preencher das páginas NÃO são verificados aqui de propósito.
+  // Seria um teste vermelho permanente até alguém preencher a morada, e um teste
+  // que está sempre a falhar ensina toda a gente a ignorar a suite inteira.
+  // Vive no `npm run web:check`, com os outros `*:check` de pré-lançamento.
+
+  it('um mailto não é aberto pelo WebBrowser', () => {
+    // O `openBrowserAsync` abre páginas; com um `mailto:` não acontece nada e
+    // não há erro nenhum a dizê-lo.
+    const bloco = ecra.slice(ecra.indexOf('const openLink'), ecra.indexOf('const handleStub'));
+    expect(bloco).toMatch(/mailto:/);
+    expect(bloco).toMatch(/Linking\.openURL/);
+  });
+});

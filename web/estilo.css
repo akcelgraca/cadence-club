@@ -1,0 +1,45 @@
+:root {
+  --verde: #7BA823;
+  --fundo: #FAFAFA;
+  --papel: #FFFFFF;
+  --texto: #1a1a1a;
+  --suave: #5c6157;
+  --linha: #E6E8E2;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fundo: #101211; --papel: #171A18; --texto: #EDEFEA;
+    --suave: #9AA093; --linha: #262B27; --verde: #9ED42F;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--fundo); color: var(--texto);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+.envelope { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+.marca { font-weight: 800; letter-spacing: .5px; color: var(--verde); text-transform: uppercase; font-size: 15px; text-decoration: none; }
+.idiomas button {
+  border: 1px solid var(--linha); background: var(--papel); color: var(--suave);
+  padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 14px; font-weight: 600;
+}
+.idiomas button[aria-pressed="true"] { background: var(--verde); border-color: var(--verde); color: #fff; }
+h1 { font-size: 30px; line-height: 1.2; margin: 24px 0 4px; }
+h2 { font-size: 20px; margin: 36px 0 8px; }
+h3 { font-size: 17px; margin: 24px 0 4px; }
+.data { color: var(--suave); font-size: 14px; margin: 0 0 8px; }
+.resumo {
+  background: var(--papel); border: 1px solid var(--linha); border-left: 3px solid var(--verde);
+  border-radius: 10px; padding: 16px 20px; margin: 24px 0;
+}
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 15px; display: block; overflow-x: auto; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--linha); vertical-align: top; }
+th { color: var(--suave); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .4px; }
+a { color: var(--verde); }
+code { background: var(--papel); border: 1px solid var(--linha); border-radius: 4px; padding: 1px 5px; font-size: 14px; }
+ul { padding-left: 22px; }
+li { margin: 6px 0; }
+footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--linha); color: var(--suave); font-size: 14px; }
+[data-lang] { display: none; }
+[data-lang].ativo { display: block; }

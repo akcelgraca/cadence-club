@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useAuthStore } from '../../store/authStore';
 import { supabase } from '../../services/supabase';
@@ -329,6 +330,12 @@ export default function SettingsScreen() {
   };
 
   const openLink = (url: string) => {
+    // O `WebBrowser` abre páginas; um `mailto:` não é página nenhuma e ele
+    // falha em silêncio. Quem sabe abrir um esquema do sistema é o `Linking`.
+    if (url.startsWith('mailto:') || url.startsWith('tel:')) {
+      Linking.openURL(url).catch(() => {});
+      return;
+    }
     WebBrowser.openBrowserAsync(url);
   };
 
@@ -810,27 +817,27 @@ export default function SettingsScreen() {
       <View style={styles.card}>
         <LinkRow
           label={t('settings_help_center')}
-          onPress={() => openLink('https://cadenceclub.app/help')}
+          onPress={() => openLink('https://cadenceclub.pt/')}
           icon="open-outline"
           colors={c}
         />
         <Separator styles={styles} />
         <LinkRow
           label={t('settings_report_problem')}
-          onPress={() => openLink('https://cadenceclub.app/feedback')}
+          onPress={() => openLink('mailto:suporte@cadenceclub.pt')}
           icon="open-outline"
           colors={c}
         />
         <Separator styles={styles} />
         <LinkRow
           label={t('settings_terms')}
-          onPress={() => openLink('https://cadenceclub.app/terms')}
+          onPress={() => openLink('https://cadenceclub.pt/termos.html')}
           colors={c}
         />
         <Separator styles={styles} />
         <LinkRow
           label={t('settings_privacy_policy')}
-          onPress={() => openLink('https://cadenceclub.app/privacy')}
+          onPress={() => openLink('https://cadenceclub.pt/privacidade.html')}
           colors={c}
         />
         <Separator styles={styles} />

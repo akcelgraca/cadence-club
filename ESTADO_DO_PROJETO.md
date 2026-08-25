@@ -1285,7 +1285,7 @@ a `apagarFicheiros` removida, porque a função continuava definida.
 ⚠️ **Falta publicar:** `supabase functions deploy delete-account`. Até lá o botão
 chama um endpoint que devolve 404.
 
-#### 4.7.2 Os quatro links das Definições estão mortos ❌
+#### 4.7.2 Páginas de privacidade e termos — ✅ escritas a 24 ago 2026
 
 Privacidade, Termos, Ajuda e Feedback apontam para **`cadenceclub.app`** — um
 domínio que **não é nosso e não resolve**. Os quatro devolvem erro de ligação.
@@ -1305,9 +1305,39 @@ Os domínios que temos são o **`cadenceclub.pt`** (onde o email já está a
 funcionar) e o `cadenceclub.site`. O `.app` nunca foi registado — em algum
 momento escreveu-se um domínio que não existe.
 
-**O que é preciso:** apontar para `cadenceclub.pt` e pôr lá as páginas. A de
-privacidade não é opcional, e tem de dizer o que a app recolhe — GPS, saúde,
-fotos, analytics — e para onde vai.
+**Feito:** `apps/mobile/web/` — `index.html`, `privacidade.html`, `termos.html`,
+estáticos e sem dependências. Cada documento traz **os dois idiomas na mesma
+página**, com um botão a alternar: as lojas pedem *um* URL, e dois URLs por
+documento era mais uma coisa para ficar dessincronizada.
+
+**Escritas a partir do que o código faz**, não de um modelo genérico — as sete
+permissões do `app.json`, os oito eventos que o PostHog recebe, as colunas de
+perfil, os seis fornecedores em uso e onde cada um está. É o que separa uma
+política correta de uma que descreve outra app qualquer.
+
+Os quatro links foram corrigidos no `settings.tsx`. O do feedback passou a
+`mailto:` — e isso obrigou a corrigir o `openLink`, que usava
+`WebBrowser.openBrowserAsync`: esse abre páginas, e com um `mailto:` **não
+acontece nada e não há erro nenhum a dizê-lo**. Passa pelo `Linking`.
+
+⚠️ **Três coisas antes de isto valer alguma coisa:**
+1. **Preencher os espaços** — `[NOME OU EMPRESA]`, `[MORADA]` e a `[REGIÃO]` do
+   Supabase (*Project Settings → General → Region*; não se descobre a partir da
+   app, o Cloudflare à frente só mostra o ponto de presença). Uma política com
+   `[MORADA]` lá dentro diz a quem a lê que ninguém a leu
+2. **Publicar em `cadenceclub.pt`** — ver `web/README.md`
+3. **Criar as caixas `suporte@` e `privacidade@`** — estão nos documentos e vão
+   para a ficha da loja. Um endereço que devolve erro é o mesmo problema que um
+   link morto
+
+**`npm run web:check`** verifica os três primeiros pontos, e com `--online`
+confirma que as páginas respondem mesmo. **Não é um teste do Jest de propósito:**
+seria vermelho permanente até alguém preencher a morada, e uma suite sempre
+vermelha ensina a ignorar a suite.
+
+📌 **Isto não é aconselhamento jurídico.** O conteúdo está certo porque saiu do
+código; o RGPD tem exigências de forma que um texto correto no conteúdo pode na
+mesma falhar. Vale uma revisão de quem faça isto antes de submeter.
 
 #### 4.7.3 Três itens das Definições são `handleStub` ⚠️
 
@@ -1433,7 +1463,7 @@ coisas muito diferentes umas das outras.
 | | Porquê |
 |---|---|
 | ~~**Apagar conta a sério**~~ | ✅ feito a 24 ago (4.7.1). **Falta publicar a edge function** — `supabase functions deploy delete-account` |
-| **Páginas de privacidade e termos** | Rejeição direta. Os quatro links apontam para `cadenceclub.app`, que não existe. Temos o `cadenceclub.pt` — ver 4.7.2 |
+| ~~**Páginas de privacidade e termos**~~ | ✅ escritas a 24 ago (4.7.2). **Falta preencher os espaços, publicar em `cadenceclub.pt` e criar as caixas de email** — `npm run web:check` |
 | **Conta Apple Developer, 99 USD/ano** | Único item com semanas de espera. Bloqueia push iOS, HealthKit em iPhone, TestFlight, toda a monetização, e builds que não expiram em 7 dias |
 
 Estes três não são código difícil. São o tipo de coisa que se descobre no dia
@@ -1682,6 +1712,10 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ## 11. Registo de alterações
 
 **24 ago 2026 (14.ª sessão)**
+- 📄 **Política de Privacidade e Termos escritos** (`web/`), bilingues na mesma página. Saíram do que o código faz — as sete permissões, os oito eventos do PostHog, as colunas de perfil, os seis fornecedores — e não de um modelo genérico. Os quatro links das Definições apontavam para `cadenceclub.app`, que nunca foi nosso
+- 🐛 **O `openLink` não sabia abrir `mailto:`** — usava `WebBrowser.openBrowserAsync`, que abre páginas e com um esquema do sistema não faz nada, sem erro nenhum. Só se descobriria com alguém a tocar no botão e a não perceber porquê
+- **`npm run web:check`** — espaços por preencher, os dois idiomas, e os URLs da app a baterem certo com os ficheiros. Fora do Jest de propósito: seria vermelho permanente até alguém preencher a morada, e uma suite sempre vermelha ensina a ignorá-la
+- +3 testes (430)
 - 🗑️ **Apagar conta passa a apagar mesmo.** O botão pedia confirmação, aceitava o toque e dizia "Funcionalidade em desenvolvimento" — pior do que não existir, porque o fluxo parecia real até ao fim. É rejeição direta na App Store (5.1.1(v)). Edge function `delete-account`, com o id a sair do JWT verificado e nunca do corpo do pedido
 - **Os ficheiros são apagados antes do utilizador.** A cascata trata das linhas, mas os dois buckets são públicos e ficheiros não são linhas: pela ordem inversa ficavam órfãos e públicos, sem se saber de quem eram
 - +8 testes (427). **A mutação apanhou duas asserções minhas que eram decorativas** — uma passava com a guarda de autenticação trocada por `if (false)`, outra passava com a chamada que apaga os ficheiros removida
