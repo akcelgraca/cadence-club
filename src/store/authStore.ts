@@ -17,6 +17,17 @@ interface AuthState {
 
   // Actions
   initialize: () => Promise<void>;
+  /**
+   * Adota uma sessão já criada: carrega o perfil, cria-o a partir do registo
+   * pendente se ainda não existir, e avisa os serviços externos.
+   *
+   * Existe porque a sessão nem sempre nasce de um `signIn`. Quando se confirma
+   * o email, quem a cria é o `setSession` do handler de deep links, e esse
+   * caminho não passava por aqui: o supabase-js ficava com sessão, este store
+   * não sabia de nada, e a app mostrava o ecrã de login a alguém que tinha
+   * acabado de confirmar a conta.
+   */
+  adoptSession: (session: { user: { id: string; email?: string } }) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -124,10 +135,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  signIn: async (email: string, password: string) => {
-    const data = await authService.signIn(email, password);
-
-    let profile = await authService.getProfile(data.session.user.id);
+  adoptSession: async (session) => {
+    let profile = await authService.getProfile(session.user.id);
 
     // No profile yet — try to create from pending registration data
     if (!profile) {
@@ -136,7 +145,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         try {
           const pending = JSON.parse(pendingJson);
           profile = await authService.createProfile({
-            id: data.session.user.id,
+            id: session.user.id,
             username: pending.username,
             full_name: pending.full_name,
             first_name: pending.first_name,
@@ -178,12 +187,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
     }
 
-    onSessionStarted(data.session.user.id);
+    onSessionStarted(session.user.id);
     set({
-      session: data.session,
+      session,
       profile,
       isOnboarded: !!profile,
+      isLoading: false,
     });
+  },
+
+  signIn: async (email: string, password: string) => {
+    const data = await authService.signIn(email, password);
+    await get().adoptSession(data.session);
   },
 
   signInWithGoogle: async () => {

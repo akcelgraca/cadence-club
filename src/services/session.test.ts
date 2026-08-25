@@ -54,6 +54,46 @@ describe('ciclo de vida da sessão', () => {
     expect(authStore).not.toMatch(/from '\.\.\/services\/purchases'/);
   });
 
+  it('uma sessão criada fora do store é adotada por ele', () => {
+    // O bug de 24 ago: o handler de deep links chamava `setSession` e mais
+    // nada. O supabase-js ficava com sessão, o store continuava a null, e quem
+    // acabava de confirmar o email por email caía no ecrã de início de sessão —
+    // e as credenciais certas pareciam erradas porque nem chegavam a ser o
+    // problema.
+    const layout = readFileSync(path.join(raiz, 'src/app/_layout.tsx'), 'utf8');
+    expect(layout).toMatch(/setSession\(/);
+    expect(layout).toMatch(/adoptSession\(/);
+
+    // E o `adoptSession` tem de ser o caminho completo, não um `set` solto:
+    // sem criar o perfil a partir do registo pendente, a pessoa entrava na app
+    // sem perfil nenhum.
+    const store = readFileSync(path.join(raiz, 'src/store/authStore.ts'), 'utf8');
+    // Âncoras na implementação (`: async`), nunca no nome só: a interface lá em
+    // cima declara os mesmos nomes e o `indexOf` casa com ela primeiro,
+    // devolvendo uma fatia vazia — um teste que examina o vazio nunca reprova.
+    const corpo = store.slice(store.indexOf('adoptSession: async'), store.indexOf('signIn: async'));
+    expect(corpo.length).toBeGreaterThan(200);
+    // Específico de propósito. Um `toMatch(/PENDING_REGISTRATION_KEY/)` solto
+    // passava com a **leitura** partida, porque o `removeItem` mais abaixo
+    // continuava a satisfazê-lo — verificado por mutação.
+    expect(corpo).toMatch(/getItem\(PENDING_REGISTRATION_KEY\)/);
+    expect(corpo).toMatch(/createProfile\(/);
+    expect(corpo).toMatch(/onSessionStarted\(/);
+  });
+
+  it('o signIn não duplica a lógica de adoção', () => {
+    // Estavam a ser a mesma coisa escrita duas vezes; corrigir uma e esquecer a
+    // outra era só uma questão de tempo.
+    const store = readFileSync(path.join(raiz, 'src/store/authStore.ts'), 'utf8');
+    const signIn = store.slice(
+      store.indexOf('signIn: async'),
+      store.indexOf('signInWithGoogle: async'),
+    );
+    expect(signIn.length).toBeGreaterThan(50);
+    expect(signIn).toMatch(/adoptSession\(/);
+    expect(signIn).not.toMatch(/PENDING_REGISTRATION_KEY/);
+  });
+
   it('o session.ts liga mesmo os dois', () => {
     const src = readFileSync(path.join(raiz, 'src/services/session.ts'), 'utf8');
     const inicio = src.slice(src.indexOf('export function onSessionStarted'));

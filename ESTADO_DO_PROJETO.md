@@ -21,7 +21,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 | Indicador | Estado |
 |---|---|
-| Testes | ✅ 416 testes, 32 suites, todos a passar |
+| Testes | ✅ 418 testes, 32 suites, todos a passar |
 | Typecheck (`tsc --noEmit`) | ✅ limpo |
 | Ecrãs (expo-router) | 44 |
 | Componentes | 67 |
@@ -1565,6 +1565,10 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ## 11. Registo de alterações
 
 **24 ago 2026 (14.ª sessão)**
+- 🐛 **Confirmar o email levava ao ecrã de login, e as credenciais certas pareciam erradas.** Duas causas independentes que se disfarçavam uma à outra:
+  1. O handler de deep links chamava `supabase.auth.setSession` **e mais nada**. A sessão passava a existir no supabase-js, o `authStore` continuava a `null`, e o router mantinha a pilha de autenticação. A lógica de adoção (carregar o perfil, criá-lo a partir do registo pendente, avisar os serviços externos) vivia dentro do `signIn` e o deep link não passava por lá. Extraída para `adoptSession`, usada pelos dois
+  2. O registo fazia `signUp(email.trim(), …)` e a entrada fazia `signIn(email, …)` — **sem `trim`**. Um espaço colado pelo preenchimento automático criava a conta com o endereço limpo e depois recusava a entrada com `Invalid login credentials`, que na app aparece como "dados incorretos". O `trim` passou para o serviço, onde vale para todos os chamadores
+- +2 testes (418). Verificados por mutação, e a mutação valeu a pena duas vezes: uma âncora `indexOf('signInWithGoogle:')` casava com a *declaração do tipo* e devolvia uma fatia vazia (o mesmo erro do `initialize`, agora com uma asserção de tamanho a impedi-lo), e um `toMatch(/PENDING_REGISTRATION_KEY/)` solto passava com a leitura partida porque o `removeItem` mais abaixo continuava a satisfazê-lo
 - ✂️ **O onboarding pedia o nome duas vezes.** Quem entrava pela primeira vez com Google ou Apple preenchia um campo de *nome completo* e, logo a seguir, *nome* e *apelido*. O `register.tsx` e o `profile/edit.tsx` **já derivavam** o `full_name` de nome + apelido — só este ecrã tinha ficado para trás. Campo removido, nome e apelido passam a obrigatórios (com `*`), e o `full_name` é montado a partir deles
 - Não era só um incómodo: com dois sítios a guardar a mesma coisa, ficava um perfil onde o `full_name` podia não bater certo com o `first_name` e o `last_name` — e é o `full_name` que aparece no feed, na pesquisa e nos clubes
 - +5 testes (416) em `src/app/profileName.test.ts`, a cobrir os **três** ecrãs que escrevem um perfil. Verificados por mutação: repor o campo, deixar de derivar o nome, e tornar os campos opcionais — os três foram apanhados

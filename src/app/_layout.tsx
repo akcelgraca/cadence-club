@@ -338,7 +338,14 @@ export default function RootLayout() {
       const access_token = params.get('access_token');
       const refresh_token = params.get('refresh_token') ?? '';
       if (access_token) {
-        await supabase.auth.setSession({ access_token, refresh_token });
+        const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
+        // Sem isto a sessão existia só no supabase-js: o `authStore` continuava
+        // a achar que ninguém tinha entrado, e quem acabava de confirmar o
+        // email caía no ecrã de login. O `adoptSession` também trata de criar o
+        // perfil a partir do registo guardado antes da confirmação.
+        if (!error && data.session) {
+          await useAuthStore.getState().adoptSession(data.session);
+        }
       }
     };
 

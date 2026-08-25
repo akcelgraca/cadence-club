@@ -59,7 +59,14 @@ export async function syncLanguagePreference(idioma?: 'pt' | 'en') {
 }
 
 export async function signIn(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  // O `trim` tem de estar aqui, e não só no ecrã: o registo já limpava o
+  // endereço e a entrada não, portanto um espaço colado pelo preenchimento
+  // automático criava a conta com o email limpo e depois recusava a entrada com
+  // `Invalid login credentials` — que na app aparece como "dados incorretos".
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.trim(),
+    password,
+  });
   if (error) throw error;
   return data;
 }
