@@ -21,7 +21,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 | Indicador | Estado |
 |---|---|
-| Testes | ✅ 418 testes, 32 suites, todos a passar |
+| Testes | ✅ 419 testes, 32 suites, todos a passar |
 | Typecheck (`tsc --noEmit`) | ✅ limpo |
 | Ecrãs (expo-router) | 44 |
 | Componentes | 67 |
@@ -1584,6 +1584,9 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ## 11. Registo de alterações
 
 **24 ago 2026 (14.ª sessão)**
+- 🪤 **Um ficheiro de teste dentro de `src/app/` parte a build, e nenhum teste o diz.** Pus o `profileName.test.ts` ali; o expo-router faz `require.context` sobre essa pasta e trata tudo o que lá está como rota, incluindo testes. O `node:fs` que o teste importa não existe no telemóvel e o Metro falha com `Unable to resolve module node:fs` — **419 testes verdes e o `xcodebuild` a falhar** na fase de empacotamento, 25 minutos depois de começar. Movido para `src/lib/`, que é onde os outros testes estruturais sempre viveram
+- Teste novo a impor a regra, verificado a reincidir: copiar um teste para `src/app/` fá-lo reprovar
+- **Lição para builds nativas:** `npx expo export --platform ios` reproduz a fase do Metro em ~10 segundos. Vale sempre a pena antes de gastar 25 minutos de `xcodebuild`
 - 🐛 **Confirmar o email levava ao ecrã de login, e as credenciais certas pareciam erradas.** Duas causas independentes que se disfarçavam uma à outra:
   1. O handler de deep links chamava `supabase.auth.setSession` **e mais nada**. A sessão passava a existir no supabase-js, o `authStore` continuava a `null`, e o router mantinha a pilha de autenticação. A lógica de adoção (carregar o perfil, criá-lo a partir do registo pendente, avisar os serviços externos) vivia dentro do `signIn` e o deep link não passava por lá. Extraída para `adoptSession`, usada pelos dois
   2. O registo fazia `signUp(email.trim(), …)` e a entrada fazia `signIn(email, …)` — **sem `trim`**. Um espaço colado pelo preenchimento automático criava a conta com o endereço limpo e depois recusava a entrada com `Invalid login credentials`, que na app aparece como "dados incorretos". O `trim` passou para o serviço, onde vale para todos os chamadores

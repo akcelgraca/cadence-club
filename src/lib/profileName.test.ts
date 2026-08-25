@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import path from 'node:path';
 
 const raiz = path.resolve(__dirname, '../..');
@@ -22,6 +23,28 @@ const ECRAS = [
   'src/app/(auth)/onboarding.tsx',
   'src/app/profile/edit.tsx',
 ];
+
+/**
+ * ⚠️ Este ficheiro **não pode viver dentro de `src/app/`**.
+ *
+ * O expo-router faz `require.context` sobre essa pasta e trata tudo o que lá
+ * está como rota — incluindo ficheiros de teste. Um teste que importe `node:fs`
+ * passa no Jest e **parte a build**, com `Unable to resolve module node:fs`,
+ * porque `node:fs` não existe no telemóvel. Aconteceu a 24 ago: os 418 testes
+ * verdes e o `xcodebuild` a falhar na fase do Metro.
+ *
+ * Por isso os testes estruturais deste projeto vivem em `src/lib`,
+ * `src/services` e `src/utils`, nunca em `src/app`. O teste abaixo garante-o.
+ */
+describe('testes fora do alcance do router', () => {
+  it('nenhum ficheiro de teste vive dentro de src/app', () => {
+    const dentro = execSync('find src/app -name "*.test.*" || true', {
+      cwd: raiz,
+      encoding: 'utf8',
+    }).trim();
+    expect(dentro).toBe('');
+  });
+});
 
 describe('nome do perfil', () => {
   it.each(ECRAS)('%s não pede o nome completo num campo próprio', (ecra) => {
