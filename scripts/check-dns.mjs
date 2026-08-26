@@ -16,31 +16,24 @@ import { execSync } from 'node:child_process';
 const D = 'cadenceclub.pt';
 
 /**
- * ⚠️ Os dois registos do site mudam de resposta quando a Cloudflare entra.
+ * ⚠️ O apex tem de apontar para o GitHub Pages, não para a Amen.
  *
- * Com a nuvem laranja, a Cloudflare deixa de devolver o IP da Amen e passa a
- * devolver os seus — é precisamente isso que lhe permite terminar o TLS e dar-
- * nos HTTPS. O painel dela continua a mostrar `81.88.57.70`, mas o mundo passa
- * a ver outra coisa, e o `dig CNAME www` deixa de devolver nada.
+ * O domínio nunca teve alojamento — a Amen serve só a página de estacionamento,
+ * e sem FTP não havia como lá pôr ficheiros. As páginas passaram para o GitHub
+ * Pages, que aloja de graça e emite um certificado válido sozinho.
  *
- * A primeira versão deste script exigia o IP da Amen. Depois da migração
- * acusaria o site como partido estando ele bom — e um alarme falso no meio de
- * uma migração é pior do que alarme nenhum, porque ensina a ignorar os outros
- * onze.
+ * Uma versão anterior deste ficheiro aceitava a Amen **ou** a Cloudflare, de
+ * quando o plano era pôr a Cloudflare à frente. Esse plano caiu, e o script
+ * ficou a dar "Zona completa" com o apex ainda na Amen — luz verde exatamente
+ * na única coisa que faltava. Aceitar demais é a maneira mais silenciosa de uma
+ * verificação deixar de verificar.
  */
 const ORIGEM_AMEN = '81.88.57.70';
-const CLOUDFLARE = /^(104\.1[6-9]\.|104\.2[0-7]\.|172\.6[4-9]\.|172\.7[0-1]\.|188\.114\.|162\.15[89]\.)/;
-
-/** Aceita a origem da Amen (antes) ou a Cloudflare (depois). */
-function siteOk(resposta) {
-  if (resposta.includes(ORIGEM_AMEN)) return 'direto na Amen';
-  if (resposta.split('\n').some((l) => CLOUDFLARE.test(l.trim()))) return 'via Cloudflare';
-  return null;
-}
+const GITHUB_PAGES = ['185.199.108.153', '185.199.109.153', '185.199.110.153', '185.199.111.153'];
 
 /** [nome, tipo, fragmento que a resposta tem de conter, para que serve] */
 const ESPERADO = [
-  ['www',                 'A',   null,                              'site'],
+  ['www',                 'CNAME', 'onstatic-pt.setupdns.net',      'site (www — inalterado)'],
   ['',                    'MX',  'mail-pt.securemail.pro',          'CORREIO — recebe email'],
   ['',                    'TXT', 'v=spf1 include:spf.webapps.net',  'CORREIO — SPF do domínio'],
   ['mail',                'CNAME', 'mail-pt.securemail.pro',        'CORREIO — IMAP/POP'],
@@ -69,34 +62,30 @@ function consultar(nome, tipo) {
 let falhas = 0;
 console.log(`Zona de ${D} — 13 registos esperados\n`);
 
-// O apex é verificado à parte porque a resposta certa muda com a migração.
+// O apex é verificado à parte: é o único que estamos a mudar.
 {
   const r = consultar('', 'A');
-  const onde = siteOk(r);
-  if (onde) {
-    console.log(`✓ A     ${'@'.padEnd(28)} site (${onde})`);
+  const encontrados = GITHUB_PAGES.filter((ip) => r.includes(ip));
+  if (encontrados.length === GITHUB_PAGES.length) {
+    console.log(`✓ A     ${'@'.padEnd(28)} site (GitHub Pages, os 4 IPs)`);
+  } else if (encontrados.length > 0) {
+    // Um só IP serve; os quatro são redundância. Não é falha, é um aviso.
+    console.log(`✓ A     ${'@'.padEnd(28)} site (GitHub Pages, ${encontrados.length} de 4 IPs)`);
   } else {
     falhas++;
     console.error(`✗ A     ${'@'.padEnd(28)} site`);
-    console.error(`      esperado: ${ORIGEM_AMEN} (Amen) ou um IP da Cloudflare`);
-    console.error(`      obtido:   ${r || '(nada)'}`);
+    if (r.includes(ORIGEM_AMEN)) {
+      console.error('      ainda aponta para a Amen (81.88.57.70) — a alteração não ficou gravada');
+      console.error('      esperado: 185.199.108.153 … 111.153');
+    } else {
+      console.error(`      esperado um IP do GitHub Pages · obtido: ${r || '(nada)'}`);
+    }
   }
 }
 
 for (const [nome, tipo, contem, para] of ESPERADO) {
   const alvo = nome ? `${nome}.${D}` : '@';
   const r = consultar(nome, tipo);
-  // `contem: null` = registo do site, que muda de resposta com a migração.
-  if (contem === null) {
-    const onde = siteOk(r);
-    if (onde) { console.log(`✓ ${tipo.padEnd(5)} ${alvo.padEnd(28)} ${para} (${onde})`); }
-    else {
-      falhas++;
-      console.error(`✗ ${tipo.padEnd(5)} ${alvo.padEnd(28)} ${para}`);
-      console.error(`      esperado: a Amen ou a Cloudflare · obtido: ${r || '(nada)'}`);
-    }
-    continue;
-  }
   if (r.includes(contem)) {
     console.log(`✓ ${tipo.padEnd(5)} ${alvo.padEnd(28)} ${para}`);
   } else {
