@@ -876,6 +876,10 @@ const en = {
   hr_zone_label: 'Zone {{zone}} · {{name}}',
 
   // --- Activity (detail and edit) ---
+  activity_export_gpx: 'Export GPX',
+  activity_export_no_points: 'This activity has no track to export.',
+  activity_export_unavailable: "This device can't share files.",
+  activity_export_error: "Couldn't export. Try again.",
   activity_create_segment: 'Create segment',
   activity_delete: 'Delete activity',
   activity_delete_confirm: 'This cannot be undone.',

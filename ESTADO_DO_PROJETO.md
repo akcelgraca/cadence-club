@@ -1244,6 +1244,51 @@ Nota: as migrações **não são idempotentes**. `CREATE TYPE` e `CREATE POLICY`
 
 ---
 
+### 4.8 Exportar GPX (26 ago 2026) ✅
+
+A app importava do Strava e do Garmin desde 20 de agosto e **não deixava sair
+nada**. Prender os dados de quem os gravou é exatamente a crítica que se faz ao
+Strava, e era a maior lacuna de produto da lista.
+
+**Menu da atividade → Exportar GPX**, só para o dono e só quando há traçado.
+Escreve o ficheiro na cache e entrega-o ao menu de partilha do sistema — dali
+segue para o Garmin Connect, o Komoot, o email ou o que estiver instalado.
+
+| Onde | O quê |
+|---|---|
+| `services/export/buildGpx.ts` | função **pura**: atividade + pontos → texto GPX |
+| `services/export/exportActivityGpx.ts` | busca os pontos, escreve, partilha |
+| `app/activity/[id].tsx` | a entrada no menu do dono |
+
+**O teste é de ida e volta, e é o que dá confiança.** A app já sabia *ler* GPX
+desde 18 de agosto; o teste escreve um e volta a lê-lo com o próprio `parseGpx`.
+Se o que sai não voltar a entrar, também não entra no Garmin — e isso só se
+descobriria com alguém a tentar e a não perceber porquê. Sobrevivem as
+coordenadas, a altimetria, os tempos **e o batimento**.
+
+**Três decisões que valem a pena reter:**
+
+1. **O texto do utilizador é escapado.** Um título com `&` ou `<` — *"Corrida &
+   bicicleta"* chega — parte o XML de maneira que só aparece do outro lado, dias
+   depois, e já sem forma de o ligar à causa
+2. **O batimento vai na extensão da Garmin** (`gpxtpx:hr`). Não cabe no GPX base;
+   é o que o Strava escreve e o que o nosso leitor já procurava
+3. **Uma modalidade sem equivalente sai como `running`**, não é recusada. Um tipo
+   errado corrige-se do outro lado; uma atividade recusada perde-se
+
+**Os pontos são pedidos em páginas de 1000.** O PostgREST corta aí em silêncio, e
+uma corrida de duas horas a um ponto por segundo são 7200 — sem paginar,
+exportava-se a primeira meia hora num ficheiro que parecia bom.
+
+⚠️ **Exporta o traçado completo, sem cortar pelas zonas de privacidade.** É
+deliberado: são os teus dados e o objetivo é levá-los inteiros para outro
+serviço. Mas quem partilhar o ficheiro com outra pessoa partilha o traçado todo,
+casa incluída. **Vale a pena avisar na interface** — fica por fazer.
+
++12 testes.
+
+---
+
 ### 4.7 Bloqueadores de loja — encontrados a 24 ago 2026 🚨
 
 Nenhum destes estava listado, e os dois primeiros são **causa de rejeição
@@ -1552,7 +1597,7 @@ antes de ligar seja o que for.
 
 | | Estado verificado |
 |---|---|
-| 🔴 **Exportar GPX** | **Não existe.** A importação está feita; a saída não. Prende o utilizador, que é exatamente a crítica que se faz ao Strava |
+| ~~🔴 **Exportar GPX**~~ | ✅ feito a 26 ago — ver 4.8 |
 | 🟠 **Classificações de troços (KOM/QOM)** | Só existe `getMySegmentEfforts` — os teus tempos contra ti próprio. A competição é o que vicia no Strava |
 | 🟠 **Distância no Health Connect** | Fica a zero; vive num registo separado do `ExerciseSession` |
 | 🟠 **Escrever treinos de volta na Saúde** | A app lê e nunca devolve |
@@ -1765,6 +1810,10 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ## 11. Registo de alterações
 
 **26 ago 2026 (15.ª sessão)**
+- 📤 **Exportar GPX** — a maior lacuna de produto da análise. A app importava desde 20 ago e não deixava sair nada. Ver 4.8
+- **O teste é de ida e volta pelo nosso próprio leitor:** escreve um GPX e volta a lê-lo com o `parseGpx`. Se não voltar a entrar aqui, também não entra no Garmin — e isso só se descobria com alguém a tentar
+- 🪤 Três armadilhas tratadas: texto do utilizador por escapar (um `&` no título parte o ficheiro), o batimento que não cabe no GPX base (vai na extensão da Garmin), e os pontos que o PostgREST corta aos 1000 em silêncio — uma corrida de duas horas são 7200
+- +12 testes (442)
 - ✅ **O link do email abre direto na app, no iPhone.** Fecha a pendência mais antiga do projeto — 20 a 26 de agosto, **três causas independentes** que se disfarçavam umas às outras: o `cadence://` nunca registado no iOS, o 500 do serviço de email embutido, e o deep link a criar sessão sem avisar o `authStore`. Ver 3.2.1
 - 📱 **`npm run ios:device`** — os quatro passos da build do iPhone num comando, com a reposição dos entitlements num `trap` (corre mesmo se o build falhar ou for interrompido) e um `expo export` de dez segundos antes de gastar vinte e cinco minutos
 - 🌐 **Páginas legais no ar** em `https://legal.cadenceclub.pt/`, com certificado válido do GitHub Pages. Não no apex: o registo `A` **não persiste** no painel da Amen (três tentativas, autoritativos a devolver sempre o IP antigo), provavelmente por o produto *OnStatic* o gerir sozinho. Um `CNAME` num nome novo gravou à primeira

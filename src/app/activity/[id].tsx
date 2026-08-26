@@ -9,6 +9,7 @@ import { useAuthStore } from '../../store/authStore';
 import { zoneForHeartRate, resolveMaxHeartRate, ageFromBirthDate } from '../../utils/heartRate';
 import { calculateActivityCalories } from '../../utils/calculateCalories';
 import { deleteActivity } from '../../services/activities';
+import { exportActivityGpx, ErroDeExportacao } from '../../services/export/exportActivityGpx';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { getActivity, getActivityPoints, getPaceComparison } from '../../services/activities';
@@ -122,11 +123,33 @@ export default function ActivityDetailScreen() {
       ? [{ url: activity.photo_url, is_generated: false } as any]
       : [];
 
+  /**
+   * Exportar é o outro lado da importação, que existe desde 18 de agosto.
+   * Um GPX abre a porta ao Garmin Connect, ao Komoot e a qualquer coisa que
+   * venha a seguir — e não prender os dados de quem os gravou é exatamente o
+   * contrário do que se critica ao Strava.
+   */
+  const handleExport = async () => {
+    try {
+      await exportActivityGpx(activity);
+    } catch (err) {
+      const motivo = err instanceof ErroDeExportacao ? err.motivo : 'falhou';
+      Alert.alert(
+        motivo === 'sem_pontos' ? t('activity_export_no_points')
+          : motivo === 'sem_partilha' ? t('activity_export_unavailable')
+            : t('activity_export_error'),
+      );
+    }
+  };
+
   const handleOwnerMenu = () => {
     Alert.alert(activity.title || t('activity_detail_screen'), undefined, [
       { text: t('edit'), onPress: () => router.push(`/activity/${id}/edit`) },
       ...(activityPoints.length >= 2
-        ? [{ text: t('activity_create_segment'), onPress: () => router.push(`/activity/${id}/segment-new`) }]
+        ? [
+            { text: t('activity_create_segment'), onPress: () => router.push(`/activity/${id}/segment-new`) },
+            { text: t('activity_export_gpx'), onPress: handleExport },
+          ]
         : []),
       {
         text: t('delete'),

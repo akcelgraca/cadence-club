@@ -878,6 +878,10 @@ const pt = {
   hr_zone_label: 'Zona {{zone}} · {{name}}',
 
   // --- Atividade (detalhe e edição) ---
+  activity_export_gpx: 'Exportar GPX',
+  activity_export_no_points: 'Esta atividade não tem traçado para exportar.',
+  activity_export_unavailable: 'Este dispositivo não consegue partilhar ficheiros.',
+  activity_export_error: 'Não foi possível exportar. Tenta outra vez.',
   activity_create_segment: 'Criar troço',
   activity_delete: 'Eliminar atividade',
   activity_delete_confirm: 'Esta ação não pode ser desfeita.',
