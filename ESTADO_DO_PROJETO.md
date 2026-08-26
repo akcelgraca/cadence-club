@@ -320,9 +320,20 @@ apagadas a 24 ago. A cascata trata do resto: `profiles.id` referencia
 `auth.users(id) ON DELETE CASCADE`, e 26 tabelas referenciam `profiles` da mesma
 maneira — apagar o utilizador leva tudo atrás.
 
-⚠️ **Testar no emulador Android, não no iPhone.** O link do email precisa do
-`cadence://`, que só passou a estar registado no `app.json` a 20 de agosto e
-**exige rebuild** (secção 12). A build que está no iPhone ainda não o sabe abrir.
+✅ **VALIDADO NO iPHONE (26 ago).** Registo → email → toque no botão → **a app
+abre já com sessão**. É a pendência mais antiga do projeto, aberta a 20 de
+agosto, e passou por **três causas diferentes** antes de fechar:
+
+1. O esquema `cadence://` nunca tinha sido registado no iOS — o
+   `ios.infoPlist.CFBundleURLTypes` definido à mão apagava o que o `scheme`
+   geraria (secção 12). Corrigido a 18 ago, exigia rebuild
+2. O `signup` devolvia **500** — o serviço de email embutido do Supabase a bater
+   no limite de envios. Resolvido com SMTP próprio a 21 ago (3.2.7)
+3. O deep link criava a sessão **sem avisar o `authStore`**, e a app caía no
+   ecrã de login a quem tinha acabado de confirmar (24 ago)
+
+Nenhuma das três se via a partir das outras. As duas primeiras davam sintomas
+que apontavam para sítios errados.
 
 #### O fornecedor e o domínio (21 ago) ✅
 
@@ -1517,7 +1528,7 @@ O APK e a build do iPhone estão instalados. Falta correr:
 
 | | Onde |
 |---|---|
-| Link do email a abrir a app | iPhone — **instalado hoje, testável já** |
+| ~~Link do email a abrir a app~~ | ✅ **validado no iPhone a 26 ago** — abre direto na app, com sessão |
 | Google Sign-In | iPhone — o emulador Android nunca conseguiu (Chrome de 2022) |
 | Push em inglês, ponta a ponta | Android físico |
 | Health Connect | Android físico |
@@ -1754,6 +1765,8 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ## 11. Registo de alterações
 
 **26 ago 2026 (15.ª sessão)**
+- ✅ **O link do email abre direto na app, no iPhone.** Fecha a pendência mais antiga do projeto — 20 a 26 de agosto, **três causas independentes** que se disfarçavam umas às outras: o `cadence://` nunca registado no iOS, o 500 do serviço de email embutido, e o deep link a criar sessão sem avisar o `authStore`. Ver 3.2.1
+- 📱 **`npm run ios:device`** — os quatro passos da build do iPhone num comando, com a reposição dos entitlements num `trap` (corre mesmo se o build falhar ou for interrompido) e um `expo export` de dez segundos antes de gastar vinte e cinco minutos
 - 🌐 **Páginas legais no ar** em `https://legal.cadenceclub.pt/`, com certificado válido do GitHub Pages. Não no apex: o registo `A` **não persiste** no painel da Amen (três tentativas, autoritativos a devolver sempre o IP antigo), provavelmente por o produto *OnStatic* o gerir sozinho. Um `CNAME` num nome novo gravou à primeira
 - **O plano da Cloudflare foi abandonado, e ainda bem** — a Fase 0 era impossível de início: o domínio **nunca teve alojamento** e não há FTP nenhum (portas 21 e 22 fechadas). Onde a Cloudflare pedia doze registos movidos e nameservers trocados, com os oito de correio à boleia, isto foi **um CNAME** e o email nem foi tocado
 - 🗑️ **`delete-account` publicada e testada ponta a ponta** contra o projeto real: conta criada com avatar e foto, apagada pela função, e confirmado que o utilizador, os ficheiros nos dois buckets e o token deixaram todos de existir. Ver 4.7.1

@@ -30,7 +30,7 @@ demora a propagar).
 | Entregabilidade | ✅ Caixa de entrada do Gmail, `spf=pass` e `dkim=pass` |
 | Painel do Supabase | ✅ SMTP, rate limit 100/h, três templates, `cadence://` + `cadence://*` |
 | Registo a funcionar | ✅ cinco `signup` seguidos em HTTP 200 (21 ago) |
-| Link do email a abrir a app | ⬜ por validar no emulador Android |
+| Link do email a abrir a app | ✅ validado no iPhone a 26 ago — abre direto, com sessão |
 
 O `cadenceclub.site` também é nosso mas **não se envia de lá**: o `.site` é dos
 TLDs baratos que os filtros olham de lado, e um domínio novo já parte sem
