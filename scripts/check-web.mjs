@@ -46,8 +46,8 @@ for (const f of ['privacidade.html', 'termos.html', 'index.html']) {
 // 4. os URLs que a app abre têm de bater certo com os ficheiros
 const ecra = readFileSync(path.join(raiz, 'src/app/profile/settings.tsx'), 'utf8');
 for (const [url, ficheiro] of [
-  ['https://cadenceclub.pt/privacidade.html', 'privacidade.html'],
-  ['https://cadenceclub.pt/termos.html', 'termos.html'],
+  ['https://legal.cadenceclub.pt/privacidade.html', 'privacidade.html'],
+  ['https://legal.cadenceclub.pt/termos.html', 'termos.html'],
 ]) {
   if (!ecra.includes(url)) falha(`a app não abre ${url}`);
   else if (!presentes.includes(ficheiro)) falha(`${url} aponta para um ficheiro que não existe`);
@@ -57,7 +57,7 @@ for (const [url, ficheiro] of [
 // 5. estão mesmo publicadas? (só se houver rede)
 const publicadas = process.argv.includes('--online');
 if (publicadas) {
-  for (const url of ['https://cadenceclub.pt/privacidade.html', 'https://cadenceclub.pt/termos.html']) {
+  for (const url of ['https://legal.cadenceclub.pt/privacidade.html', 'https://legal.cadenceclub.pt/termos.html']) {
     try {
       const r = await fetch(url, { redirect: 'follow' });
       if (r.ok) ok(`${url} responde ${r.status}`);

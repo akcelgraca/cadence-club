@@ -817,7 +817,7 @@ export default function SettingsScreen() {
       <View style={styles.card}>
         <LinkRow
           label={t('settings_help_center')}
-          onPress={() => openLink('https://cadenceclub.pt/')}
+          onPress={() => openLink('https://legal.cadenceclub.pt/')}
           icon="open-outline"
           colors={c}
         />
@@ -831,13 +831,13 @@ export default function SettingsScreen() {
         <Separator styles={styles} />
         <LinkRow
           label={t('settings_terms')}
-          onPress={() => openLink('https://cadenceclub.pt/termos.html')}
+          onPress={() => openLink('https://legal.cadenceclub.pt/termos.html')}
           colors={c}
         />
         <Separator styles={styles} />
         <LinkRow
           label={t('settings_privacy_policy')}
-          onPress={() => openLink('https://cadenceclub.pt/privacidade.html')}
+          onPress={() => openLink('https://legal.cadenceclub.pt/privacidade.html')}
           colors={c}
         />
         <Separator styles={styles} />

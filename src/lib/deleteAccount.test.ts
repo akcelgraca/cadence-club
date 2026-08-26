@@ -107,8 +107,8 @@ describe('links legais', () => {
 
   it('privacidade e termos apontam para páginas que existem no repositório', () => {
     const paginas: Record<string, string> = {
-      'https://cadenceclub.pt/privacidade.html': 'web/privacidade.html',
-      'https://cadenceclub.pt/termos.html': 'web/termos.html',
+      'https://legal.cadenceclub.pt/privacidade.html': 'web/privacidade.html',
+      'https://legal.cadenceclub.pt/termos.html': 'web/termos.html',
     };
     for (const [url, ficheiro] of Object.entries(paginas)) {
       expect(ecra).toContain(url);

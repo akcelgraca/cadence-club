@@ -1320,15 +1320,31 @@ Os quatro links foram corrigidos no `settings.tsx`. O do feedback passou a
 `WebBrowser.openBrowserAsync`: esse abre páginas, e com um `mailto:` **não
 acontece nada e não há erro nenhum a dizê-lo**. Passa pelo `Linking`.
 
-⚠️ **Três coisas antes de isto valer alguma coisa:**
-1. **Preencher os espaços** — `[NOME OU EMPRESA]`, `[MORADA]` e a `[REGIÃO]` do
-   Supabase (*Project Settings → General → Region*; não se descobre a partir da
-   app, o Cloudflare à frente só mostra o ponto de presença). Uma política com
-   `[MORADA]` lá dentro diz a quem a lê que ninguém a leu
-2. **Publicar em `cadenceclub.pt`** — ver `web/README.md`
-3. **Criar as caixas `suporte@` e `privacidade@`** — estão nos documentos e vão
+✅ **Publicadas a 26 ago em `https://legal.cadenceclub.pt/`**, com certificado
+Let's Encrypt válido, emitido e renovado pelo **GitHub Pages**.
+
+**Porque não foi no apex, e porque não foi a Cloudflare.** O domínio **nunca teve
+alojamento** — a Amen serve só a página de estacionamento e não há FTP (portas 21
+e 22 fechadas), portanto a Fase 0 do plano da Cloudflare era impossível de
+início. E o registo `A` do apex **não persiste**: escrito no painel, os dois
+autoritativos continuavam a devolver `81.88.57.70`, três tentativas seguidas. A
+explicação mais provável é o produto *OnStatic* estar associado ao domínio e
+gerir esse registo sozinho, descartando edições.
+
+Um `CNAME` num **nome novo** gravou à primeira — não tem produto associado. Daí
+`legal.` em vez do apex. Para a App Store é indiferente: o que ela exige é um URL
+acessível em HTTPS.
+
+**O que isto evitou:** a migração para a Cloudflare exigia mover doze registos e
+trocar nameservers, com os oito de correio à boleia. Isto foi **um CNAME**, e
+nada de email foi tocado.
+
+⚠️ **Duas coisas ainda em falta:**
+1. **Criar as caixas `suporte@` e `privacidade@`** — estão nos documentos e vão
    para a ficha da loja. Um endereço que devolve erro é o mesmo problema que um
-   link morto
+   link morto. O domínio já tem correio da Amen
+2. **Build nova da app** — os links já apontam para `legal.cadenceclub.pt`, mas
+   a build no iPhone ainda tem os antigos
 
 **`npm run web:check`** verifica os três primeiros pontos, e com `--online`
 confirma que as páginas respondem mesmo. **Não é um teste do Jest de propósito:**
@@ -1463,7 +1479,7 @@ coisas muito diferentes umas das outras.
 | | Porquê |
 |---|---|
 | ~~**Apagar conta a sério**~~ | ✅ feito a 24 ago (4.7.1). **Falta publicar a edge function** — `supabase functions deploy delete-account` |
-| ~~**Páginas de privacidade e termos**~~ | ✅ escritas a 24 ago (4.7.2). **Falta preencher os espaços, publicar em `cadenceclub.pt` e criar as caixas de email** — `npm run web:check` |
+| ~~**Páginas de privacidade e termos**~~ | ✅ no ar em `https://legal.cadenceclub.pt/` (4.7.2). **Falta criar as caixas `suporte@` e `privacidade@`** |
 | **Conta Apple Developer, 99 USD/ano** | Único item com semanas de espera. Bloqueia push iOS, HealthKit em iPhone, TestFlight, toda a monetização, e builds que não expiram em 7 dias |
 
 Estes três não são código difícil. São o tipo de coisa que se descobre no dia
