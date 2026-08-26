@@ -41,6 +41,11 @@ jobs:
         run: |
           mkdir -p site
           cp web/index.html web/privacidade.html web/termos.html web/estilo.css web/idioma.js site/
+          # O domínio próprio também está na configuração do Pages, mas sem este
+          # ficheiro no artefacto uma publicação futura pode deixá-lo cair — e o
+          # sintoma seria o URL da política de privacidade a morrer sem ninguém
+          # ter mexido em DNS nenhum.
+          echo "legal.cadenceclub.pt" > site/CNAME
           echo "— o que vai para o ar:"
           ls -1 site
 
