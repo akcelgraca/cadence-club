@@ -1,0 +1,54 @@
+# Publica as páginas públicas (privacidade, termos) no GitHub Pages.
+#
+# Existe porque o domínio não tem alojamento: a Amen serve só a página de
+# estacionamento, e sem FTP não há como lá pôr ficheiros. O GitHub Pages aloja
+# de graça e — o que decide — emite e renova sozinho um certificado válido.
+# A App Store exige a política de privacidade em HTTPS.
+#
+# Publica-se APENAS os cinco ficheiros públicos. O `README.md` e o
+# `CLOUDFLARE.md` que vivem na mesma pasta não vão: o segundo lista a zona DNS
+# toda, e isso não tem por que estar num URL público.
+name: Publicar páginas públicas
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Uma publicação de cada vez, sem cancelar a que está a meio.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.publicacao.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Separar o que é público do que não é
+        run: |
+          mkdir -p site
+          cp web/index.html web/privacidade.html web/termos.html web/estilo.css web/idioma.js site/
+          echo "— o que vai para o ar:"
+          ls -1 site
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+      - id: publicacao
+        uses: actions/deploy-pages@v4
