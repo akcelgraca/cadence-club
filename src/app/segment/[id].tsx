@@ -126,7 +126,7 @@ export default function SegmentScreen() {
               <View style={styles.stat}>
                 <Text style={styles.statValue}>{segment.my_attempts}</Text>
                 <Text style={styles.statLabel}>
-                  {segment.my_attempts === 1 ? 'passagem' : 'passagens'}
+                  {t('segment_attempts', { count: segment.my_attempts })}
                 </Text>
               </View>
             </View>
@@ -174,8 +174,7 @@ export default function SegmentScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.communityValue}>{formatDuration(segment.community_avg)}</Text>
               <Text style={styles.communityLabel}>
-                média de {segment.community_people}{' '}
-                {segment.community_people === 1 ? 'atleta' : 'atletas'}
+                {t('segment_community_athletes', { count: segment.community_people })}
               </Text>
             </View>
             {segment.my_best != null && vsCommunity != null && Math.abs(vsCommunity) >= 1 && (
@@ -240,8 +239,9 @@ export default function SegmentScreen() {
 
       {segment.my_best != null && (
         <Text style={styles.paceNote}>
-          Ritmo do teu melhor tempo:{' '}
-          {formatPace(segment.my_best / (segment.distance / 1000), unitSystem)}
+          {t('segment_best_pace', {
+            pace: formatPace(segment.my_best / (segment.distance / 1000), unitSystem),
+          })}
         </Text>
       )}
     </ScrollView>

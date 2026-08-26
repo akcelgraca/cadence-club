@@ -222,7 +222,9 @@ export default function UserProfileScreen() {
                   <Ionicons name="pulse-outline" size={36} color={c.mutedForeground} />
                   <Text style={styles.emptyTitle}>{t('profile_no_activities')}</Text>
                   <Text style={styles.emptyText}>
-                    Quando {profile.full_name?.split(' ')[0] ?? 'este atleta'} registar atividades, aparecem aqui.
+                    {t('profile_no_activities_body', {
+                      name: profile.full_name?.split(' ')[0] ?? t('profile_this_athlete'),
+                    })}
                   </Text>
                 </View>
               )}

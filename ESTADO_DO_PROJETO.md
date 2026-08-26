@@ -21,7 +21,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 | Indicador | Estado |
 |---|---|
-| Testes | ✅ 427 testes, 33 suites, todos a passar |
+| Testes | ✅ 459 testes, 36 suites, todos a passar |
 | Typecheck (`tsc --noEmit`) | ✅ limpo |
 | Ecrãs (expo-router) | 44 |
 | Componentes | 67 |
@@ -29,7 +29,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 | Stores (Zustand) | 6 |
 | Hooks | 17 |
 | Linhas em `src/` | ~40 800 |
-| Chaves i18n | 1188 PT + 1188 EN (equilibradas ✅) |
+| Chaves i18n | 1299 PT + 1299 EN (equilibradas ✅) |
 | Migrações Supabase | 51 ficheiros (`001` → `052`; não existe `025`) |
 | Edge functions | 2 (`send-push`, `revenuecat-webhook`) |
 | Build iOS em dispositivo | ✅ iPhone 15, 18 ago — ⏰ expira **25 ago 2026** |
@@ -1591,6 +1591,9 @@ Coisas já mordidas, para não se repetirem:
 - **`member_count` de clubes é mantido por trigger** — nunca incrementar manualmente no cliente
 - **Dedup de treinos precisa de duas defesas:** `external_id` (mesma sincronização repetida) **e** sobreposição temporal (mesmo treino gravado na app e no relógio, com ids diferentes). Só a primeira não chega
 - **Ao traduzir, cuidado com frases montadas por concatenação** — em inglês a ordem muda. Usar uma chave interpolada inteira (ver `segment_new_range`)
+- **Plurais escritos à mão (`n === 1 ? 'passagem' : 'passagens'`) são proibidos pelo `hardcoded.test.ts`** — usar `_one`/`_other` e deixar o i18next escolher, com `t('chave', { count })`
+- **Plurais em português acima de 1 000 000 devolvem a chave crua** — o CLDR tem uma categoria `many` para o português e os dicionários só têm `_one`/`_other`. Nenhum contador da app lá chega, mas qualquer plural futuro sobre valores grandes chega
+- **O `hardcoded.test.ts` ainda não vê texto *depois* de uma expressão** (`{n} atividades`). Faltam dois sítios: `club/[id]/chat.tsx` e `WeeklyChartCard.tsx`
 - **App só tem tema claro** — `useColors()` devolve sempre `lightColors`
 - **Correr `tsc --noEmit` a partir de `apps/mobile`** — a partir da raiz apanha um `tsc` npm falso
 
@@ -1866,6 +1869,17 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ---
 
 ## 11. Registo de alterações
+
+**26 ago 2026 (16.ª sessão)**
+- 🌍 **O teste de i18n só via metade do texto visível.** O `hardcoded.test.ts` procurava texto entre `>` e `<` — exigia uma tag a fechar, portanto tudo o que fosse seguido de uma expressão (`>Distância inicial: {formatDistance(...)`) passava-lhe ao lado. E strings dentro de ternários não eram vistas por nenhum dos describes. Alargado às duas formas
+- **Apanhou 20 sítios, não os seis que se andava à procura** — sete de texto colado a uma expressão, treze de ramos de ternário. Os quatro ficheiros a mais (`ChallengesCard`, `SplitsTable`, `EventCard`, `profile/[id]`) só apareceram *depois* de o teste ser alargado, o que é o argumento para o alargar
+- **Os plurais passam a ser do i18next** — `t('segment_attempts', { count })` a resolver `_one`/`_other`, em vez do `n === 1 ? 'passagem' : 'passagens'` escrito à mão, que era precisamente a forma que o teste passou a proibir. Sete pares convertidos
+- O `keys.test.ts` teve de aprender chaves de plural: `t('segment_attempts')` é chamada por um nome que **não existe** no dicionário (só `_one` e `_other` existem). Sem isso, dava a chave como em falta e a única saída era voltar ao ternário
+- **Verificado por mutação**, não por leitura: cada forma nova foi reintroduzida à vez — mesma linha, linha própria, ternário, e ternário logo a seguir a `{' '}` — e o teste falhou em todas as quatro
+- 🪤 **O `}` de uma expressão tem de servir de início da seguinte.** Com o âncora a ser consumido, o `{' '}{n === 1 ? 'atleta' : 'atletas'}` escapava: o `}` já tinha sido comido pelo match anterior. Passou a lookbehind, e apareceram mais três pares
+- 🪤 **`{{count}}` acima de 1 000 000 em português devolve a chave crua** — o CLDR tem categoria `many` para o português e não temos `_many`. Não afeta nenhum contador da app (passagens, atletas, inscritos, parciais, desafios), mas afeta qualquer plural futuro sobre valores grandes. Ficou um teste que prova que os plurais resolvem, porque a falha é silenciosa: o i18next não estoira, mostra o nome da chave no ecrã
+- +20 chaves em PT e EN (1299 cada), +2 testes (459, 36 suites), `tsc --noEmit` limpo
+- ⚠️ **Fica uma terceira forma por cobrir:** texto *depois* de uma expressão (`{n} atividades`). Duas ocorrências conhecidas, listadas na secção 7
 
 **26 ago 2026 (15.ª sessão)**
 - 📤 **Exportar GPX** — a maior lacuna de produto da análise. A app importava desde 20 ago e não deixava sair nada. Ver 4.8

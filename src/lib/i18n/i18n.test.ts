@@ -26,6 +26,33 @@ describe('idioma da app', () => {
     expect(i18n.t('saved_remove_confirm', { title: 'Corrida matinal' }))
       .toContain('Corrida matinal');
   });
+
+  /**
+   * As chaves com plural são chamadas pelo nome sem sufixo — `t('segment_
+   * attempts', { count })` — e é o i18next que escolhe `_one` ou `_other`.
+   * Quando essa resolução falha, o i18next não estoira: devolve o nome da
+   * chave, e é isso que aparece no ecrã. Por isso vale a pena provar que
+   * resolve, em vez de assumir.
+   */
+  it('resolve os plurais em vez de devolver a chave', async () => {
+    const bases = [...new Set(
+      Object.keys(pt)
+        .filter((k) => k.endsWith('_one'))
+        .map((k) => k.slice(0, -'_one'.length)),
+    )].filter((base) => `${base}_other` in pt);
+
+    expect(bases.length).toBeGreaterThan(0);
+
+    for (const idioma of ['pt', 'en']) {
+      await i18n.changeLanguage(idioma);
+      for (const base of bases) {
+        expect([base, i18n.t(base, { count: 1 })]).not.toEqual([base, base]);
+        expect([base, i18n.t(base, { count: 2 })]).not.toEqual([base, base]);
+      }
+    }
+
+    await i18n.changeLanguage('pt');
+  });
 });
 
 describe('dicionários', () => {

@@ -125,7 +125,7 @@ export function EventCard({
           <View style={styles.metaItem}>
             <Ionicons name="people-outline" size={12} color={c.mutedForeground} />
             <Text style={styles.metaText}>
-              {count} {count === 1 ? 'inscrito' : 'inscritos'}
+              {t('event_attendees', { count })}
             </Text>
           </View>
 
@@ -147,7 +147,7 @@ export function EventCard({
                 <ActivityIndicator size="small" color={attending ? c.primary : c.primaryForeground} />
               ) : (
                 <Text style={[styles.attendText, attending && styles.attendTextActive]}>
-                  {attending ? 'Inscrito' : 'Vou'}
+                  {attending ? t('event_attending') : t('event_attend')}
                 </Text>
               )}
             </TouchableOpacity>

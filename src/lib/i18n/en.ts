@@ -1438,6 +1438,28 @@ const en = {
   equipment_empty_body: 'Add your equipment to keep track of the kilometres.',
   filter_all: 'All',
 
+  // Texto que estava fixo no JSX — ver hardcoded.test.ts
+  equipment_initial_distance_value: 'Starting distance: {{distance}}',
+  equipment_yes: 'Yes',
+  club_join_requests: 'Join requests ({{count}})',
+  segment_attempts_one: 'effort',
+  segment_attempts_other: 'efforts',
+  segment_community_athletes_one: 'average of {{count}} athlete',
+  segment_community_athletes_other: 'average of {{count}} athletes',
+  segment_best_pace: 'Pace of your best time: {{pace}}',
+  messages_no_results_for: 'No results for "{{query}}"',
+  clubs_wants_to_join: 'wants to join {{club}}',
+  profile_no_activities_body: 'When {{name}} logs activities, they show up here.',
+  profile_this_athlete: 'this athlete',
+  challenges_active_one: '{{count}} active challenge',
+  challenges_active_other: '{{count}} active challenges',
+  splits_hidden_one: '+ {{count}} split in the activity detail',
+  splits_hidden_other: '+ {{count}} splits in the activity detail',
+  event_attendees_one: '{{count}} attendee',
+  event_attendees_other: '{{count}} attendees',
+  event_attending: 'Going',
+  event_attend: 'Attend',
+
 } as const;
 
 export default en;

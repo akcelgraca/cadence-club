@@ -1440,6 +1440,28 @@ const pt = {
   equipment_empty_body: 'Adiciona o teu equipamento para acompanhar os kms.',
   filter_all: 'Todas',
 
+  // Texto que estava fixo no JSX — ver hardcoded.test.ts
+  equipment_initial_distance_value: 'Distância inicial: {{distance}}',
+  equipment_yes: 'Sim',
+  club_join_requests: 'Pedidos de adesão ({{count}})',
+  segment_attempts_one: 'passagem',
+  segment_attempts_other: 'passagens',
+  segment_community_athletes_one: 'média de {{count}} atleta',
+  segment_community_athletes_other: 'média de {{count}} atletas',
+  segment_best_pace: 'Ritmo do teu melhor tempo: {{pace}}',
+  messages_no_results_for: 'Sem resultados para "{{query}}"',
+  clubs_wants_to_join: 'quer entrar em {{club}}',
+  profile_no_activities_body: 'Quando {{name}} registar atividades, aparecem aqui.',
+  profile_this_athlete: 'este atleta',
+  challenges_active_one: '{{count}} desafio ativo',
+  challenges_active_other: '{{count}} desafios ativos',
+  splits_hidden_one: '+ {{count}} parcial no detalhe da atividade',
+  splits_hidden_other: '+ {{count}} parciais no detalhe da atividade',
+  event_attendees_one: '{{count}} inscrito',
+  event_attendees_other: '{{count}} inscritos',
+  event_attending: 'Inscrito',
+  event_attend: 'Vou',
+
 } as const;
 
 export default pt;

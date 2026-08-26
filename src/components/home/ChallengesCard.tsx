@@ -84,7 +84,7 @@ export function ChallengesCard() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.inviteTitle}>
-              {challenges.length} {challenges.length === 1 ? 'desafio ativo' : 'desafios ativos'}
+              {t('challenges_active', { count: challenges.length })}
             </Text>
             <Text style={styles.inviteSub}>{t('challenges_card_body')}</Text>
           </View>

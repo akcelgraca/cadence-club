@@ -96,7 +96,9 @@ export function EquipmentSection({
                 </Text>
               ) : null}
               <Text style={styles.equipmentDistance}>
-                Distância inicial: {formatDistance(item.initial_distance, unitSystem)}
+                {t('equipment_initial_distance_value', {
+                  distance: formatDistance(item.initial_distance, unitSystem),
+                })}
               </Text>
             </View>
           </TouchableOpacity>

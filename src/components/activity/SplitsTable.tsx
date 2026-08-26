@@ -105,7 +105,7 @@ export function SplitsTable({ points, maxRows }: SplitsTableProps) {
 
       {hiddenCount > 0 && (
         <Text style={styles.more}>
-          + {hiddenCount} {hiddenCount === 1 ? 'parcial' : 'parciais'} no detalhe da atividade
+          {t('splits_hidden', { count: hiddenCount })}
         </Text>
       )}
     </View>

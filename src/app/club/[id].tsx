@@ -565,7 +565,9 @@ export default function ClubDetailScreen() {
             ListHeaderComponent={
               isAdmin && pendingRequests.length > 0 ? (
                 <View>
-                  <Text style={styles.sectionHeader}>Pedidos de adesão ({pendingRequests.length})</Text>
+                  <Text style={styles.sectionHeader}>
+                    {t('club_join_requests', { count: pendingRequests.length })}
+                  </Text>
                   {pendingRequests.map((req) => (
                     <View key={req.id} style={styles.requestRow}>
                       <TouchableOpacity onPress={() => router.push(`/profile/${req.user_id}`)}>

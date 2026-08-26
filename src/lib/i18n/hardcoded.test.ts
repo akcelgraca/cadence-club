@@ -35,6 +35,21 @@ function pareceTexto(s: string): boolean {
 }
 
 /**
+ * Texto colado a uma expressão fica com a pontuação de abertura agarrada:
+ * `Pedidos de adesão (` , `Sem resultados para "`. O `pareceTexto` rejeita
+ * parênteses porque são sinal de fragmento de expressão, por isso tira-se a
+ * pontuação de abertura antes de perguntar se aquilo é texto.
+ */
+function semPontuacaoDeAbertura(s: string): string {
+  return s.replace(/[("'\u00ab\u201c[]+$/, '').trim();
+}
+
+/** Uma chave de i18n (`history_activity_one`) não é texto para ninguém ler. */
+function pareceChave(s: string): boolean {
+  return /^[a-z0-9]+(_[a-z0-9]+)+$/.test(s);
+}
+
+/**
  * Texto visível passado por propriedade, e não como conteúdo de JSX.
  *
  *   label: 'Tempo'          ← apanha
@@ -90,6 +105,69 @@ describe('texto fixo no JSX', () => {
       for (const m of src.matchAll(/>\s*\n\s*([A-Za-zÀ-ÿ][^<>{}\n]+)\s*\n\s*</g)) {
         const s = m[1].trim();
         if (pareceTexto(s)) encontrados.push(`${s}  (${ficheiro})`);
+      }
+
+      // Texto que acaba numa expressão em vez de numa tag:
+      //
+      //   <Text>Distância inicial: {formatDistance(...)}</Text>
+      //
+      // Os dois padrões acima exigem um "<" a fechar, portanto tudo o que seja
+      // seguido de "{" escapava-lhes — e era metade do texto interpolado da
+      // app. Mesma linha primeiro, linha própria a seguir.
+      for (const m of src.matchAll(/(?<!=)>([^<>{}\n]+)\{/g)) {
+        const s = m[1].trim();
+        if (pareceTexto(semPontuacaoDeAbertura(s))) encontrados.push(`${s}  (${ficheiro})`);
+      }
+
+      for (const m of src.matchAll(/(?<!=)>[^\S\n]*\n\s*([A-Za-zÀ-ÿ][^<>{}\n]*?)\s*\{/g)) {
+        const s = m[1].trim();
+        if (pareceTexto(semPontuacaoDeAbertura(s))) encontrados.push(`${s}  (${ficheiro})`);
+      }
+    }
+
+    expect(encontrados).toEqual([]);
+  });
+});
+
+/**
+ * Texto visível escolhido por um ternário dentro do JSX.
+ *
+ *   {n === 1 ? 'passagem' : 'passagens'}   ← apanha
+ *   {t('segment_laps', { count: n })}      ← certo
+ *
+ * Existe porque os plurais escritos à mão não são conteúdo entre tags nem
+ * valor de propriedade: são ramos de uma expressão, e por isso nenhum dos
+ * describes acima os via. Eram sete pares espalhados pela app.
+ */
+describe('texto fixo em ternários do JSX', () => {
+  it('nenhum ramo de ternário traz texto escrito à mão', () => {
+    const encontrados: string[] = [];
+
+    // Uma expressão em posição de conteúdo JSX: `>{...}` ou `}{...}`, com o
+    // "{" logo a seguir. O (?<!=) descarta o corpo das arrow functions, onde
+    // o "=> {" também é um ">" seguido de "{" mas nada ali chega a um ecrã.
+    // O anchor fica no lookbehind para o "}" de uma expressão poder servir de
+    // início da seguinte — é o caso do `{' '}{n === 1 ? ...}`.
+    const CONTENTOR = /(?<=(?<!=)>|\})\s*\{([^{}]{0,300})\}/g;
+
+    // Só ramos de ternário: a string tem de vir logo a seguir a "?" ou ":".
+    // Assim ficam de fora os argumentos de t('chave') e as chaves de objetos.
+    const RAMO = /[?:]\s*(['"])([^'"\n]*)\1/g;
+
+    // Um "?" que não seja de `??` nem de `?.` — sem isto, o `nome ?? 'Atleta'`
+    // passava por ternário e o teste apanhava fallbacks que não são ramos.
+    const TERNARIO = /(?<!\?)\?(?!\?|\.)/;
+
+    for (const ficheiro of ficheirosDeEcra()) {
+      const src = readFileSync(path.join(raiz, ficheiro), 'utf8');
+      for (const m of src.matchAll(CONTENTOR)) {
+        const interior = m[1];
+        if (!TERNARIO.test(interior)) continue;
+        for (const ramo of interior.matchAll(RAMO)) {
+          const s = ramo[2];
+          if (pareceChave(s)) continue;
+          if (pareceTexto(s)) encontrados.push(`${s}  (${ficheiro})`);
+        }
       }
     }
 

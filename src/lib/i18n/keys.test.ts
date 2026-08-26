@@ -22,13 +22,25 @@ function ficheirosDeCodigo(): string[] {
 describe('chaves usadas no código', () => {
   const existentes = new Set(Object.keys(pt));
 
+  /**
+   * Uma chave com plural do i18next não existe com o nome por que é chamada:
+   * o `t('segment_attempts', { count })` resolve para `segment_attempts_one`
+   * ou `segment_attempts_other`, conforme o número. Sem isto, o teste dava a
+   * chave como em falta e obrigava a escrever o ternário à mão — que é
+   * exatamente o que o `hardcoded.test.ts` passou a proibir.
+   */
+  function existe(chave: string): boolean {
+    return existentes.has(chave)
+      || (existentes.has(`${chave}_one`) && existentes.has(`${chave}_other`));
+  }
+
   it('todas as chamadas t() apontam para uma chave que existe', () => {
     const emFalta: string[] = [];
 
     for (const ficheiro of ficheirosDeCodigo()) {
       const src = readFileSync(path.join(raiz, ficheiro), 'utf8');
       for (const m of src.matchAll(/\bt\(\s*['"]([a-z_0-9]+)['"]/g)) {
-        if (!existentes.has(m[1])) emFalta.push(`${m[1]} (${ficheiro})`);
+        if (!existe(m[1])) emFalta.push(`${m[1]} (${ficheiro})`);
       }
     }
 

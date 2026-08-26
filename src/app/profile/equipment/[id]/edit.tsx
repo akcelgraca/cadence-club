@@ -178,7 +178,7 @@ export default function EditEquipmentScreen() {
           onPress={() => setIsRetired(!isRetired)}
         >
           <Text style={[styles.toggleText, isRetired && styles.toggleTextActive]}>
-            {isRetired ? 'Sim' : t('equipment_no')}
+            {isRetired ? t('equipment_yes') : t('equipment_no')}
           </Text>
         </TouchableOpacity>
       </View>

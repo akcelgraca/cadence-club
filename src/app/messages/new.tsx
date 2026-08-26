@@ -114,7 +114,7 @@ export default function NewMessageScreen() {
               ? (
                 <>
                   <Ionicons name="search-outline" size={40} color={c.mutedForeground} />
-                  <Text style={styles.emptyText}>Sem resultados para "{query}"</Text>
+                  <Text style={styles.emptyText}>{t('messages_no_results_for', { query })}</Text>
                 </>
               )
               : (

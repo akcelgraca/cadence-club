@@ -154,7 +154,7 @@ export function ClubsTab() {
                     {req.profile?.full_name ?? 'Atleta'}
                   </Text>
                   <Text style={styles.requestClub} numberOfLines={1}>
-                    quer entrar em {req.club?.name ?? t('clubs_a_club')}
+                    {t('clubs_wants_to_join', { club: req.club?.name ?? t('clubs_a_club') })}
                   </Text>
                 </View>
                 <TouchableOpacity
