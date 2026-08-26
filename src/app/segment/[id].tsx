@@ -4,7 +4,8 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
-import { getSegmentDetail, getMySegmentEfforts, percentFaster } from '../../services/segments';
+import { getSegmentDetail, getMySegmentEfforts, getSegmentLeaderboard, percentFaster } from '../../services/segments';
+import { Avatar } from '../../components/common/Avatar';
 import { ActivityIcon } from '../../components/common/ActivityIcon';
 import { formatDuration, formatDate } from '../../utils/dateHelpers';
 import { formatPace } from '../../utils/formatPace';
@@ -16,8 +17,12 @@ import { track } from '../../lib/analytics';
 /**
  * Detalhe de um troço.
  *
- * Deliberadamente sem classificação: mostra a tua evolução neste troço e a
- * média da comunidade como referência, não como competição.
+ * Mostra a tua evolução, a média da comunidade, e — desde 26 ago 2026 — o
+ * quadro de tempos. Até aí não havia classificação nenhuma, por decisão escrita
+ * no cabeçalho da migração 039; a decisão mudou, e a 052 explica porquê.
+ *
+ * O quadro só conta atividades **públicas**. Quem tem os treinos privados não
+ * aparece lá, e é preciso dizer-lho — senão fica a achar que não tem tempos.
  */
 export default function SegmentScreen() {
   const c = useColors();
@@ -29,6 +34,12 @@ export default function SegmentScreen() {
   const { data: segment, isLoading } = useQuery({
     queryKey: ['segment', id],
     queryFn: () => getSegmentDetail(id),
+    enabled: !!id,
+  });
+
+  const { data: leaderboard = [] } = useQuery({
+    queryKey: ['segmentLeaderboard', id],
+    queryFn: () => getSegmentLeaderboard(id),
     enabled: !!id,
   });
 
@@ -186,6 +197,47 @@ export default function SegmentScreen() {
         </View>
       )}
 
+      {/* Quadro de tempos — o melhor de cada pessoa, só de atividades públicas */}
+      {leaderboard.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{t('segment_leaderboard')}</Text>
+
+          {leaderboard.map((linha, i) => {
+            // Quem está fora dos primeiros vem na mesma, no fim. A linha
+            // separadora diz que houve um salto, em vez de fingir continuidade.
+            const salto = i > 0 && linha.pos > leaderboard[i - 1].pos + 1;
+            return (
+              <View key={linha.user_id}>
+                {salto && <View style={styles.lbGap} />}
+                <TouchableOpacity
+                  style={[styles.lbRow, linha.is_me && styles.lbRowMe]}
+                  onPress={() => router.push(`/activity/${linha.activity_id}`)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.lbPos, linha.is_me && styles.lbTextMe]}>{linha.pos}</Text>
+                  <Avatar uri={linha.avatar_url ?? undefined} name={linha.full_name ?? undefined} size={28} />
+                  <Text
+                    style={[styles.lbName, linha.is_me && styles.lbTextMe]}
+                    numberOfLines={1}
+                  >
+                    {linha.is_me ? t('segment_leaderboard_you') : (linha.full_name ?? linha.username ?? '—')}
+                  </Text>
+                  <Text style={[styles.lbTime, linha.is_me && styles.lbTextMe]}>
+                    {formatDuration(linha.duration)}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+
+          {/* Tens tempos mas nenhum aparece: as atividades são privadas. Sem
+              isto ficavas a olhar para uma lista sem ti e sem explicação. */}
+          {segment.my_attempts > 0 && !leaderboard.some((l) => l.is_me) && (
+            <Text style={styles.lbNote}>{t('segment_leaderboard_private')}</Text>
+          )}
+        </View>
+      )}
+
       {segment.my_best != null && (
         <Text style={styles.paceNote}>
           Ritmo do teu melhor tempo:{' '}
@@ -298,6 +350,44 @@ const makeStyles = (c: Colors) => StyleSheet.create({
     borderTopColor: withAlpha(c.foreground, 0.08),
   },
 
+  lbRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+  },
+  lbRowMe: {
+    backgroundColor: withAlpha(c.primary, 0.1),
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    marginHorizontal: -8,
+  },
+  lbPos: {
+    ...typography.body,
+    color: c.mutedForeground,
+    width: 26,
+    textAlign: 'right',
+    fontVariant: ['tabular-nums'],
+  },
+  lbName: { ...typography.body, color: c.foreground, flex: 1 },
+  lbTime: {
+    ...typography.body,
+    color: c.foreground,
+    fontVariant: ['tabular-nums'],
+  },
+  lbTextMe: { color: c.primary, fontWeight: '700' },
+  lbGap: {
+    height: 1,
+    backgroundColor: c.border,
+    marginVertical: 8,
+    opacity: 0.6,
+  },
+  lbNote: {
+    ...typography.body,
+    fontSize: 13,
+    color: c.mutedForeground,
+    marginTop: 10,
+  },
   paceNote: {
     ...typography.body, fontSize: 12, color: c.mutedForeground,
     textAlign: 'center', marginTop: 20,

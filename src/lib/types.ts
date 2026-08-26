@@ -151,6 +151,26 @@ export interface SegmentEffort {
   started_at: string;
 }
 
+/**
+ * Uma linha do quadro de tempos de um troço.
+ *
+ * Só entram atividades públicas — quem tem os treinos privados não aparece, e
+ * a app diz-lho em vez de o deixar a pensar que não tem tempos.
+ */
+export interface SegmentLeaderboardRow {
+  /** Lugar. Tempos iguais partilham o mesmo — é `rank()`, não `row_number()`. */
+  pos: number;
+  user_id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  duration: number;
+  pace: number | null;
+  started_at: string;
+  activity_id: string;
+  is_me: boolean;
+}
+
 export interface NearbySegment {
   id: string;
   name: string;

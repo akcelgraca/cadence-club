@@ -1,4 +1,4 @@
--- Diagnóstico: as migrações 042 a 051 estão aplicadas e completas?
+-- Diagnóstico: as migrações 042 a 052 estão aplicadas e completas?
 --
 -- Correr no SQL Editor do Supabase. É UMA só instrução de propósito: o editor
 -- do Supabase só mostra o resultado da última instrução, por isso um ficheiro
@@ -200,6 +200,24 @@ SELECT * FROM (
   UNION ALL SELECT 33, '051_notification_i18n', 'evento guarda starts_at em ISO',
     CASE WHEN EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'notify_on_club_event'
                         AND prosrc ILIKE '%starts_at%' AND prosrc ILIKE '%YYYY-MM-DD%')
+         THEN 'APLICADA' ELSE 'EM FALTA' END
+
+  -- ── 052: quadro de tempos dos troços ─────────────────────────────────────
+  UNION ALL SELECT 34, '052_segment_leaderboard', 'função get_segment_leaderboard',
+    CASE WHEN EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'get_segment_leaderboard')
+         THEN 'APLICADA' ELSE 'EM FALTA' END
+
+  -- A função é SECURITY DEFINER: lá dentro as RLS não se aplicam. Sem o filtro
+  -- explícito por `is_public`, o quadro exporia tempos de treinos privados a
+  -- toda a gente — sem erro nenhum e sem ninguém dar por isso.
+  UNION ALL SELECT 35, '052_segment_leaderboard', 'só conta atividades públicas',
+    CASE WHEN EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'get_segment_leaderboard'
+                        AND prosrc ILIKE '%is_public = true%')
+         THEN 'APLICADA' ELSE 'EM FALTA' END
+
+  -- `anon` a poder executá-la seria o quadro legível sem sessão nenhuma.
+  UNION ALL SELECT 36, '052_segment_leaderboard', 'fechada a quem não tem sessão',
+    CASE WHEN NOT has_function_privilege('anon', 'public.get_segment_leaderboard(uuid, int)', 'EXECUTE')
          THEN 'APLICADA' ELSE 'EM FALTA' END
 ) t
 ORDER BY ord;

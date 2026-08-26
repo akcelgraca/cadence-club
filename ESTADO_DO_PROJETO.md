@@ -30,7 +30,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 | Hooks | 17 |
 | Linhas em `src/` | ~40 800 |
 | Chaves i18n | 1188 PT + 1188 EN (equilibradas ✅) |
-| Migrações Supabase | 50 ficheiros (`001` → `051`; não existe `025`) |
+| Migrações Supabase | 51 ficheiros (`001` → `052`; não existe `025`) |
 | Edge functions | 2 (`send-push`, `revenuecat-webhook`) |
 | Build iOS em dispositivo | ✅ iPhone 15, 18 ago — ⏰ expira **25 ago 2026** |
 | Build iOS em simulador | ✅ Debug, com Metro |
@@ -1244,6 +1244,49 @@ Nota: as migrações **não são idempotentes**. `CREATE TYPE` e `CREATE POLICY`
 
 ---
 
+### 4.9 Quadro de tempos dos troços (26 ago 2026) ✅
+
+⚠️ **Isto reverte uma decisão anterior, e isso não é acidente.** O cabeçalho da
+migração **039** dizia, textualmente: *"Não há classificação nem KOM — a app mede
+consistência, não competição entre pessoas."* Ao mesmo tempo, a secção 6.2 deste
+documento listava as classificações como lacuna face ao Strava. **Os dois
+documentos diziam o contrário um do outro**, e a contradição só apareceu ao ir
+implementar. A decisão mudou a 26 de agosto; a 052 explica porquê no cabeçalho,
+para daqui a três meses não parecer um descuido.
+
+A 039 já tinha construído tudo o que isto precisa. Os tempos estão gravados
+desde então e as RLS já resolviam a parte difícil — faltava olhar para eles.
+
+**Migração 052**, `get_segment_leaderboard(segmento, limite)`: o **melhor tempo
+de cada pessoa**, só de atividades **públicas**, com os primeiros `limite` mais
+a linha de quem chama esteja ela onde estiver.
+
+**Porque é que o filtro de privacidade é escrito outra vez.** A política
+`segment_efforts_select` da 039 já dizia que os tempos alheios só se veem se a
+atividade for pública. Mas a função é **`SECURITY DEFINER`**, e lá dentro **as
+RLS não se aplicam** — esquecer o filtro exporia tempos de treinos privados a
+toda a gente, sem erro nenhum. Há três verificações no
+`VERIFICAR_MIGRACOES.sql` só sobre isto.
+
+**Três decisões que valem a pena reter:**
+
+1. **`rank()`, não `row_number()`** — dois tempos iguais são o mesmo lugar.
+   Desempatar pela data dava a um deles um lugar que não ganhou
+2. **Um tempo por pessoa** (`DISTINCT ON`) — sem isso, quem repete o troço todas
+   as semanas enchia o quadro sozinho e ele deixava de dizer alguma coisa
+3. **Quem chama vem sempre**, mesmo fora dos primeiros. "O 47.º de 300" é
+   informação; uma lista onde não te encontras não é
+
+**Quem tem os treinos privados não aparece** — não se compete em público com
+dados que se escolheu não mostrar. Mas a app **diz-lho**, em vez de o deixar a
+concluir que a app não lhe registou as passagens.
+
++9 testes, verificados por mutação: expor atividades privadas, desempatar tempos
+iguais, deixar de incluir quem chama, e abrir a função ao `anon` — os quatro são
+apanhados.
+
+---
+
 ### 4.8 Exportar GPX (26 ago 2026) ✅
 
 A app importava do Strava e do Garmin desde 20 de agosto e **não deixava sair
@@ -1613,7 +1656,7 @@ antes de ligar seja o que for.
 | | Estado verificado |
 |---|---|
 | ~~🔴 **Exportar GPX**~~ | ✅ feito a 26 ago — ver 4.8 |
-| 🟠 **Classificações de troços (KOM/QOM)** | Só existe `getMySegmentEfforts` — os teus tempos contra ti próprio. A competição é o que vicia no Strava |
+| ~~🟠 **Classificações de troços**~~ | ✅ feito a 26 ago — ver 4.9 |
 | 🟠 **Distância no Health Connect** | Fica a zero; vive num registo separado do `ExerciseSession` |
 | 🟠 **Escrever treinos de volta na Saúde** | A app lê e nunca devolve |
 | 🟠 **Garmin, Wahoo, Coros** | Hoje só pela app de Saúde / Health Connect |
@@ -1830,7 +1873,9 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 - 🪤 Três armadilhas tratadas: texto do utilizador por escapar (um `&` no título parte o ficheiro), o batimento que não cabe no GPX base (vai na extensão da Garmin), e os pontos que o PostgREST corta aos 1000 em silêncio — uma corrida de duas horas são 7200
 - 🔒 **Aviso de zona de privacidade na exportação.** O ficheiro leva o traçado completo de propósito, mas as zonas só escondem o que se vê *dentro da app* — quem partilhar o GPX partilha a casa. Avisa, e diz quantos pontos estão na zona
 - **O caso que quase passava:** sem rede não se leem as zonas, e tratar essa dúvida como "não atravessa" falhava justamente a quem tem zonas definidas. A dúvida avisa também
-- +18 testes (448)
+- 🏆 **Quadro de tempos dos troços** (migração 052) — e a implementação destapou uma contradição: o cabeçalho da 039 dizia *"não há classificação nem KOM"* enquanto a secção 6.2 a listava como lacuna. Os dois documentos diziam o contrário um do outro. Ver 4.9
+- **A função é `SECURITY DEFINER`, portanto as RLS não a protegem** — o filtro por atividade pública é escrito outra vez, explicitamente, e há três verificações no `VERIFICAR_MIGRACOES.sql` só sobre isso
+- +18 testes (448), depois +9 (457)
 - ✅ **O link do email abre direto na app, no iPhone.** Fecha a pendência mais antiga do projeto — 20 a 26 de agosto, **três causas independentes** que se disfarçavam umas às outras: o `cadence://` nunca registado no iOS, o 500 do serviço de email embutido, e o deep link a criar sessão sem avisar o `authStore`. Ver 3.2.1
 - 📱 **`npm run ios:device`** — os quatro passos da build do iPhone num comando, com a reposição dos entitlements num `trap` (corre mesmo se o build falhar ou for interrompido) e um `expo export` de dez segundos antes de gastar vinte e cinco minutos
 - 🌐 **Páginas legais no ar** em `https://legal.cadenceclub.pt/`, com certificado válido do GitHub Pages. Não no apex: o registo `A` **não persiste** no painel da Amen (três tentativas, autoritativos a devolver sempre o IP antigo), provavelmente por o produto *OnStatic* o gerir sozinho. Um `CNAME` num nome novo gravou à primeira

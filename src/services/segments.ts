@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import type {
-  ActivitySegment, SegmentDetail, SegmentEffort, NearbySegment,
+  ActivitySegment, SegmentDetail, SegmentEffort, NearbySegment, SegmentLeaderboardRow,
 } from '../lib/types';
 
 // Schema e funções: supabase/migrations/039_segments.sql
@@ -45,6 +45,25 @@ export async function getMySegmentEfforts(segmentId: string, limit = 20): Promis
   });
   if (error) return [];
   return (data ?? []) as SegmentEffort[];
+}
+
+/**
+ * O quadro de tempos de um troço.
+ *
+ * Devolve os primeiros `limit` **mais a linha de quem chama**, esteja ela onde
+ * estiver — quem é 47.º entre 300 quer saber isso; uma lista onde não se
+ * encontra não lhe diz nada.
+ */
+export async function getSegmentLeaderboard(
+  segmentId: string,
+  limit = 20,
+): Promise<SegmentLeaderboardRow[]> {
+  const { data, error } = await supabase.rpc('get_segment_leaderboard', {
+    p_segment_id: segmentId,
+    p_limit: limit,
+  });
+  if (error) return [];
+  return (data ?? []) as SegmentLeaderboardRow[];
 }
 
 export async function getNearbySegments(
