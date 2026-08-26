@@ -1280,12 +1280,27 @@ coordenadas, a altimetria, os tempos **e o batimento**.
 uma corrida de duas horas a um ponto por segundo são 7200 — sem paginar,
 exportava-se a primeira meia hora num ficheiro que parecia bom.
 
-⚠️ **Exporta o traçado completo, sem cortar pelas zonas de privacidade.** É
-deliberado: são os teus dados e o objetivo é levá-los inteiros para outro
-serviço. Mas quem partilhar o ficheiro com outra pessoa partilha o traçado todo,
-casa incluída. **Vale a pena avisar na interface** — fica por fazer.
+**Exporta o traçado completo, sem cortar pelas zonas de privacidade** — é
+deliberado: são os dados de quem correu e o objetivo é levá-los inteiros para
+outro serviço; cortá-los dava uma cópia adulterada da própria atividade.
 
-+12 testes.
+✅ **Com aviso, desde 26 ago.** As zonas escondem o traçado *dentro da app*; um
+ficheiro que sai dela não passa por elas, e quem o partilhar partilha a casa.
+Quando o percurso atravessa uma zona, aparece um alerta com **quantos pontos**
+estão lá dentro e a escolha de cancelar ou exportar na mesma.
+
+**A parte que interessa é o `null`.** Sem rede não se leem as zonas, e isso não é
+o mesmo que "não atravessa": tratar a dúvida como zero exportava em silêncio o
+traçado de casa **exatamente a quem se tinha dado ao trabalho de criar zonas**.
+A dúvida avisa também, com mensagem própria.
+
+A contagem é derivada do `trimRouteForZones`, que já tem testes, em vez de
+repetir a geometria — duas contas do mesmo com hipóteses de discordarem. E o
+alerta vive no ecrã, não no serviço: quem chamar sem callback (um script, um
+teste) não fica preso à espera de uma resposta que ninguém vai dar.
+
++18 testes, o aviso verificado por mutação: tratar a falha de rede como zero,
+deixar de avisar na dúvida, e desligar o aviso — os três são apanhados.
 
 ---
 
@@ -1813,7 +1828,9 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 - 📤 **Exportar GPX** — a maior lacuna de produto da análise. A app importava desde 20 ago e não deixava sair nada. Ver 4.8
 - **O teste é de ida e volta pelo nosso próprio leitor:** escreve um GPX e volta a lê-lo com o `parseGpx`. Se não voltar a entrar aqui, também não entra no Garmin — e isso só se descobria com alguém a tentar
 - 🪤 Três armadilhas tratadas: texto do utilizador por escapar (um `&` no título parte o ficheiro), o batimento que não cabe no GPX base (vai na extensão da Garmin), e os pontos que o PostgREST corta aos 1000 em silêncio — uma corrida de duas horas são 7200
-- +12 testes (442)
+- 🔒 **Aviso de zona de privacidade na exportação.** O ficheiro leva o traçado completo de propósito, mas as zonas só escondem o que se vê *dentro da app* — quem partilhar o GPX partilha a casa. Avisa, e diz quantos pontos estão na zona
+- **O caso que quase passava:** sem rede não se leem as zonas, e tratar essa dúvida como "não atravessa" falhava justamente a quem tem zonas definidas. A dúvida avisa também
+- +18 testes (448)
 - ✅ **O link do email abre direto na app, no iPhone.** Fecha a pendência mais antiga do projeto — 20 a 26 de agosto, **três causas independentes** que se disfarçavam umas às outras: o `cadence://` nunca registado no iOS, o 500 do serviço de email embutido, e o deep link a criar sessão sem avisar o `authStore`. Ver 3.2.1
 - 📱 **`npm run ios:device`** — os quatro passos da build do iPhone num comando, com a reposição dos entitlements num `trap` (corre mesmo se o build falhar ou for interrompido) e um `expo export` de dez segundos antes de gastar vinte e cinco minutos
 - 🌐 **Páginas legais no ar** em `https://legal.cadenceclub.pt/`, com certificado válido do GitHub Pages. Não no apex: o registo `A` **não persiste** no painel da Amen (três tentativas, autoritativos a devolver sempre o IP antigo), provavelmente por o produto *OnStatic* o gerir sozinho. Um `CNAME` num nome novo gravou à primeira

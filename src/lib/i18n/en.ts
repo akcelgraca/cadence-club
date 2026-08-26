@@ -876,6 +876,10 @@ const en = {
   hr_zone_label: 'Zone {{zone}} · {{name}}',
 
   // --- Activity (detail and edit) ---
+  activity_export_zone_title: 'This route passes through a privacy zone',
+  activity_export_zone_message: 'The file carries the full route, including the {{count}} points inside the zone. Zones hide your track inside the app — in a file that leaves it, they do not. Whoever receives it sees everything.',
+  activity_export_zone_unknown: "We couldn't check your privacy zones — they can't be read without a connection. If this route crosses one, the file carries it anyway.",
+  activity_export_zone_continue: 'Export anyway',
   activity_export_gpx: 'Export GPX',
   activity_export_no_points: 'This activity has no track to export.',
   activity_export_unavailable: "This device can't share files.",

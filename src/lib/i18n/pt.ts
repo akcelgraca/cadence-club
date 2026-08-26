@@ -878,6 +878,10 @@ const pt = {
   hr_zone_label: 'Zona {{zone}} · {{name}}',
 
   // --- Atividade (detalhe e edição) ---
+  activity_export_zone_title: 'O traçado passa numa zona de privacidade',
+  activity_export_zone_message: 'O ficheiro leva o percurso completo, incluindo os {{count}} pontos dentro da zona. As zonas escondem o traçado dentro da app — num ficheiro que sai daqui, não. Quem o receber vê tudo.',
+  activity_export_zone_unknown: 'Não foi possível verificar as tuas zonas de privacidade — sem rede não dá para as ler. Se tiveres alguma neste percurso, o ficheiro leva-a na mesma.',
+  activity_export_zone_continue: 'Exportar mesmo assim',
   activity_export_gpx: 'Exportar GPX',
   activity_export_no_points: 'Esta atividade não tem traçado para exportar.',
   activity_export_unavailable: 'Este dispositivo não consegue partilhar ficheiros.',

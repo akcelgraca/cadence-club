@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import { getMyPrivacyZones, trimRouteForZones } from '../privacyZones';
 import { buildGpx, nomeDoFicheiro, type PontoParaExportar, type AtividadeParaExportar } from './buildGpx';
 
 /**
@@ -44,8 +45,35 @@ async function buscarPontos(activityId: string): Promise<PontoParaExportar[]> {
   return todos;
 }
 
+/**
+ * Quantos pontos do traçado caem dentro de uma zona de privacidade.
+ *
+ * Derivado do `trimRouteForZones`, que já tem testes, em vez de repetir a
+ * geometria aqui — duas contas do mesmo com hipóteses de discordarem.
+ *
+ * `null` = **não foi possível saber**, e isso não é o mesmo que zero. Sem rede
+ * não se leem as zonas, e tratar isso como "não atravessa" era exportar em
+ * silêncio o traçado de casa de quem tem zonas definidas. Quem chama decide o
+ * que faz com a dúvida.
+ */
+export async function pontosDentroDeZonas(pontos: PontoParaExportar[]): Promise<number | null> {
+  try {
+    const zonas = await getMyPrivacyZones();
+    if (zonas.length === 0) return 0;
+    return pontos.length - trimRouteForZones(pontos, zonas).length;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * @param confirmarZonas Chamado **só** quando o traçado atravessa uma zona, ou
+ *   quando não foi possível verificar (`null`). Devolver `false` cancela.
+ *   Vive fora daqui porque mostrar um alerta é assunto do ecrã, não do serviço.
+ */
 export async function exportActivityGpx(
   atividade: AtividadeParaExportar & { id: string; avg_heart_rate?: number | null },
+  confirmarZonas?: (pontosEmZona: number | null) => Promise<boolean>,
 ): Promise<void> {
   const pontos = await buscarPontos(atividade.id);
 
@@ -53,6 +81,18 @@ export async function exportActivityGpx(
   // GPS ficam no relógio. Um GPX sem pontos é um ficheiro que nenhum serviço
   // aceita, e é melhor dizê-lo do que entregar um ficheiro vazio.
   if (pontos.length === 0) throw new ErroDeExportacao('sem_pontos');
+
+  // O ficheiro leva o traçado **completo**, de propósito: são os dados de quem
+  // correu e o objetivo é levá-los inteiros para outro serviço — cortá-los dava
+  // uma cópia adulterada da própria atividade. Mas as zonas de privacidade
+  // protegem o que os outros veem *na app*, e um ficheiro que sai da app não
+  // passa por elas: quem o partilhar partilha a casa. Daí o aviso.
+  if (confirmarZonas) {
+    const emZona = await pontosDentroDeZonas(pontos);
+    if (emZona === null || emZona > 0) {
+      if (!(await confirmarZonas(emZona))) return;
+    }
+  }
 
   const gpx = buildGpx(atividade, pontos);
 

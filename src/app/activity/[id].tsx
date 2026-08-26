@@ -131,7 +131,23 @@ export default function ActivityDetailScreen() {
    */
   const handleExport = async () => {
     try {
-      await exportActivityGpx(activity);
+      await exportActivityGpx(activity, (pontosEmZona) =>
+        // Um alerta como promessa: o serviço espera pela decisão em vez de
+        // exportar primeiro e avisar depois, que não serviria de nada.
+        new Promise<boolean>((resolver) => {
+          Alert.alert(
+            t('activity_export_zone_title'),
+            pontosEmZona === null
+              ? t('activity_export_zone_unknown')
+              : t('activity_export_zone_message', { count: pontosEmZona }),
+            [
+              { text: t('cancel'), style: 'cancel', onPress: () => resolver(false) },
+              { text: t('activity_export_zone_continue'), style: 'destructive', onPress: () => resolver(true) },
+            ],
+            { onDismiss: () => resolver(false) },
+          );
+        }),
+      );
     } catch (err) {
       const motivo = err instanceof ErroDeExportacao ? err.motivo : 'falhou';
       Alert.alert(
