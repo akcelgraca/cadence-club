@@ -1,6 +1,6 @@
 # Cadence Club — Estado do Projeto
 
-**Data:** 24 de agosto de 2026
+**Data:** 26 de agosto de 2026
 **Commit:** `57e5a6b` — `main`, sincronizado com `origin/main`, working tree limpo
 
 > **Branches (21 ago):** o trabalho vivia em `feat/dark-mode`, 47 commits à
@@ -1282,8 +1282,34 @@ palavras `Authorization` e `401` algures no ficheiro passava com a guarda
 trocada por `if (false)`, e verificar os nomes dos buckets passava com a chamada
 a `apagarFicheiros` removida, porque a função continuava definida.
 
-⚠️ **Falta publicar:** `supabase functions deploy delete-account`. Até lá o botão
-chama um endpoint que devolve 404.
+✅ **Publicada e testada ponta a ponta (26 ago).** Não só publicada — corrida
+contra o projeto a sério, com uma conta descartável:
+
+| Passo | Resultado |
+|---|---|
+| Conta criada, com avatar e foto, os dois com URL público a responder 200 | montado |
+| `POST /functions/v1/delete-account` com o token da conta | `200 {"ok":true}` |
+| Utilizador em `auth.users` | apagado |
+| Ficheiros nos dois buckets | apagados |
+| O token de sessão a seguir | 403 |
+
+**As três defesas, verificadas contra o endpoint publicado:**
+- sem cabeçalho `Authorization` → 401
+- **com a chave anónima como token → 401 `invalid_token`.** É a que mais
+  importa: essa chave está dentro de cada bundle da app, e não serve para apagar
+  nada
+- `GET` em vez de `POST` → 405
+
+🪤 **Um falso alarme que valeu a pena perseguir.** No primeiro teste o avatar
+continuava a responder 200 depois de apagado, e a foto não. Não era ficheiro por
+apagar — era **cache do CDN**: o avatar tinha sido pedido antes da eliminação e a
+foto não. A listagem do Storage mostrava os dois buckets vazios, e um pedido com
+cache-busting devolvia 400.
+
+**Fica a nota, porque é real:** um avatar apagado pode continuar a ser servido
+pela cache a quem já tinha carregado aquele URL exato, durante algum tempo. É
+cache transitória de CDN, não ficheiro por apagar — mas se alguém perguntar, é
+esta a resposta.
 
 #### 4.7.2 Páginas de privacidade e termos — ✅ escritas a 24 ago 2026
 
@@ -1478,7 +1504,7 @@ coisas muito diferentes umas das outras.
 
 | | Porquê |
 |---|---|
-| ~~**Apagar conta a sério**~~ | ✅ feito a 24 ago (4.7.1). **Falta publicar a edge function** — `supabase functions deploy delete-account` |
+| ~~**Apagar conta a sério**~~ | ✅ feito e **publicado**, testado ponta a ponta contra o projeto real (4.7.1) |
 | ~~**Páginas de privacidade e termos**~~ | ✅ no ar em `https://legal.cadenceclub.pt/` (4.7.2). **Falta criar as caixas `suporte@` e `privacidade@`** |
 | **Conta Apple Developer, 99 USD/ano** | Único item com semanas de espera. Bloqueia push iOS, HealthKit em iPhone, TestFlight, toda a monetização, e builds que não expiram em 7 dias |
 
@@ -1726,6 +1752,13 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ---
 
 ## 11. Registo de alterações
+
+**26 ago 2026 (15.ª sessão)**
+- 🌐 **Páginas legais no ar** em `https://legal.cadenceclub.pt/`, com certificado válido do GitHub Pages. Não no apex: o registo `A` **não persiste** no painel da Amen (três tentativas, autoritativos a devolver sempre o IP antigo), provavelmente por o produto *OnStatic* o gerir sozinho. Um `CNAME` num nome novo gravou à primeira
+- **O plano da Cloudflare foi abandonado, e ainda bem** — a Fase 0 era impossível de início: o domínio **nunca teve alojamento** e não há FTP nenhum (portas 21 e 22 fechadas). Onde a Cloudflare pedia doze registos movidos e nameservers trocados, com os oito de correio à boleia, isto foi **um CNAME** e o email nem foi tocado
+- 🗑️ **`delete-account` publicada e testada ponta a ponta** contra o projeto real: conta criada com avatar e foto, apagada pela função, e confirmado que o utilizador, os ficheiros nos dois buckets e o token deixaram todos de existir. Ver 4.7.1
+- 🪤 **Um falso alarme perseguido até ao fim:** o avatar parecia sobreviver à eliminação. Era cache do CDN — a listagem do Storage estava vazia e um pedido com cache-busting dava 400
+- 🐛 **O `dns:check` estava a dar luz verde ao que faltava.** Ficou a aceitar "a Amen ou a Cloudflare" de quando esse era o plano; com o plano mudado, dizia "Zona completa" com o apex por mudar. Aceitar demais é a maneira mais silenciosa de uma verificação deixar de verificar
 
 **24 ago 2026 (14.ª sessão)**
 - 📄 **Política de Privacidade e Termos escritos** (`web/`), bilingues na mesma página. Saíram do que o código faz — as sete permissões, os oito eventos do PostHog, as colunas de perfil, os seis fornecedores — e não de um modelo genérico. Os quatro links das Definições apontavam para `cadenceclub.app`, que nunca foi nosso
