@@ -62,3 +62,4 @@ service-account*.json
 # `serviceAccountKey.json` — é o nome para que mais gente lhe pega ao renomear.
 serviceAccountKey*.json
 *serviceAccount*.json
+.build-iphone.log
