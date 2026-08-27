@@ -1767,6 +1767,72 @@ antes de ligar seja o que for.
 4. **Exportar GPX** — a maior lacuna de produto, e das mais baratas de fazer
 5. Monetização, quando houver retenção medida para decidir preço
 
+## 8.1 Web app — o que já está resolvido antes de começares (27 ago 2026)
+
+Planeado para a tarde de 27 de agosto. Notas do que existe e do que vai doer,
+para não se descobrir a meio.
+
+### O backend está inteiro e é reutilizável
+
+O Supabase não sabe se quem lhe fala é a app ou um browser. **As RLS são a
+fronteira de segurança e já estão certas** — uma web app com a chave anónima é
+tão segura como a app, por construção. Os RPC `SECURITY DEFINER` estão
+`GRANT`-ados a `authenticated` e revogados a `anon`, portanto o comportamento é
+o mesmo dos dois lados.
+
+### 34 módulos são código puro e vêm de graça
+
+Não importam `react-native` nem `expo`. Copiam-se ou partilham-se sem tocar em
+nada:
+
+| | |
+|---|---|
+| **i18n completo** | `lib/i18n/pt.ts` e `en.ts` — 1200+ chaves nos dois idiomas |
+| **Tipos** | `lib/types.ts` — o modelo de dados inteiro |
+| **Tema** | `lib/theme.ts` — cores, tipografia, claro e escuro |
+| **Formatadores** | ritmo, distância, datas, unidades, splits |
+| **Cálculos** | calorias (Keytel + MET), zonas de FC (Tanaka), geo |
+| **GPX/TCX/FIT** | os três leitores **e** o construtor de GPX |
+| **Saúde** | mapeamento de modalidades e deduplicação |
+
+O que **não** vem: tudo o que toca em ecrã, mapa, ficheiros ou módulos nativos.
+
+### ⚠️ O domínio vai dar problema, e é bom sabê-lo antes
+
+O `cadenceclub.pt` **não aceita alterações ao registo `A` do apex** — escrito
+três vezes no painel da Amen, os autoritativos continuaram a devolver o IP
+antigo. A causa provável é o produto *OnStatic* estar associado ao domínio e
+gerir esse registo sozinho.
+
+Foi por isso que as páginas legais foram parar a `legal.cadenceclub.pt`, com um
+`CNAME` — que gravou à primeira, porque um nome novo não tem produto associado.
+
+**Para a web app, o mesmo caminho:** um subdomínio com `CNAME`
+(`app.cadenceclub.pt`, `www.`) em vez de lutar com o apex. Ou desassociar o
+OnStatic do domínio no painel da Amen, que liberta o apex mas é preciso
+confirmar que não parte o resto.
+
+### Coisas pequenas que mordem
+
+- **O token do Mapbox é público** (`EXPO_PUBLIC_`). Numa web app fica visível no
+  browser — restringir por URL no painel do Mapbox antes de publicar
+- **Google Sign-In** precisa de um URL de redireccionamento novo em
+  *Authentication → URL Configuration*, além do `cadence://` que lá está
+- **Os emails de autenticação voltam para `cadence://`**, que um browser não
+  abre. Um utilizador que se registe pela web precisa que o *Site URL* ou o
+  `emailRedirectTo` aponte para a web — ver 3.2.7
+
+---
+
+## 8.2 O que fica para depois
+
+| | Quando | Porquê |
+|---|---|---|
+| **Conta Apple Developer** (99 USD/ano) | dentro de semanas | Bloqueia push no iOS, HealthKit no telemóvel, TestFlight, toda a monetização, e builds que não expiram em 7 dias. **É o único item com semanas de espera** |
+| **Garmin, Wahoo, Coros** | dentro de semanas | Integrações a sério, semanas cada. Hoje só via Apple Saúde / Health Connect |
+
+---
+
 ## 9. Plano de teste no iPhone físico
 
 **Build instalada: 21 ago 2026, 16:07.** Traz a importação FIT e o arquivo do
