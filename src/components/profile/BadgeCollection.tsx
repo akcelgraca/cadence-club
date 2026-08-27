@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { textoDoCracha } from '../../lib/badgeText';
 import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { useColors } from '../../hooks/useColors';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,7 +37,7 @@ export function BadgeCollection({ badges }: BadgeCollectionProps) {
                 <Ionicons name={(ub.badge?.icon as any) ?? 'ribbon'} size={28} color={c.primary} />
               )}
             </View>
-            <Text style={styles.badgeName} numberOfLines={2}>{ub.badge?.name}</Text>
+            <Text style={styles.badgeName} numberOfLines={2}>{textoDoCracha(ub.badge?.name, t)}</Text>
           </View>
         ))}
       </View>

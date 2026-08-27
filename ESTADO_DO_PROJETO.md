@@ -30,7 +30,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 | Hooks | 17 |
 | Linhas em `src/` | ~40 800 |
 | Chaves i18n | 1299 PT + 1299 EN (equilibradas ✅) |
-| Migrações Supabase | 51 ficheiros (`001` → `052`; não existe `025`) |
+| Migrações Supabase | 52 ficheiros (`001` → `053`; não existe `025`) |
 | Edge functions | 2 (`send-push`, `revenuecat-webhook`) |
 | Build iOS em dispositivo | ✅ iPhone 15, 18 ago — ⏰ expira **25 ago 2026** |
 | Build iOS em simulador | ✅ Debug, com Metro |
@@ -1244,6 +1244,65 @@ Nota: as migrações **não são idempotentes**. `CREATE TYPE` e `CREATE POLICY`
 
 ---
 
+### 4.10 Saúde e crachás (26 ago 2026) ✅
+
+Três pendências antigas, fechadas de seguida.
+
+#### Distância no Health Connect
+
+Vive em registos `Distance` separados do `ExerciseSession`, e por isso ficou a
+**zero desde que a sincronização existe** — e um 0 km numa lista de corridas não
+parece um erro, parece um treino de ginásio. Lê-se a janela toda de uma vez e
+reparte-se por treino, como já se fazia com o batimento.
+
+**A sobreposição é o que engana.** Um troço pode começar antes do treino ou
+acabar depois — quem carrega no "iniciar" com atraso produz isso. Conta-se a
+**fração sobreposta**; senão dois treinos seguidos somavam mais do que a pessoa
+andou. E a unidade é lida do registo, não assumida: assumir metros funcionava
+até uma app escrever em quilómetros, e aí uma maratona entrava como 42 metros.
+
+🪤 Um teste apanhou o **código a discordar do próprio comentário**: dizia que um
+registo instantâneo conta inteiro, e a guarda de sobreposição descartava-o antes
+disso.
+
+#### Escrever treinos de volta na Saúde
+
+As atividades gravadas na app passam a ser devolvidas à plataforma, se a
+permissão for dada nas Definições. **Pede-se lá e não no fim de uma corrida:** um
+diálogo do sistema em cima de quem acabou de correr leva quase sempre "não", e
+essa recusa fica.
+
+🪤 **A defesa contra o ciclo tinha um buraco.** O que sai volta a entrar na
+leitura seguinte, e essa corre a cada sincronização — não seria uma cópia, seria
+um ciclo. O `recordedByUs` reconhecia **nomes** de app ("Cadence Club"), mas o
+Health Connect identifica a origem pelo **nome do pacote**
+(`com.akcelgraca.cadence`). No Android, nada do que escrevêssemos seria
+reconhecido como nosso. Encontrado ao construir a escrita, corrigido antes de a
+ligar.
+
+Uma modalidade sem equivalente **não é escrita**. Forçar um genérico poluía o
+histórico de saúde de alguém, e esse histórico não é nosso para estragar. O mapa
+inverso é escrito à mão e não derivado por inversão — os de leitura são
+muitos-para-um, e inverter obrigava a escolher às escondidas.
+
+#### Nome dos crachás — migração 053
+
+A 051 tinha deixado isto por resolver: o nome ia como **parâmetro** da
+notificação e um inglês recebia *"You unlocked the badge: Madrugador!"*. A frase
+traduzia, o nome não. Agora a base de dados guarda a chave, como na 041 e na 051.
+
+💡 **As traduções já existiam.** As 26 chaves `badge_*` estavam nos dois
+dicionários desde antes, sem nunca terem sido usadas — faltava a base de dados
+guardar chaves e alguém traduzi-las ao mostrar.
+
+🪤 São **treze** crachás, não doze. O `multi_sport` escapou-me ao escrever o
+dicionário da edge function; o teste apanhou-o por ler os ids **da própria
+semente** em vez de uma lista escrita à mão.
+
++31 testes no total das três.
+
+---
+
 ### 4.9 Quadro de tempos dos troços (26 ago 2026) ✅
 
 ⚠️ **Isto reverte uma decisão anterior, e isso não é acidente.** O cabeçalho da
@@ -1660,10 +1719,10 @@ antes de ligar seja o que for.
 |---|---|
 | ~~🔴 **Exportar GPX**~~ | ✅ feito a 26 ago — ver 4.8 |
 | ~~🟠 **Classificações de troços**~~ | ✅ feito a 26 ago — ver 4.9 |
-| 🟠 **Distância no Health Connect** | Fica a zero; vive num registo separado do `ExerciseSession` |
-| 🟠 **Escrever treinos de volta na Saúde** | A app lê e nunca devolve |
+| ~~🟠 **Distância no Health Connect**~~ | ✅ feito a 26 ago — ver 4.10 |
+| ~~🟠 **Escrever treinos de volta na Saúde**~~ | ✅ feito a 26 ago — ver 4.10 |
 | 🟠 **Garmin, Wahoo, Coros** | Hoje só pela app de Saúde / Health Connect |
-| 🟡 **Nome dos crachás traduzível** | Vem da tabela `badges` em português; a frase traduz, o nome não (ver 3.2.1) |
+| ~~🟡 **Nome dos crachás traduzível**~~ | ✅ feito a 26 ago (migração 053) — ver 4.10 |
 | 🟡 **Web app** | O Strava vive tanto no browser como no telemóvel |
 
 ---
@@ -1890,6 +1949,9 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 - 🏆 **Quadro de tempos dos troços** (migração 052) — e a implementação destapou uma contradição: o cabeçalho da 039 dizia *"não há classificação nem KOM"* enquanto a secção 6.2 a listava como lacuna. Os dois documentos diziam o contrário um do outro. Ver 4.9
 - **A função é `SECURITY DEFINER`, portanto as RLS não a protegem** — o filtro por atividade pública é escrito outra vez, explicitamente, e há três verificações no `VERIFICAR_MIGRACOES.sql` só sobre isso
 - +18 testes (448), depois +9 (457)
+- 🏃 **Distância no Health Connect**, **escrever treinos de volta na Saúde** e **nomes de crachás traduzíveis** (migração 053) — ver 4.10
+- 🪤 Três armadilhas, todas encontradas antes de fazerem estrago: o `recordedByUs` não reconhecia o **nome do pacote** que o Health Connect usa (no Android, cada treino escrito voltava a entrar — um ciclo, não uma cópia); o código da distância discordava do próprio comentário; e há **treze** crachás, não doze
+- +31 testes (494)
 - ✅ **O link do email abre direto na app, no iPhone.** Fecha a pendência mais antiga do projeto — 20 a 26 de agosto, **três causas independentes** que se disfarçavam umas às outras: o `cadence://` nunca registado no iOS, o 500 do serviço de email embutido, e o deep link a criar sessão sem avisar o `authStore`. Ver 3.2.1
 - 📱 **`npm run ios:device`** — os quatro passos da build do iPhone num comando, com a reposição dos entitlements num `trap` (corre mesmo se o build falhar ou for interrompido) e um `expo export` de dez segundos antes de gastar vinte e cinco minutos
 - 🌐 **Páginas legais no ar** em `https://legal.cadenceclub.pt/`, com certificado válido do GitHub Pages. Não no apex: o registo `A` **não persiste** no painel da Amen (três tentativas, autoritativos a devolver sempre o IP antigo), provavelmente por o produto *OnStatic* o gerir sozinho. Um `CNAME` num nome novo gravou à primeira

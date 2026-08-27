@@ -1,4 +1,5 @@
 import type { Notification } from './types';
+import { textoDoCracha } from './badgeText';
 
 /**
  * O texto de uma notificação, no idioma de quem lê.
@@ -24,6 +25,13 @@ export function notificationText(
   if (!n.message_key) return n.message;
 
   const params: Record<string, unknown> = { ...(n.message_params ?? {}) };
+
+  // O crachá chega como CHAVE desde a migração 053, não como nome. Interpolar
+  // sem traduzir punha `badge_early_bird` dentro da frase — o oposto do que a
+  // 053 foi corrigir.
+  if (typeof params.badge === 'string') {
+    params.badge = textoDoCracha(params.badge, t);
+  }
 
   // A data chega em ISO de propósito — ver o comentário da migração 051. Com
   // o en-GB de hoje o resultado é igual ao português; o que se ganha é o

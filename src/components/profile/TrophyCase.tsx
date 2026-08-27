@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { textoDoCracha } from '../../lib/badgeText';
 import { localeTag } from '../../utils/dateHelpers';
 import { useColors } from '../../hooks/useColors';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Image } from 'react-native';
@@ -45,7 +46,7 @@ export function TrophyCase({ badges }: TrophyCaseProps) {
                   <Ionicons name={(ub.badge?.icon as any) ?? 'ribbon'} size={28} color={c.primary} />
                 )}
               </View>
-              <Text style={styles.badgeName} numberOfLines={2}>{ub.badge?.name}</Text>
+              <Text style={styles.badgeName} numberOfLines={2}>{textoDoCracha(ub.badge?.name, t)}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -68,8 +69,8 @@ export function TrophyCase({ badges }: TrophyCaseProps) {
         ) : (
           <Ionicons name={(selectedBadge?.badge?.icon as any) ?? 'ribbon'} size={56} color={c.primary} />
         )}
-            <Text style={styles.modalName}>{selectedBadge?.badge?.name}</Text>
-            <Text style={styles.modalDescription}>{selectedBadge?.badge?.description}</Text>
+            <Text style={styles.modalName}>{textoDoCracha(selectedBadge?.badge?.name, t)}</Text>
+            <Text style={styles.modalDescription}>{textoDoCracha(selectedBadge?.badge?.description, t)}</Text>
             {selectedBadge?.activity_id ? (
               <Text style={styles.modalActivity}>
                 {t('badge_earned_in_activity')}

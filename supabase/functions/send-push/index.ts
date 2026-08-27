@@ -68,6 +68,33 @@ const CORPOS: Record<string, Record<Idioma, string>> = {
   },
 };
 
+/**
+ * Nome dos crachas, nos dois idiomas.
+ *
+ * Desde a migracao 053 a base de dados guarda a CHAVE (`badge_early_bird`), e o
+ * gatilho manda-a no parametro `badge`. Interpolar sem traduzir punha
+ * `badge_early_bird` dentro do push — o oposto do que a 053 foi corrigir.
+ *
+ * Vive aqui em duplicado com `src/lib/i18n/` pela mesma razao que os corpos das
+ * notificacoes: o push e desenhado no servidor e nao ha i18next. Um teste
+ * confirma que os dois nao divergem.
+ */
+const CRACHAS: Record<string, Record<Idioma, string>> = {
+  badge_first_activity: { pt: "Primeira Atividade", en: "First Activity" },
+  badge_streak_3: { pt: "3 Dias Seguidos", en: "3 Day Streak" },
+  badge_streak_7: { pt: "7 Dias Seguidos", en: "7 Day Streak" },
+  badge_streak_30: { pt: "30 Dias Seguidos", en: "30 Day Streak" },
+  badge_distance_5k: { pt: "5K", en: "5K" },
+  badge_distance_10k: { pt: "10K", en: "10K" },
+  badge_distance_21k: { pt: "Meia Maratona", en: "Half Marathon" },
+  badge_climb_100m: { pt: "Escalador", en: "Climber" },
+  badge_social_5_kudos: { pt: "Popular", en: "Popular" },
+  badge_early_bird: { pt: "Madrugador", en: "Early Bird" },
+  badge_night_owl: { pt: "Coruja Noturna", en: "Night Owl" },
+  badge_weekend_warrior: { pt: "Guerreiro de Fim de Semana", en: "Weekend Warrior" },
+  badge_multi_sport: { pt: "Polivalente", en: "Versatile" },
+};
+
 /** Dia, mes e hora. A data chega em ISO — ver o comentario da migracao 051. */
 function formatarData(iso: string, idioma: Idioma): string {
   const d = new Date(iso);
@@ -94,6 +121,11 @@ function corpoDoPush(n: NotificationRecord, idioma: Idioma): string {
   if (!modelo) return n.message;
 
   const params: Record<string, unknown> = { ...(n.message_params ?? {}) };
+  // Uma chave que este dicionario nao conheca fica como esta: um cracha novo
+  // com o nome em bruto e mau, mas um push a dizer `undefined` e pior.
+  if (typeof params.badge === "string" && CRACHAS[params.badge]) {
+    params.badge = CRACHAS[params.badge][idioma];
+  }
   if (typeof params.starts_at === "string") {
     params.date = formatarData(params.starts_at, idioma);
   }

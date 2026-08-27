@@ -1,4 +1,4 @@
--- Diagnóstico: as migrações 042 a 052 estão aplicadas e completas?
+-- Diagnóstico: as migrações 042 a 053 estão aplicadas e completas?
 --
 -- Correr no SQL Editor do Supabase. É UMA só instrução de propósito: o editor
 -- do Supabase só mostra o resultado da última instrução, por isso um ficheiro
@@ -218,6 +218,18 @@ SELECT * FROM (
   -- `anon` a poder executá-la seria o quadro legível sem sessão nenhuma.
   UNION ALL SELECT 36, '052_segment_leaderboard', 'fechada a quem não tem sessão',
     CASE WHEN NOT has_function_privilege('anon', 'public.get_segment_leaderboard(uuid, int)', 'EXECUTE')
+         THEN 'APLICADA' ELSE 'EM FALTA' END
+
+  -- ── 053: crachás traduzíveis ─────────────────────────────────────────────
+  UNION ALL SELECT 37, '053_badge_i18n', 'nomes convertidos em chaves',
+    CASE WHEN NOT EXISTS (SELECT 1 FROM public.badges WHERE name NOT LIKE 'badge\_%')
+         THEN 'APLICADA' ELSE 'EM FALTA' END
+
+  -- Sem o gatilho substituído, as colunas ficam convertidas mas a notificação
+  -- continua a mandar o nome antigo — e o parâmetro deixa de bater certo.
+  UNION ALL SELECT 38, '053_badge_i18n', 'gatilho manda a chave',
+    CASE WHEN EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'notify_on_badge_earned'
+                        AND prosrc ILIKE '%v_badge_key%')
          THEN 'APLICADA' ELSE 'EM FALTA' END
 ) t
 ORDER BY ord;
