@@ -124,7 +124,17 @@ certo — o `sync.ts` ignora esse erro em vez de o tratar como falha.
 - **Frequência cardíaca.** O `ExternalWorkout` já a transporta, mas não há
   coluna em `activities` para a guardar. É o ponto 2 da análise original e
   vem quase de graça a partir daqui.
-- **Distância no Health Connect.** Vive num registo separado do
-  `ExerciseSession`; hoje fica a zero. Precisa de uma segunda leitura.
+- ✅ **Distância no Health Connect** — feito a 26 ago 2026. Vive em registos
+  `Distance` separados do `ExerciseSession`, e por isso ficou a zero desde que a
+  sincronização existe. Lê-se a janela toda de uma vez e reparte-se por treino,
+  como já se fazia com o batimento.
+
+  **A parte que engana é a sobreposição:** um troço pode começar antes do treino
+  ou acabar depois — quem carrega no "iniciar" com atraso produz isso. Conta-se
+  a **fração sobreposta**, senão dois treinos seguidos somavam mais do que a
+  pessoa andou. `distanciaNoIntervalo` e `metrosDe` são puras e têm 11 testes.
+
+  ⚠️ **Por confirmar em dispositivo Android com Health Connect** — a leitura em
+  si nunca correu contra dados reais.
 - **Escrever na Saúde.** A app ainda não devolve os treinos que grava. Quando
   o fizer, o filtro `recordedByUs` em `dedup.ts` é o que evita reimportá-los.

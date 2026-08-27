@@ -189,6 +189,72 @@ export function resumoBatimento(
   };
 }
 
+/**
+ * Metros, a partir do que o Health Connect devolver.
+ *
+ * O valor chega como `{ value, unit }` — a biblioteca aceita metros,
+ * quilómetros, milhas e pés. Assumir metros funcionaria até ao dia em que uma
+ * app escrevesse em quilómetros, e aí uma maratona entrava como 42 metros: um
+ * número absurdo mas plausível o suficiente para ninguém reparar numa lista.
+ */
+export function metrosDe(distancia: any): number {
+  if (typeof distancia === 'number') return distancia;
+  const valor = Number(distancia?.value);
+  if (!Number.isFinite(valor)) return 0;
+  switch (String(distancia?.unit ?? 'meters').toLowerCase()) {
+    case 'kilometers': case 'km': return valor * 1000;
+    case 'miles': case 'mi': return valor * 1609.344;
+    case 'feet': case 'ft': return valor * 0.3048;
+    default: return valor;   // metros
+  }
+}
+
+/**
+ * Distância percorrida dentro de um intervalo, em metros.
+ *
+ * O Health Connect guarda a distância em registos `Distance` **separados** do
+ * `ExerciseSession` — daí ela ter ficado a zero desde que a sincronização
+ * existe. Cada registo é um troço com início, fim e total, e uma sessão de
+ * corrida costuma ter dezenas deles.
+ *
+ * **A parte que engana é a sobreposição.** Um registo pode começar antes do
+ * treino ou acabar depois — quem carrega no "iniciar" três segundos atrasado
+ * produz exatamente isso. Contá-lo inteiro atribuía a este treino metros
+ * percorridos noutro, e dois treinos seguidos somariam mais do que a pessoa
+ * andou. Conta-se **a fração sobreposta**, assumindo velocidade constante
+ * dentro do troço, que é o mais que se pode assumir sem inventar.
+ *
+ * Exportada para ser testável: é lógica a sério e é fácil de enganar.
+ */
+export function distanciaNoIntervalo(
+  registos: { inicio: number; fim: number; metros: number }[],
+  inicioMs: number,
+  fimMs: number,
+): number {
+  let total = 0;
+  for (const r of registos) {
+    if (!Number.isFinite(r.metros) || r.metros <= 0) continue;
+
+    const duracao = r.fim - r.inicio;
+
+    // Um registo instantâneo (início igual ao fim) não dá para repartir, e tem
+    // de ser tratado ANTES da sobreposição: para ele `ate === de`, e a guarda
+    // de baixo descartá-lo-ia. O comentário dizia que contava inteiro e o
+    // código descartava-o — apanhado por um teste que exercia esse caso.
+    if (duracao <= 0) {
+      if (r.inicio >= inicioMs && r.inicio <= fimMs) total += r.metros;
+      continue;
+    }
+
+    const de = Math.max(r.inicio, inicioMs);
+    const ate = Math.min(r.fim, fimMs);
+    if (ate <= de) continue;  // não se tocam
+
+    total += r.metros * ((ate - de) / duracao);
+  }
+  return Math.round(total);
+}
+
 const HEALTH_CONNECT_READ = [
   { accessType: 'read' as const, recordType: 'ExerciseSession' as const },
   { accessType: 'read' as const, recordType: 'Distance' as const },
@@ -268,6 +334,25 @@ export const healthConnectAdapter: HealthAdapter = {
       // Sem permissão de batimento, os treinos entram sem ele.
     }
 
+    // A distância vive em registos `Distance` separados, com a mesma forma: uma
+    // leitura para a janela toda, repartida depois por treino. Ler por treino
+    // seriam N chamadas à ponte nativa.
+    let registosDistancia: { inicio: number; fim: number; metros: number }[] = [];
+    try {
+      const d = await HC.readRecords('Distance', { timeRangeFilter: janela });
+      registosDistancia = (d.records ?? [])
+        .map((r: any) => ({
+          inicio: new Date(r.startTime).getTime(),
+          fim: new Date(r.endTime).getTime(),
+          // O valor vem com unidade declarada. Assumir metros seria ler um
+          // maratona de 42 km como 42 metros no dia em que viesse em km.
+          metros: metrosDe(r.distance),
+        }))
+        .filter((r: any) => Number.isFinite(r.inicio) && Number.isFinite(r.fim));
+    } catch {
+      // Sem permissão de distância, fica a zero — como antes desta alteração.
+    }
+
     return (records ?? []).map((r: any): ExternalWorkout => {
       const inicio = new Date(r.startTime);
       const fim = new Date(r.endTime);
@@ -278,10 +363,7 @@ export const healthConnectAdapter: HealthAdapter = {
         rawType: r.exerciseType,
         startTime: inicio.toISOString(),
         endTime: fim.toISOString(),
-        // A distância vive num registo Distance separado do ExerciseSession.
-        // Sem uma segunda leitura fica a zero, e a app trata isso como treino
-        // sem distância em vez de inventar um valor.
-        distance: 0,
+        distance: distanciaNoIntervalo(registosDistancia, inicio.getTime(), fim.getTime()),
         duration: Math.max(0, (fim.getTime() - inicio.getTime()) / 1000),
         elevationGain: 0,
         avgHeartRate: avg,
