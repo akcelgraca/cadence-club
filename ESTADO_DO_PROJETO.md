@@ -1,6 +1,6 @@
 # Cadence Club — Estado do Projeto
 
-**Data:** 26 de agosto de 2026
+**Data:** 27 de agosto de 2026
 **Commit:** `57e5a6b` — `main`, sincronizado com `origin/main`, working tree limpo
 
 > **Branches (21 ago):** o trabalho vivia em `feat/dark-mode`, 47 commits à
@@ -21,7 +21,7 @@ A app está **funcionalmente construída e tecnicamente saudável**. Não há tr
 
 | Indicador | Estado |
 |---|---|
-| Testes | ✅ 459 testes, 36 suites, todos a passar |
+| Testes | ✅ 500 testes, 40 suites, todos a passar |
 | Typecheck (`tsc --noEmit`) | ✅ limpo |
 | Ecrãs (expo-router) | 44 |
 | Componentes | 67 |
@@ -1643,6 +1643,34 @@ Gravação GPS, feed social, clubes, segments, rotas, registos pessoais, distint
 
 ## 7. Dívida técnica e armadilhas conhecidas
 
+### 7.1 O botão escondido pela mensagem de vazio (27 ago 2026) ✅
+
+O botão de criar rota não aparecia no mapa. **Duas causas somadas, e nenhuma se
+via a partir da outra:**
+
+1. `fabBottom` descia para **30px** quando não havia rotas — e o cartão
+   *"Nenhuma rota por aqui"* ocupa exatamente esse espaço (`bottom: 16`, ~78px
+   de altura)
+2. O cartão era desenhado **depois** do botão no JSX. Em React Native, quem vem
+   depois pinta por cima
+
+**Porque é que ninguém deu por isso antes:** o botão tinha `elevation: 8`, que
+no **Android** o levanta acima de tudo. No **iOS não há elevation** — quem manda
+é a ordem no JSX e o `zIndex`, e `zIndex` não havia. Só se via num iPhone, e o
+iPhone só passou a ter builds regulares esta semana.
+
+**O efeito é o pior possível:** o botão de criar a primeira rota ficava escondido
+atrás da mensagem a dizer que não há rotas nenhumas. Invisível para quem mais
+precisava dele, visível para quem já tinha rotas e menos falta lhe fazia.
+
+**Corrigido em três frentes**, porque qualquer uma sozinha deixava a armadilha
+armada: a altura passou a vir de `alturaDoBotaoDeCriar` (função pura, testada) e
+sobe acima do cartão de vazio; o botão é desenhado **depois** do carrossel; e
+ganhou `zIndex`, para reordenar o JSX não voltar a escondê-lo. Seis testes, dois
+verificados por mutação.
+
+---
+
 Coisas já mordidas, para não se repetirem:
 
 - **RLS com subqueries à própria tabela → recursão 42P17.** Referências não qualificadas (`id`, `conversation_id`) resolvem para a tabela interior. Usar funções `SECURITY DEFINER` + colunas qualificadas (padrão nas migrações 028/033/034)
@@ -1654,6 +1682,7 @@ Coisas já mordidas, para não se repetirem:
 - **Plurais em português acima de 1 000 000 devolvem a chave crua** — o CLDR tem uma categoria `many` para o português e os dicionários só têm `_one`/`_other`. Nenhum contador da app lá chega, mas qualquer plural futuro sobre valores grandes chega
 - **O `hardcoded.test.ts` ainda não vê texto *depois* de uma expressão** (`{n} atividades`). Faltam dois sítios: `club/[id]/chat.tsx` e `WeeklyChartCard.tsx`
 - **App só tem tema claro** — `useColors()` devolve sempre `lightColors`
+- **`elevation` só conta no Android.** No iOS, quem fica por cima decide-se pela ordem no JSX e pelo `zIndex`. Um overlay que dependa do `elevation` está a funcionar por acidente — ver 7.1
 - **Correr `tsc --noEmit` a partir de `apps/mobile`** — a partir da raiz apanha um `tsc` npm falso
 
 ---
@@ -1928,6 +1957,12 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 ---
 
 ## 11. Registo de alterações
+
+**27 ago 2026 (17.ª sessão)**
+- 🐛 **O botão de criar rota estava escondido atrás do "Nenhuma rota por aqui"** — invisível exatamente para quem não tinha rotas e mais precisava dele, visível para quem já as tinha. Ver 7.1
+- 📱 Build no iPhone com tudo o que se acumulou: crachás traduzidos, quadro de tempos, exportar GPX, devolver treinos à Saúde. **Expira a 3 set**
+- ⚠️ **Correção ao que ficou dito antes:** a escrita na Saúde **não** se testa no iPhone com conta grátis. O `HealthKit` é uma das capabilities que saem para a assinatura passar, e sem ela a Saúde nem liga. Testa-se no **simulador**
+- +6 testes (500)
 
 **26 ago 2026 (16.ª sessão)**
 - 🌍 **O teste de i18n só via metade do texto visível.** O `hardcoded.test.ts` procurava texto entre `>` e `<` — exigia uma tag a fechar, portanto tudo o que fosse seguido de uma expressão (`>Distância inicial: {formatDistance(...)`) passava-lhe ao lado. E strings dentro de ternários não eram vistas por nenhum dos describes. Alargado às duas formas
