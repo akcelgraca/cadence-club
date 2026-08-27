@@ -1669,6 +1669,9 @@ sobe acima do cartão de vazio; o botão é desenhado **depois** do carrossel; e
 ganhou `zIndex`, para reordenar o JSX não voltar a escondê-lo. Seis testes, dois
 verificados por mutação.
 
+✅ **Confirmado no iPhone a 27 ago** — o botão aparece. Os testes provavam a
+aritmética da altura; quem prova o aspeto é o telemóvel.
+
 ---
 
 Coisas já mordidas, para não se repetirem:
