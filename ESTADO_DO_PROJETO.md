@@ -1767,10 +1767,43 @@ antes de ligar seja o que for.
 4. **Exportar GPX** — a maior lacuna de produto, e das mais baratas de fazer
 5. Monetização, quando houver retenção medida para decidir preço
 
-## 8.1 Web app — o que já está resolvido antes de começares (27 ago 2026)
+## 8.1 Site — o que já está resolvido antes de começares (27 ago 2026)
 
-Planeado para a tarde de 27 de agosto. Notas do que existe e do que vai doer,
-para não se descobrir a meio.
+Decidido a 27 de agosto: **um site nos moldes do strava.com** — estatísticas,
+mapa, atividades, desafios, subscrição e uma parte pública de funcionalidades.
+Notas do que existe e do que vai doer, para não se descobrir a meio.
+
+### São duas coisas num só sítio, e não se constroem da mesma maneira
+
+O strava.com é **público** (funcionalidades, preços — tem de ser indexável pelo
+Google e carregar depressa a frio) e **privado** (o painel de quem entra —
+estatísticas, mapa, atividades). O primeiro pede geração estática ou no
+servidor; o segundo é uma aplicação normal no browser e não precisa de nada
+disso.
+
+Fazer as duas com a mesma ferramenta é possível; fazê-las com a **mesma
+estratégia de renderização** é o erro caro — um painel renderizado no servidor
+paga latência sem ganhar nada, e uma página de preços que só existe depois do
+JavaScript não aparece no Google.
+
+### 💰 A página de subscrição é a parte estratégica, não decorativa
+
+**O Stripe não pode cobrar dentro da app** — App Store 3.1.1 e a política do
+Google Play obrigam a IAP para conteúdo digital consumido na app, e isso custa
+**15 a 30%**. Num site, essa regra não se aplica: cobra-se por Stripe e fica-se
+com quase tudo (~1,4% + 0,25 € na UE).
+
+**E a canalização já está preparada para isto.** O RevenueCat aceita o Stripe
+como fonte de subscrição, e o `revenuecat-webhook` já escreve em `subscriptions`
+sem saber de onde veio a compra. Um utilizador que assine no site entra com
+premium na app, sem código novo do lado dos direitos de acesso.
+
+Traduzido: **o site não é só uma montra do produto — é o canal de receita com
+melhor margem que existe.** É por isso que o Strava empurra tanto para lá.
+
+⚠️ Cuidado com a outra metade da regra: a app **não pode** apontar para o site
+para pagar, nem sequer mencionar que é mais barato lá. A Apple lê isso como
+contornar o IAP. O site atrai por si; a app cala-se sobre ele.
 
 ### O backend está inteiro e é reutilizável
 
@@ -1807,10 +1840,15 @@ gerir esse registo sozinho.
 Foi por isso que as páginas legais foram parar a `legal.cadenceclub.pt`, com um
 `CNAME` — que gravou à primeira, porque um nome novo não tem produto associado.
 
-**Para a web app, o mesmo caminho:** um subdomínio com `CNAME`
-(`app.cadenceclub.pt`, `www.`) em vez de lutar com o apex. Ou desassociar o
-OnStatic do domínio no painel da Amen, que liberta o apex mas é preciso
-confirmar que não parte o resto.
+**E agora isto pesa mais do que pesava.** Para as páginas legais, `legal.` servia
+perfeitamente. Um site público que se quer indexado e partilhado quer o
+**apex** — `cadenceclub.pt`, não `app.cadenceclub.pt`. Vale a pena resolver a
+sério: desassociar o produto *OnStatic* do domínio no painel da Amen, ou pedir-
+lhes que o libertem. Com o apex livre, os quatro `A` do GitHub Pages (ou o que
+vier a alojar) entram sem drama.
+
+Enquanto isso não estiver resolvido, um `CNAME` num subdomínio funciona — mas é
+solução de recurso para o que vai ser a cara do produto.
 
 ### Coisas pequenas que mordem
 
@@ -1819,8 +1857,12 @@ confirmar que não parte o resto.
 - **Google Sign-In** precisa de um URL de redireccionamento novo em
   *Authentication → URL Configuration*, além do `cadence://` que lá está
 - **Os emails de autenticação voltam para `cadence://`**, que um browser não
-  abre. Um utilizador que se registe pela web precisa que o *Site URL* ou o
-  `emailRedirectTo` aponte para a web — ver 3.2.7
+  abre. Um utilizador que se registe pelo site precisa que o `emailRedirectTo`
+  aponte para lá — e aí passa a haver **dois destinos**, o da app e o do site,
+  os dois na lista de *Redirect URLs*. Ver 3.2.7
+- **O mapa no site não é o do telemóvel.** O `@rnmapbox/maps` é nativo; no
+  browser é o `mapbox-gl-js`, outra biblioteca com outra API. Os dados (o
+  `route_summary`, os `activity_points`) são os mesmos; o desenho é reescrito
 
 ---
 
