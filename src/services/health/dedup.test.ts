@@ -223,3 +223,37 @@ describe('planImport', () => {
     expect(Object.values(skipped).every((n) => n === 0)).toBe(true);
   });
 });
+
+/**
+ * A origem, nas duas plataformas.
+ *
+ * O HealthKit identifica pelo **nome** da app; o Health Connect pelo **nome do
+ * pacote**. A lista só tinha os nomes, e no Android nada teria sido reconhecido
+ * como nosso — cada treino escrito de volta voltava a entrar na leitura
+ * seguinte, e como essa corre a cada sincronização, não era uma cópia, era um
+ * ciclo. Encontrado a 26 ago ao construir a escrita, antes de a ligar.
+ */
+describe('recordedByUs nas duas plataformas', () => {
+  const treino = (sourceApp: string | null) => ({ sourceApp } as any);
+
+  it('reconhece o nome que o HealthKit dá', () => {
+    expect(recordedByUs(treino('Cadence Club'))).toBe(true);
+    expect(recordedByUs(treino('cadence club'))).toBe(true);
+    expect(recordedByUs(treino(' Cadence '))).toBe(true);
+  });
+
+  it('reconhece o pacote que o Health Connect dá', () => {
+    expect(recordedByUs(treino('com.akcelgraca.cadence'))).toBe(true);
+  });
+
+  it('não reclama treinos de outras apps', () => {
+    expect(recordedByUs(treino('Strava'))).toBe(false);
+    expect(recordedByUs(treino('com.strava.android'))).toBe(false);
+    expect(recordedByUs(treino('Apple Watch'))).toBe(false);
+  });
+
+  it('sem origem declarada não assume que é nosso', () => {
+    // Assumir que sim descartava treinos do relógio que não declaram a origem.
+    expect(recordedByUs(treino(null))).toBe(false);
+  });
+});

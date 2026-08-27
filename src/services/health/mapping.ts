@@ -1,5 +1,5 @@
 import type { ActivityType } from '../../lib/types';
-import type { ImportSource } from './types';
+import type { ImportSource, HealthSource } from './types';
 
 /**
  * Tradução das modalidades das plataformas para as da app.
@@ -194,6 +194,77 @@ const FILE_BY_NAME: Record<string, ActivityType> = {
  * Aceita número ou nome porque as bibliotecas divergem — e porque um número
  * chegado como string ("56") também tem de funcionar.
  */
+/**
+ * O caminho inverso: modalidade da app → o número que cada plataforma espera.
+ *
+ * Não se deriva dos mapas de leitura por inversão, e de propósito: eles são
+ * **muitos-para-um** (o `56 RUNNING` e o `57 RUNNING_TREADMILL` dão os dois
+ * `run`), portanto inverter obrigava a escolher um e a escolha ficaria
+ * escondida numa expressão. Aqui está escrita.
+ *
+ * Escolhe-se sempre a variante de **exterior**: é o que a app grava, porque
+ * grava por GPS.
+ *
+ * O que não estiver aqui não é escrito na Saúde. Forçar um tipo genérico
+ * poluía o histórico de saúde de alguém com treinos mal classificados — e esse
+ * histórico não é nosso para estragar.
+ */
+const APP_PARA_HEALTHKIT: Partial<Record<ActivityType, number>> = {
+  cycle: 13,
+  ebike: 13,
+  mtb: 13,
+  walk: 52,
+  stroll: 52,
+  rowing: 35,
+  run: 37,
+  trail_run: 37,
+  swimming: 46,
+  tennis: 48,
+  yoga: 57,
+};
+
+const APP_PARA_HEALTH_CONNECT: Partial<Record<ActivityType, number>> = {
+  badminton: 2,
+  basketball: 5,
+  cycle: 8,
+  ebike: 8,
+  mtb: 8,
+  dance: 16,
+  hiit: 36,
+  ice_skating: 39,
+  kayak: 46,
+  pilates: 48,
+  rowing: 53,
+  run: 56,
+  trail_run: 56,
+  sailing: 58,
+  alpine_skiing: 61,
+  snowboard: 62,
+  football: 64,
+  squash: 66,
+  weight_training: 70,
+  surf: 72,
+  swimming: 73,
+  table_tennis: 75,
+  tennis: 76,
+  volleyball: 78,
+  walk: 79,
+  stroll: 79,
+  wheelchair: 82,
+  yoga: 83,
+};
+
+/**
+ * O número da plataforma para uma modalidade da app, ou `null` se não houver.
+ *
+ * `null` significa "não escrever". Ver o comentário acima: um tipo forçado é
+ * pior do que a ausência do registo.
+ */
+export function tipoParaPlataforma(tipo: ActivityType, destino: HealthSource): number | null {
+  const mapa = destino === 'healthkit' ? APP_PARA_HEALTHKIT : APP_PARA_HEALTH_CONNECT;
+  return mapa[tipo] ?? null;
+}
+
 export function mapWorkoutType(
   rawType: number | string,
   source: ImportSource,

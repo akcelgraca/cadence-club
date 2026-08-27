@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
-import type { ExternalWorkout, HealthAdapter } from './types';
+import type { ExternalWorkout, HealthAdapter, WorkoutToWrite } from './types';
+import { tipoParaPlataforma } from './mapping';
 
 /**
  * Ligação ao código nativo.
@@ -118,6 +119,64 @@ export const healthKitAdapter: HealthAdapter = {
       await HealthKit.requestAuthorization({ toRead: HEALTHKIT_READ, toShare: [] });
       return await this.hasPermissions();
     } catch {
+      return false;
+    }
+  },
+
+  /**
+   * A escrita pede permissão à parte.
+   *
+   * O `requestAuthorization` do fluxo normal pede `toShare: []` — a app só lia.
+   * Escrever exige `toShare`, e a Apple mostra um diálogo próprio para isso.
+   */
+  async canWrite() {
+    const HealthKit = carregar(() => require('@kingstinct/react-native-healthkit'));
+    if (!HealthKit) return false;
+    try {
+      // Ao contrário da leitura, o estado de **escrita** é legível: a Apple só
+      // esconde o de leitura, para não se poder inferir o que alguém escondeu.
+      const estado = await HealthKit.authorizationStatusFor?.('HKWorkoutTypeIdentifier');
+      return estado === 2 || estado === 'sharingAuthorized';
+    } catch {
+      return false;
+    }
+  },
+
+  async requestWritePermission() {
+    const HealthKit = carregar(() => require('@kingstinct/react-native-healthkit'));
+    if (!HealthKit) return false;
+    try {
+      await HealthKit.requestAuthorization({
+        toRead: HEALTHKIT_READ,
+        toShare: ['HKWorkoutTypeIdentifier'],
+      });
+      return await healthKitAdapter.canWrite();
+    } catch {
+      return false;
+    }
+  },
+
+  async writeWorkout(w: WorkoutToWrite) {
+    const HealthKit = carregar(() => require('@kingstinct/react-native-healthkit'));
+    if (!HealthKit) return false;
+
+    const tipo = tipoParaPlataforma(w.type, 'healthkit');
+    // Sem equivalente não se escreve. Forçar um genérico poluía o histórico de
+    // saúde de alguém com treinos mal classificados, e esse histórico não é
+    // nosso para estragar.
+    if (tipo === null) return false;
+
+    try {
+      await HealthKit.saveWorkoutSample(
+        tipo,
+        [],
+        new Date(w.startTime),
+        new Date(w.endTime),
+        w.distance > 0 ? { distance: w.distance } : undefined,
+      );
+      return true;
+    } catch {
+      // Falhar a escrever nunca pode impedir a atividade de ser gravada na app.
       return false;
     }
   },
@@ -261,6 +320,17 @@ const HEALTH_CONNECT_READ = [
   { accessType: 'read' as const, recordType: 'HeartRate' as const },
 ];
 
+/**
+ * Permissões de escrita, pedidas à parte das de leitura.
+ *
+ * A app leu-as durante meses sem nunca escrever; pedir escrita a quem só quer
+ * ler seria pedir mais do que precisamos.
+ */
+const HEALTH_CONNECT_WRITE = [
+  { accessType: 'write' as const, recordType: 'ExerciseSession' as const },
+  { accessType: 'write' as const, recordType: 'Distance' as const },
+];
+
 /** SdkAvailabilityStatus.SDK_AVAILABLE */
 const SDK_AVAILABLE = 3;
 
@@ -371,6 +441,69 @@ export const healthConnectAdapter: HealthAdapter = {
         sourceApp: r.metadata?.dataOrigin ?? null,
       };
     }).filter((w: ExternalWorkout) => w.externalId);
+  },
+
+  async canWrite() {
+    const HC = carregar(() => require('react-native-health-connect'));
+    if (!HC) return false;
+    try {
+      await HC.initialize();
+      const concedidas = await HC.getGrantedPermissions();
+      return (concedidas ?? []).some(
+        (p: any) => p.recordType === 'ExerciseSession' && p.accessType === 'write',
+      );
+    } catch {
+      return false;
+    }
+  },
+
+  async requestWritePermission() {
+    const HC = carregar(() => require('react-native-health-connect'));
+    if (!HC) return false;
+    try {
+      await HC.initialize();
+      await HC.requestPermission(HEALTH_CONNECT_WRITE);
+      return await healthConnectAdapter.canWrite();
+    } catch {
+      return false;
+    }
+  },
+
+  async writeWorkout(w: WorkoutToWrite) {
+    const HC = carregar(() => require('react-native-health-connect'));
+    if (!HC) return false;
+
+    const tipo = tipoParaPlataforma(w.type, 'healthconnect');
+    if (tipo === null) return false;
+
+    try {
+      await HC.initialize();
+      // A sessão e a distância são registos **separados**, como na leitura.
+      // A sessão vai sempre; a distância só quando existe, senão ficava um
+      // registo de 0 m a poluir o histórico de quem faz ioga.
+      const registos: any[] = [
+        {
+          recordType: 'ExerciseSession',
+          exerciseType: tipo,
+          startTime: w.startTime,
+          endTime: w.endTime,
+          startZoneOffset: undefined,
+          endZoneOffset: undefined,
+        },
+      ];
+      if (w.distance > 0) {
+        registos.push({
+          recordType: 'Distance',
+          startTime: w.startTime,
+          endTime: w.endTime,
+          distance: { value: w.distance, unit: 'meters' },
+        });
+      }
+      await HC.insertRecords(registos);
+      return true;
+    } catch {
+      return false;
+    }
   },
 };
 

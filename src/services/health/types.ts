@@ -54,6 +54,15 @@ export type ImportSource = HealthSource | 'gpx' | 'tcx' | 'fit';
  * nativo e que não consigo verificar sem dispositivo. Tudo o que puder viver
  * fora daqui, vive.
  */
+/** O que se devolve à Saúde depois de gravar um treino na app. */
+export interface WorkoutToWrite {
+  type: import('../../lib/types').ActivityType;
+  startTime: string;
+  endTime: string;
+  /** Metros. Zero em modalidades sem distância. */
+  distance: number;
+}
+
 export interface HealthAdapter {
   readonly source: HealthSource;
   /** O módulo nativo existe e a plataforma suporta-o? */
@@ -64,6 +73,18 @@ export interface HealthAdapter {
   requestPermissions(): Promise<boolean>;
   /** Treinos começados a partir de `since`. */
   readWorkouts(since: Date): Promise<ExternalWorkout[]>;
+
+  /**
+   * Já temos permissão de **escrita**?
+   *
+   * Separada da leitura de propósito: a app lê desde sempre e só passou a
+   * escrever a 26 ago 2026. Pedir escrita a quem só quer ler seria pedir mais
+   * do que precisamos, e nas duas plataformas as permissões são independentes.
+   */
+  canWrite(): Promise<boolean>;
+  requestWritePermission(): Promise<boolean>;
+  /** Devolve `true` se o treino ficou escrito. Nunca lança. */
+  writeWorkout(w: WorkoutToWrite): Promise<boolean>;
 }
 
 /** Janela de uma atividade já registada, para detetar sobreposições. */

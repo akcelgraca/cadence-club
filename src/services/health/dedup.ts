@@ -63,18 +63,26 @@ export function overlapsExisting(
 }
 
 /**
- * Nomes de app que significam "isto fomos nós".
+ * O que significa "isto fomos nós".
  *
- * Quando a app escrever os treinos na Saúde, eles voltam na leitura seguinte.
- * Sem este filtro, cada corrida gravada aqui era reimportada como se viesse
- * do relógio.
+ * Os treinos que a app escreve na Saúde voltam na leitura seguinte. Sem este
+ * filtro, cada corrida gravada aqui era reimportada como se viesse do relógio —
+ * e como a leitura corre a cada sincronização, não seria uma cópia, seria um
+ * ciclo.
+ *
+ * **As duas plataformas identificam a origem de maneiras diferentes**, e isso
+ * quase custou caro: o HealthKit dá o **nome** da app ("Cadence Club"), o
+ * Health Connect dá o **nome do pacote** (`com.akcelgraca.cadence`). A lista só
+ * tinha os nomes, portanto no Android nada seria reconhecido como nosso.
+ * Descoberto a 26 ago, ao construir a escrita — antes de a ligar.
  */
 const NOSSAS_APPS = ['cadence club', 'cadence'];
+const NOSSOS_PACOTES = ['com.akcelgraca.cadence'];
 
 export function recordedByUs(workout: ExternalWorkout): boolean {
   if (!workout.sourceApp) return false;
   const nome = workout.sourceApp.trim().toLowerCase();
-  return NOSSAS_APPS.includes(nome);
+  return NOSSAS_APPS.includes(nome) || NOSSOS_PACOTES.includes(nome);
 }
 
 export interface PlanResult {

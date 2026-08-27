@@ -13,6 +13,7 @@ import { typography } from '../../lib/theme';
 import { useColors } from '../../hooks/useColors';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useHealthSync } from '../../hooks/useHealthSync';
+import { currentAdapter } from '../../services/health/adapters';
 import { usePremium } from '../../hooks/usePremium';
 import { pickAndImportArchive, pickAndImportTrackFile } from '../../services/import/pickAndImport';
 import { setPickerConfig } from './settings/picker';
@@ -100,6 +101,40 @@ export default function SettingsScreen() {
     { key: 'pt', label: t('settings_language_pt') },
     { key: 'en', label: t('settings_language_en') },
   ], [t]);
+
+  // --- Devolver treinos à Saúde ---
+
+  const [podeEscrever, setPodeEscrever] = useState(false);
+  const [pedindoEscrita, setPedindoEscrita] = useState(false);
+
+  useEffect(() => {
+    // O estado real está na plataforma, não aqui: alguém pode revogar a
+    // permissão nas Definições do sistema sem a app saber. Lê-se ao abrir.
+    if (!health.isConnected) return;
+    let vivo = true;
+    currentAdapter()?.canWrite().then((v) => { if (vivo) setPodeEscrever(v); }).catch(() => {});
+    return () => { vivo = false; };
+  }, [health.isConnected]);
+
+  const handleWriteBackPress = async () => {
+    if (podeEscrever) {
+      // Não há como revogar a partir daqui — as duas plataformas só o
+      // permitem nas suas próprias definições. Dizer onde é mais útil do que
+      // um interruptor que não desliga nada.
+      Alert.alert(t('health_write_on_title'), t('health_write_revoke', { platform: health.platformName }));
+      return;
+    }
+    setPedindoEscrita(true);
+    try {
+      const concedida = await currentAdapter()?.requestWritePermission();
+      setPodeEscrever(!!concedida);
+      if (!concedida) {
+        Alert.alert(t('health_write_denied_title'), t('health_write_denied_body', { platform: health.platformName }));
+      }
+    } finally {
+      setPedindoEscrita(false);
+    }
+  };
 
   // --- Sincronização com a Saúde ---
 
@@ -435,6 +470,34 @@ export default function SettingsScreen() {
                 )}
             </TouchableOpacity>
             <Separator styles={styles} />
+
+            {/* Devolver os treinos à Saúde. Só aparece depois de ligada — sem
+                leitura, escrever de volta não faz sentido nenhum. A permissão
+                pede-se aqui e não no fim de uma corrida: um diálogo do sistema
+                em cima de quem acabou de correr leva quase sempre "não". */}
+            {health.isConnected && (
+              <>
+                <TouchableOpacity
+                  style={styles.linkRow}
+                  onPress={handleWriteBackPress}
+                  disabled={pedindoEscrita}
+                  activeOpacity={0.6}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.linkLabel}>{t('health_write_row')}</Text>
+                    <Text style={styles.linkSub}>{t('health_write_sub')}</Text>
+                  </View>
+                  {pedindoEscrita
+                    ? <ActivityIndicator size="small" color={c.primary} />
+                    : (
+                      <Text style={[styles.rowLabel, { color: podeEscrever ? c.primary : c.mutedForeground }]}>
+                        {podeEscrever ? t('health_write_on') : t('health_write_off')}
+                      </Text>
+                    )}
+                </TouchableOpacity>
+                <Separator styles={styles} />
+              </>
+            )}
           </>
         )}
 

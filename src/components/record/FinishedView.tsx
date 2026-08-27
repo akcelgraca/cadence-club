@@ -11,6 +11,7 @@ import { useActivityStore } from '../../store/activityStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useAuth } from '../../hooks/useAuth';
 import { saveActivity, addActivityPhotos, MAX_ACTIVITY_PHOTOS } from '../../services/activities';
+import { writeBackWorkout } from '../../services/health/sync';
 import { getEquipment } from '../../services/equipment';
 import { getActivityByKey } from '../../lib/constants';
 import { formatDuration } from '../../utils/dateHelpers';
@@ -243,6 +244,11 @@ export function FinishedView({ isDistanceBased = true }: { isDistanceBased?: boo
 
       // Deteta troços percorridos. Falhar aqui não invalida a atividade.
       detectSegmentEfforts(saved.id).catch(() => {});
+
+      // Devolve o treino à Saúde, se a pessoa tiver dado essa permissão. Sem
+      // `await` de propósito: já está guardado, e ninguém deve esperar pelo
+      // módulo nativo para ver o resumo da corrida que acabou de fazer.
+      void writeBackWorkout(saved).catch(() => {});
 
       // Invalidate all stats-related queries so home screen refreshes
       queryClient.invalidateQueries({ queryKey: ['weeklyPlan'] });

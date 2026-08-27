@@ -3,6 +3,7 @@ import { track } from '../../lib/analytics';
 import { planImport, type PlanOptions } from './dedup';
 import { currentAdapter } from './adapters';
 import type { ActivityWindow, HealthSource, SyncOutcome } from './types';
+import type { ActivityType } from '../../lib/types';
 
 // Schema: supabase/migrations/043_health_sync.sql
 
@@ -181,4 +182,54 @@ export async function isHealthConnected(): Promise<boolean> {
   const adapter = currentAdapter();
   if (!adapter || !(await adapter.isAvailable())) return false;
   return adapter.hasPermissions();
+}
+
+/**
+ * Devolve à Saúde um treino gravado na app.
+ *
+ * A app leu da Saúde durante meses sem nunca lhe devolver nada. Quem grava aqui
+ * e usa o relógio para o resto ficava com o histórico partido em dois — e a
+ * Saúde é onde a maioria das pessoas espera ver tudo junto.
+ *
+ * **Nunca lança, e nunca bloqueia.** É chamado depois de a atividade já estar
+ * guardada: uma falha a escrever não pode custar a corrida, e o utilizador não
+ * pode ficar à espera do módulo nativo para ver o resumo. Quem chama não deve
+ * esperar por isto.
+ */
+export async function writeBackWorkout(activity: {
+  type: ActivityType;
+  start_time: string;
+  end_time: string | null;
+  distance: number;
+  duration: number;
+  source: string;
+}): Promise<boolean> {
+  // Só o que foi gravado AQUI. Devolver à Saúde um treino que veio da Saúde
+  // era escrever uma cópia do que já lá está — e a deduplicação da leitura
+  // seguinte teria de a apanhar por sobreposição, que é a defesa mais fraca
+  // das duas.
+  if (activity.source !== 'app') return false;
+
+  const adaptador = currentAdapter();
+  if (!adaptador) return false;
+
+  try {
+    if (!(await adaptador.isAvailable())) return false;
+    // Não se pede permissão aqui. Pedi-la no fim de uma corrida seria um
+    // diálogo do sistema em cima de quem acabou de correr, e a resposta a
+    // frio é quase sempre "não". Pede-se nas Definições, com contexto.
+    if (!(await adaptador.canWrite())) return false;
+
+    const fim = activity.end_time
+      ?? new Date(new Date(activity.start_time).getTime() + activity.duration * 1000).toISOString();
+
+    return await adaptador.writeWorkout({
+      type: activity.type,
+      startTime: activity.start_time,
+      endTime: fim,
+      distance: activity.distance,
+    });
+  } catch {
+    return false;
+  }
 }

@@ -136,5 +136,27 @@ certo — o `sync.ts` ignora esse erro em vez de o tratar como falha.
 
   ⚠️ **Por confirmar em dispositivo Android com Health Connect** — a leitura em
   si nunca correu contra dados reais.
-- **Escrever na Saúde.** A app ainda não devolve os treinos que grava. Quando
-  o fizer, o filtro `recordedByUs` em `dedup.ts` é o que evita reimportá-los.
+- ✅ **Escrever na Saúde** — feito a 26 ago 2026. As atividades gravadas na app
+  são devolvidas à plataforma, se a permissão de escrita tiver sido dada nas
+  Definições.
+
+  **A permissão pede-se nas Definições, nunca no fim de uma corrida.** Um
+  diálogo do sistema em cima de quem acabou de correr leva quase sempre "não",
+  e essa recusa fica.
+
+  **Três defesas contra o ciclo**, porque o que sai volta a entrar na leitura
+  seguinte — e essa corre a cada sincronização:
+  1. `recordedByUs` reconhece a origem. ⚠️ **Tinha um buraco:** o HealthKit dá o
+     *nome* da app, o Health Connect dá o *nome do pacote*
+     (`com.akcelgraca.cadence`), e a lista só tinha os nomes. No Android nada
+     teria sido reconhecido como nosso. Corrigido antes de a escrita ser ligada
+  2. Só se devolve `source === 'app'` — devolver um treino que veio da Saúde
+     escrevia uma cópia do que já lá está
+  3. A deduplicação por sobreposição continua a ser a última rede
+
+  **Uma modalidade sem equivalente não é escrita** (`tipoParaPlataforma`
+  devolve `null`). Forçar um genérico poluía o histórico de saúde de alguém, e
+  esse histórico não é nosso para estragar.
+
+  ⚠️ **Por confirmar em dispositivo.** No simulador iOS dá para provar, com o
+  `devSeed` a servir de leitura de retorno.
