@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { alturaDoBotaoDeCriar } from '../../lib/mapFab';
 import { useColors } from '../../hooks/useColors';
 import {
   View, Text, StyleSheet, TouchableOpacity, FlatList,
@@ -31,7 +32,7 @@ import { track } from '../../lib/analytics';
 
 const CARD_GAP = 12;
 const CARD_RATIO = 0.82;
-const CAROUSEL_HEIGHT = 156;
+const CAROUSEL_HEIGHT = 156;  // reexportado de lib/mapFab para o estilo local
 
 export default function RoutesScreen() {
   const c = useColors();
@@ -175,7 +176,7 @@ export default function RoutesScreen() {
   const handleSaveRoute = useCallback(() => { refetch(); }, [refetch]);
 
   const showCarousel = !isCreating && visibleRoutes.length > 0;
-  const fabBottom = showCarousel ? CAROUSEL_HEIGHT + 16 : 30;
+  const fabBottom = alturaDoBotaoDeCriar({ aCriar: isCreating, temRotas: visibleRoutes.length > 0 });
 
   return (
     <View style={styles.container}>
@@ -341,17 +342,6 @@ export default function RoutesScreen() {
           </>
         )}
 
-        {/* FAB: criar rota */}
-        {!isCreating && (
-          <TouchableOpacity
-            style={[styles.fab, { bottom: fabBottom }]}
-            onPress={startCreating}
-            accessibilityLabel={t('routes_create')}
-          >
-            <Ionicons name="add" size={28} color={c.primaryForeground} />
-          </TouchableOpacity>
-        )}
-
         {/* Carrossel de rotas — a camada de navegação que faltava */}
         {!isCreating && (
           isLoading ? (
@@ -410,6 +400,21 @@ export default function RoutesScreen() {
               </View>
             </View>
           )
+        )}
+
+        {/* FAB: criar rota.
+            Desenhado DEPOIS do carrossel de propósito: em React Native quem vem
+            depois pinta por cima, e enquanto esteve antes ficou escondido atrás
+            do cartão de estado vazio. O `zIndex` é a segunda defesa, para que
+            reordenar o JSX não volte a escondê-lo. */}
+        {!isCreating && (
+          <TouchableOpacity
+            style={[styles.fab, { bottom: fabBottom }]}
+            onPress={startCreating}
+            accessibilityLabel={t('routes_create')}
+          >
+            <Ionicons name="add" size={28} color={c.primaryForeground} />
+          </TouchableOpacity>
         )}
 
         {isCreating && <RouteCreator onSave={handleSaveRoute} onCancel={cancelCreating} />}
@@ -520,6 +525,9 @@ const makeStyles = (c: Colors) => StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 8,
+    // O elevation só conta no Android. No iOS quem manda é a ordem no JSX e o
+    // zIndex — e foi por não haver zIndex que o botão ficou escondido.
+    zIndex: 10,
   },
 
   // Carrossel
