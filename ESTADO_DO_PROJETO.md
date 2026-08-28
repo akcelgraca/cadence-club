@@ -879,11 +879,75 @@ paleta está coerente; nenhum dos dois vê um cinzento que ficou ilegível. Vale
 pena percorrer os ecrãs em escuro — sobretudo mapa, gravação e feed, que são os
 que mais misturam cor de marca com fotografia.
 
-**Encontrado de caminho, e por decidir:** no tema **claro**, o verde da marca dá
-**2,69:1** contra o fundo, e o branco sobre o verde dá **2,81:1** — ambos abaixo
-do mínimo AA (4,5:1 para texto, 3:1 para elementos). O modo escuro não tem esse
-problema porque o verde subiu. Corrigir no claro é mexer na cor da marca, e isso
-não é decisão técnica.
+**Encontrado de caminho, e resolvido a 27 ago:** no tema **claro**, o verde da
+marca dava **2,69:1** contra o fundo, e o branco sobre o verde **2,81:1** —
+ambos abaixo do mínimo AA (4,5:1 para texto, 3:1 para elementos). Não era
+decisão técnica, e por isso ficou parado à espera de quem decide a marca.
+Passou a `#527F17` (**4,57:1**, e **4,77:1** para o branco por cima), aproveitando
+a boleia do logótipo novo — ver 3.11d.
+
+### 3.11d Marca — símbolo, ícones e o verde do tema claro (27 ago) ✅
+
+O logótipo era só palavra: "Cadence Club" em duas linhas, a preto, com a ponta
+de um laço a fazer de **C** de "Cadence". Três problemas, e nenhum era a cor:
+
+- **Não havia símbolo.** Duas linhas de texto aos 60 px do ecrã inicial não se
+  leem. Um logótipo de palavra não serve de ícone de app
+- **O C não existia.** Quem o fazia era o laço, e ao pequeno a primeira linha
+  lia-se `adence`. Havia dois C no logótipo, com desenhos diferentes
+- **O desenho sangrava até à borda** do quadrado de 1024. O iOS arredonda os
+  cantos e o adaptativo do Android só garante os 66 dp centrais de 108: as duas
+  pontas do laço iam ser cortadas
+
+**O símbolo novo** é um **C** aberto à direita com o traçado de um batimento
+cardíaco no interior. Não é enfeite: a app mede mesmo frequência cardíaca
+(`utils/heartRate.ts`, zonas de treino, FC média e máxima por atividade). E
+procurando `cadence` no código só aparece o nome da marca — **não existe métrica
+de cadência de passada em lado nenhum**, o que torna o batimento a única das
+duas coisas que a app realmente sabe.
+
+**Os ícones passaram a ser gerados**, não desenhados: `scripts/build-brand-assets.mjs`
+(`npm run brand:build`). O rasterizador é próprio — campo de distâncias com
+anti-alias analítico, sem dependências, porque nesta máquina não há `sharp`,
+`rsvg-convert`, `inkscape` nem `cairosvg`.
+
+🪤 **Os três ficheiros do ícone adaptativo do Android eram o mesmo ficheiro.**
+`android-icon-background.png`, `-foreground.png` e `-monochrome.png` tinham o
+mesmo `md5` (`ecaad7be…`, 21 847 bytes). O Android estava a desenhar o logótipo
+por cima do logótipo, e o monocromático não era silhueta nenhuma. O
+`splash-icon.png` também era cópia byte a byte do `icon.png`. É o argumento para
+o gerador: enquanto os sete PNG forem ficheiros à mão, voltam a divergir.
+
+🪤 **Havia cinco verdes na app, e três não estavam na paleta.** `#7BA823` (tema
+claro), `#9ED42F` (tema escuro), `#c8f73a` (cor das notificações no `app.json` e
+em `push.ts`), `#C8F31D` (logótipo do cartão de partilha e traço da rota) e
+`#E6F4FE` — este último um **azul-claro** a servir de fundo ao ícone adaptativo.
+E o `picker.tsx` tinha `#7BA823` escrito em código, à revelia do tema, num
+ficheiro cuja própria paleta avisa em comentário que isso não se faz.
+
+**O verde do tema claro subiu de `#7BA823` para `#527F17`**, o que fecha a
+pendência de AA que estava aberta desde 19 ago (ver 3.11c). Foi aplicado também
+aos três modelos de email do Supabase, que vivem sobre fundo branco e tinham o
+mesmo problema.
+
+**O que ficou:**
+
+| Ficheiro | Papel |
+| --- | --- |
+| `assets/brand/mark.svg` | O mestre editável do símbolo |
+| `assets/brand/logo-lockup.svg` | Símbolo + nome. ⚠️ texto vivo, não curvas |
+| `scripts/build-brand-assets.mjs` | Gera os 7 PNG a partir da geometria |
+| `src/components/common/Logo.tsx` | A marca dentro da app, a seguir o tema |
+
+⚠️ **O `logo-lockup.svg` tem texto vivo e não contornos.** Não há nenhuma
+ferramenta de fontes instalada para converter. Abre bem em quem tenha Barlow
+Condensed; para lojas, imprensa ou gráfica é preciso passar a curvas primeiro.
+
+⚠️ **Exige rebuild.** Ícones e `app.json` são nativos — não chegam por OTA.
+
+**Por decidir, e de propósito:** o `RouteSketch` continua a desenhar o traçado
+da rota a `#C8F31D`. É o quinto verde, mas é o traço do percurso e não a marca,
+e mudá-lo altera o aspeto do cartão de partilha para lá do logótipo.
 
 ### 3.13 Alinhamento com o SDK 57 (22 ago) ✅
 
@@ -2069,6 +2133,67 @@ Não mexer no `iOS DeviceSupport` (6,3 GB): apagá-lo obriga o Xcode a re-prepar
 
 ## 11. Registo de alterações
 
+**27 ago 2026 (18.ª sessão)**
+- 🎨 **Marca nova: símbolo em vez de logótipo de palavra.** Um C aberto com o
+  traçado do batimento cardíaco dentro. O anterior era texto a preto em duas
+  linhas, ilegível como ícone, com o C a ser feito pela ponta de um laço. Ver 3.11d
+- ✅ **Fechada a pendência de contraste de 19 ago.** O verde do tema claro passou
+  de `#7BA823` (2,69:1 — chumba AA) para `#527F17` (4,57:1). Aplicado também aos
+  três modelos de email do Supabase
+- 🪤 **Os três PNG do ícone adaptativo do Android eram o mesmo ficheiro** (`md5`
+  igual). E o `splash-icon.png` era cópia do `icon.png`. Passaram a ser gerados
+  por `npm run brand:build`, com rasterizador próprio e zero dependências
+- 🪤 **Cinco verdes na app, três fora da paleta** — incluindo um azul-claro
+  (`#E6F4FE`) como fundo do ícone adaptativo, e um `#7BA823` escrito em código
+  no `picker.tsx` à revelia do tema
+- 🧹 O cartão de partilha tinha um quarto desenho do logótipo, feito à mão, com
+  o wordmark partido em `adence` + `Club`. Passou a usar `common/Logo.tsx`
+- `tsc --noEmit` limpo, **500 testes verdes**
+- 📱 **Build instalada no iPhone 15** (`npm run ios:device`), `BUILD SUCCEEDED`,
+  entitlements repostos pelo `trap`. **Expira a 3 set**
+- 🪤 **A primeira build saiu com o ícone antigo, e disse `BUILD SUCCEEDED`.**
+  Ver secção 13 — é a armadilha mais cara do dia
+- 🎯 A marca passou a aparecer no **arranque** (só o símbolo, sem indicador de
+  carregamento) e no **cabeçalho do ecrã principal** (símbolo ao lado da
+  saudação). Antes só existia no cartão de partilha, que é agora o único sítio
+  com a assinatura completa — e o único que precisa da Barlow Condensed para a
+  marca aparecer certa
+- 🎬 **O arranque abre-se, não corta.** O `AuthGate` deixou de trocar um ecrã
+  pelo outro: monta a app por baixo assim que está pronta e amplia o símbolo
+  por cima dela até se desfazer — 600 ms, até 1,8× (`DURACAO_DA_TRANSICAO_MS`,
+  `AMPLIACAO_FINAL`). De caminho esconde o primeiro fotograma da app, que é o
+  que tem mais hipóteses de aparecer ainda por compor. A sobreposição continua
+  a receber toques até desaparecer de vez — a meio da transição a app já está
+  lá, meia visível, e um toque certeiro abriria um ecrã que ninguém escolheu
+- 🪤 **A animação de *push* do navegador corria à vista por baixo da marca.** A
+  app montava-se no instante exato em que a transição começava, e via-se o
+  primeiro ecrã a deslizar da direita — movimento que não tem nada que ver com
+  o do símbolo, e que dava a sensação de duas coisas mal coladas. Passou a
+  montar-se assim que **carrega**, tapada por uma sobreposição ainda opaca: o
+  deslize acontece sem ninguém o ver e, quando a transição arranca, o que está
+  por baixo já assentou. São duas condições (`carregado`, `pronto`) onde antes
+  havia uma
+- 🎚️ **As curvas do símbolo são `Easing.in`, as da app são `Easing.out`, e não
+  é detalhe.** O símbolo afasta-se a acelerar, a app aproxima-se a travar
+  (`AMPLIACAO_INICIAL_DA_APP`, 0,94 → 1, com a opacidade a acompanhar). Curvas
+  iguais dariam duas coisas a acontecer ao mesmo tempo; opostas dão uma só.
+  O invólucro da app fica montado para sempre com os valores a assentar em 1 —
+  trocá-lo por `children` nus no fim remontava a app inteira
+- 🎚️ **Sobre o símbolo em concreto:** o `in` é o que separa um
+  símbolo a inchar da sensação de se entrar por ele adentro: começa devagar e
+  acelera. Com `Easing.out` o movimento trava no fim e a marca parece presa ao
+  vidro. A opacidade segura-se no início pela mesma razão — a ritmo constante,
+  a marca já não estava lá quando a ampliação se nota. A ampliação vive num
+  invólucro dentro da sobreposição, não na sobreposição: o fundo tem de tapar o
+  ecrã todo enquanto o símbolo cresce, senão via-se a app pelas bordas
+- ⏱️ **O ecrã da marca fica no mínimo 2 s** (`TEMPO_MINIMO_DA_MARCA_MS` no
+  `_layout.tsx`). O contador corre **em paralelo** com o carregamento, portanto
+  o arranque é `max(carregamento, 2s)` e não a soma. Sem isto piscava: quem já
+  tem sessão guardada — toda a gente a partir do segundo arranque — não chegava
+  a ver a marca. Esteve a 3 s e desceu para 2 s no mesmo dia, depois de se ver
+  no telemóvel. ⚠️ **Tem um custo:** todos os arranques passam a demorar 2 s no
+  mínimo, mesmo sem nada a carregar
+
 **27 ago 2026 (17.ª sessão)**
 - 🐛 **O botão de criar rota estava escondido atrás do "Nenhuma rota por aqui"** — invisível exatamente para quem não tinha rotas e mais precisava dele, visível para quem já as tinha. Ver 7.1
 - 📱 Build no iPhone com tudo o que se acumulou: crachás traduzidos, quadro de tempos, exportar GPX, devolver treinos à Saúde. **Expira a 3 set**
@@ -2264,3 +2389,40 @@ Quando se define `CFBundleURLTypes` à mão, esse valor **substitui** o que o `s
 **Corrigido** acrescentando `cadence` ao array em `app.json`, à frente do esquema do Google. ⚠️ **Exige rebuild** para ter efeito.
 
 **Regra:** ao definir `ios.infoPlist.CFBundleURLTypes` à mão, incluir sempre o esquema próprio da app. O campo `scheme` sozinho deixa de bastar.
+
+---
+
+## 13. Armadilha: mudar o ícone não muda o ícone
+
+**Encontrado a 27 ago 2026,** depois de uma build instalada no iPhone com
+`BUILD SUCCEEDED` e o **ícone antigo** no ecrã inicial.
+
+O `assets/icon.png` **não é o que o telemóvel mostra**. O Xcode lê de
+`ios/CadenceClub/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png`,
+e quem copia de um para o outro é o **`expo prebuild`**.
+
+O `ios/` e o `android/` estão no `.gitignore` — são pastas geradas — e o
+`scripts/build-iphone.sh` vai **direto ao `xcodebuild`**, sem passar pelo
+prebuild. Resultado: o prebuild não corria desde **18 ago**, e o ficheiro do
+catálogo tinha essa data enquanto o `assets/icon.png` tinha a de hoje.
+
+**Porque é que isto é pior do que parece:** não há aviso nenhum. O build
+compila, assina, instala e diz que correu tudo bem. O único sintoma é olhar
+para o ecrã inicial — e a primeira explicação que ocorre a qualquer pessoa
+(cache do SpringBoard) manda-a reiniciar o telemóvel, o que não resolve e
+confirma a suspeita errada.
+
+**Corrigido em dois sítios:**
+
+1. O `scripts/build-brand-assets.mjs` passou a escrever **também** no catálogo
+   do Xcode, se a pasta existir
+2. O `scripts/build-iphone.sh` ganhou um passo 2/5 que corre o gerador e depois
+   **compara os `md5`** dos dois ficheiros, abortando se diferirem
+
+**Regra:** qualquer alteração a ícones, `app.json` ou plugins nativos só chega
+ao telemóvel via prebuild. Compilar sem ele dá uma build verde com o conteúdo
+antigo lá dentro.
+
+⚠️ **Android continua por regenerar.** Os mipmaps são `.webp` e o gerador não
+sabe escrever webp — falta correr `npx expo prebuild --platform android` antes
+da primeira build de Android.
