@@ -29,13 +29,29 @@ cd "$RAIZ"
 # Dez segundos aqui poupam vinte e cinco minutos: a fase do Metro é a última do
 # xcodebuild, portanto um erro de JavaScript só aparece no fim. Foi assim que um
 # ficheiro de teste dentro de `src/app/` partiu uma build inteira a 24 de agosto.
-echo "▸ 1/4  A confirmar que o JavaScript empacota…"
+echo "▸ 1/5  A confirmar que o JavaScript empacota…"
 npx expo export --platform ios --output-dir "$(mktemp -d)/export" >/dev/null 2>&1 \
   || { echo "✗ o Metro não consegue empacotar. Corre 'npx expo export --platform ios' para ver o erro."; exit 1; }
 echo "       ✓ empacota"
 
-# ── 1. Entitlements ─────────────────────────────────────────────────────────
-echo "▸ 2/4  A esvaziar os entitlements (Personal Team não assina nenhum deles)…"
+# ── 1. Ícones ───────────────────────────────────────────────────────────────
+# O que o iPhone mostra vem do catálogo do Xcode, não do `assets/icon.png`.
+# Quem copia de um para o outro é o `expo prebuild`, e este script nunca o
+# corre. A 27 de agosto isso deu uma build com BUILD SUCCEEDED, instalada, e o
+# ícone antigo no ecrã inicial — sem um único aviso pelo caminho. O gerador
+# escreve nos dois sítios; aqui só se confirma que ficaram iguais.
+echo "▸ 2/5  A sincronizar os ícones com o catálogo do Xcode…"
+CATALOGO="$IOS/CadenceClub/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png"
+node "$RAIZ/scripts/build-brand-assets.mjs" >/dev/null
+if [ "$(md5 -q "$RAIZ/assets/icon.png")" != "$(md5 -q "$CATALOGO")" ]; then
+  echo "✗ o ícone do catálogo não bate certo com assets/icon.png."
+  echo "  Corre 'npx expo prebuild --platform ios' e tenta outra vez."
+  exit 1
+fi
+echo "       ✓ o ícone do catálogo é o mesmo que o de assets/"
+
+# ── 2. Entitlements ─────────────────────────────────────────────────────────
+echo "▸ 3/5  A esvaziar os entitlements (Personal Team não assina nenhum deles)…"
 GUARDADO="$(mktemp)"
 cp "$ENT" "$GUARDADO"
 repor() {
@@ -57,8 +73,8 @@ PY
 n=$(plutil -convert json -o - "$ENT" | python3 -c 'import json,sys; print(len(json.load(sys.stdin)))')
 [ "$n" = "0" ] || { echo "✗ os entitlements não ficaram vazios ($n chaves) — a assinatura ia falhar"; exit 1; }
 
-# ── 2. Compilar ─────────────────────────────────────────────────────────────
-echo "▸ 3/4  A compilar (20–30 min na primeira vez)…"
+# ── 3. Compilar ─────────────────────────────────────────────────────────────
+echo "▸ 4/5  A compilar (20–30 min na primeira vez)…"
 cd "$IOS"
 xcodebuild \
   -workspace CadenceClub.xcworkspace \
@@ -71,8 +87,8 @@ xcodebuild \
   || { echo "✗ o build falhou. Últimas linhas:"; tail -20 "$RAIZ/.build-iphone.log"; exit 1; }
 echo "       ✓ BUILD SUCCEEDED"
 
-# ── 3. Instalar ─────────────────────────────────────────────────────────────
-echo "▸ 4/4  A instalar no iPhone…"
+# ── 4. Instalar ─────────────────────────────────────────────────────────────
+echo "▸ 5/5  A instalar no iPhone…"
 xcrun devicectl device install app --device "$UDID" "$APP" >/dev/null \
   || { echo "✗ falhou a instalar. O iPhone está ligado e desbloqueado?"; exit 1; }
 
