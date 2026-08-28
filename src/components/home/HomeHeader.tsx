@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { Avatar } from '../common/Avatar';
+import { Logo } from '../common/Logo';
 import type { Profile } from '../../lib/types';
 import { useColors } from '../../hooks/useColors';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
@@ -36,6 +37,10 @@ export function HomeHeader({ profile }: HomeHeaderProps) {
 
   return (
     <View style={styles.container}>
+      {/* Só o símbolo, e não a assinatura completa: ao lado de "BOM DIA,
+          AKCEL" o nome apareceria duas vezes na mesma linha. O nome por
+          extenso vive no arranque, que é onde há espaço para ele. */}
+      <Logo size={30} variant="mark" />
       <View style={styles.textGroup}>
         <Text style={styles.greeting} numberOfLines={1}>
           {t(getGreetingKey())}{firstName ? `, ${firstName}` : ''}
