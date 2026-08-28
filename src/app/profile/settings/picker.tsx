@@ -143,7 +143,7 @@ export default function PickerScreen() {
             }
             return <Ionicons name={opt.icon as any} size={20} color={color} />;
           })()}
-          <Text style={[styles.optionText, { color: c.foreground }, isSelected && styles.optionTextSelected]}>
+          <Text style={[styles.optionText, { color: isSelected ? c.primary : c.foreground }, isSelected && styles.optionTextSelected]}>
             {opt.label}
           </Text>
         </View>
@@ -209,6 +209,5 @@ const styles = StyleSheet.create({
   },
   optionTextSelected: {
     ...typography.bodyBold,
-    color: '#7BA823',
   },
 });

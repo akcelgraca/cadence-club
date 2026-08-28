@@ -1,7 +1,7 @@
 import React, { forwardRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import Svg, { Path } from "react-native-svg";
 import RouteSketch, { LatLng } from "./RouteSketch";
+import { Logo } from "../common/Logo";
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -21,7 +21,12 @@ export interface ShareCardData {
   routeCoords: LatLng[];
 }
 
-const NEON = "#C8F31D";
+/**
+ * O verde da marca sobre fundo escuro. Era `#C8F31D` — um quinto verde que
+ * não estava em lado nenhum na paleta e que ninguém tinha reparado que
+ * divergia do resto.
+ */
+const NEON = "#9ED42F";
 
 /** Sombra suave para o texto se ler sobre stories claras e escuras. */
 const shadow = {
@@ -59,24 +64,20 @@ function Stat({ label, value, unit }: { label: string; value: string; unit?: str
   );
 }
 
-/** Logótipo Cadence Club — laço em SVG + wordmark. */
+/**
+ * Logótipo Cadence Club.
+ *
+ * Era aqui um desenho à parte — uma aproximação do laço antigo com o wordmark
+ * partido em "adence" + "Club" por cima. Passou a usar o componente da marca,
+ * que é o mesmo desenho dos ícones.
+ *
+ * A cor vai fixa e não pelo tema: o cartão é capturado por cima da fotografia
+ * de quem partilha, onde o verde escuro do tema claro desapareceria.
+ */
 function BrandLogo() {
   return (
     <View style={styles.logo}>
-      <Svg width={230} height={78} viewBox="0 0 230 78">
-        {/* Laço que envolve o wordmark, como no logótipo da marca */}
-        <Path
-          d="M112 12 C 60 6, 18 22, 30 40 C 42 58, 120 70, 178 62 C 214 57, 226 44, 196 36"
-          fill="none"
-          stroke={NEON}
-          strokeWidth={5}
-          strokeLinecap="round"
-        />
-      </Svg>
-      <View style={styles.logoText}>
-        <Text style={styles.logoLine}>adence</Text>
-        <Text style={styles.logoLine}>Club</Text>
-      </View>
+      <Logo size={54} color={NEON} />
     </View>
   );
 }
@@ -158,13 +159,6 @@ const styles = StyleSheet.create({
   route: { marginTop: 28, alignItems: "center" },
 
   logo: { marginTop: 28, alignItems: "center", justifyContent: "center" },
-  logoText: { position: "absolute", alignItems: "center" },
-  logoLine: {
-    fontFamily: "BarlowCondensed_900Black",
-    fontSize: 30,
-    lineHeight: 32,
-    color: NEON,
-  },
 });
 
 export default ShareActivityCard;

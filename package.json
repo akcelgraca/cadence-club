@@ -87,7 +87,8 @@
     "smtp:check": "node scripts/check-smtp.mjs",
     "env:check": "node scripts/check-env.mjs",
     "web:check": "node scripts/check-web.mjs",
-    "dns:check": "node scripts/check-dns.mjs"
+    "dns:check": "node scripts/check-dns.mjs",
+    "brand:build": "node scripts/build-brand-assets.mjs"
   },
   "jest": {
     "preset": "jest-expo",

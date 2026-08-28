@@ -15,8 +15,14 @@ import path from 'node:path';
 
 const raiz = path.resolve(__dirname, '../../..');
 
-/** Palavras que são marca, não texto traduzível. */
-const EXCECOES = new Set(['adence', 'Club']);
+/**
+ * Palavras que são marca, não texto traduzível.
+ *
+ * Eram `'adence'` e `'Club'` — o wordmark antigo vinha partido em duas, com a
+ * ponta do laço a fazer de C. Agora o nome aparece inteiro (`common/Logo.tsx`)
+ * e o cartão de partilha usa esse mesmo componente.
+ */
+const MARCA = new Set(['CADENCE', 'CLUB', 'Cadence Club']);
 
 function ficheirosDeEcra(): string[] {
   return execSync('find src -name "*.tsx" | grep -v "\\.test\\."', {
@@ -31,7 +37,7 @@ function pareceTexto(s: string): boolean {
   if (/^[\d\s.,:%°·—–-]+$/.test(s)) return false;    // só números e pontuação
   if (/^(km|m|kg|h|min|s|ft|mi|mph|bpm|@)$/i.test(s)) return false;
   if (!/[A-Za-zÀ-ÿ]{2}/.test(s)) return false;
-  return !EXCECOES.has(s);
+  return !MARCA.has(s);
 }
 
 /**
@@ -78,7 +84,7 @@ describe('texto fixo em propriedades', () => {
         // minúsculos ou camelCase, portanto a maiúscula chega para os separar.
         const pareceTextoHumano =
           /[áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]/.test(valor) || /^[A-ZÁÉÍÓÚ]/.test(valor);
-        if (pareceTextoHumano) encontrados.push(`${valor}  (${ficheiro})`);
+        if (pareceTextoHumano && !MARCA.has(valor)) encontrados.push(`${valor}  (${ficheiro})`);
       }
     }
 

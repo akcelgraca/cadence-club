@@ -15,7 +15,7 @@ export const lightColors = {
   scheme: 'light',
   background: '#FAFAFA',
   card: '#FFFFFF',
-  primary: '#7BA823',
+  primary: '#527F17',
   primaryForeground: '#FFFFFF',
   foreground: '#1a1a1a',
   mutedForeground: '#6b6b6b',
@@ -57,9 +57,9 @@ export const lightColors = {
  *   família do `primary`. Preto puro faz o conteúdo flutuar e, em OLED, torna
  *   o *smearing* do scroll bem visível.
  *
- * • **O verde da marca sobe.** O `#7BA823` do modo claro é escuro de mais para
+ * • **O verde da marca sobe.** O `#527F17` do modo claro é escuro de mais para
  *   fundo escuro. O `#9ED42F` é o mesmo verde com mais luz: dá 10,7:1 contra o
- *   fundo, contra os 2,7:1 que o original dá no modo claro.
+ *   fundo escuro, onde o do tema claro daria 3,9:1.
  *
  * • **O texto sobre o verde inverte-se.** Com o verde claro, o branco deixaria
  *   de se ler; o `primaryForeground` passa a ser a cor do fundo.

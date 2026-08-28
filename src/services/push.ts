@@ -49,7 +49,9 @@ export async function registerForPushNotifications(): Promise<string | null> {
         name: 'Notificacoes',
         importance: Notifications.AndroidImportance.HIGH,
         vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#c8f73a',
+        // O mesmo verde do `notification.color` do `app.json`. Estavam
+        // diferentes — este era `#c8f73a`, que não existia na paleta.
+        lightColor: '#527F17',
       });
     }
 

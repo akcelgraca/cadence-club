@@ -1,0 +1,24 @@
+<!--
+  Cadence Club — símbolo.
+
+  Um C aberto à direita, com o traçado do batimento cardíaco no interior.
+  A app mede mesmo frequência cardíaca (`src/utils/heartRate.ts`, zonas de
+  treino, FC média e máxima por atividade); o símbolo aponta para algo que
+  existe.
+
+  Esta geometria é a mesma que está em `scripts/build-brand-assets.mjs`, que
+  gera os PNG. Mexer aqui obriga a mexer lá — e a correr `npm run brand:build`.
+
+  Grelha 100×100. A marca ocupa 77 (o círculo exterior do C), centrada.
+  `currentColor` de propósito: quem usa escolhe a cor.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <title>Cadence Club</title>
+  <!-- O C: arco de 274°, deixando um vão de 86° à direita -->
+  <path d="M 74.136 72.505 A 33 33 0 1 1 74.136 27.495"
+        fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round"/>
+  <!-- A batida: seis pontos, nem mais um — cada vértice extra fecha-se aos 34 px -->
+  <path d="M 32 50 H 42 L 48 38 L 55 62 L 60 50 H 68"
+        fill="none" stroke="currentColor" stroke-width="8"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

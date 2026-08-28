@@ -1,0 +1,29 @@
+<!--
+  Cadence Club — assinatura completa (símbolo + nome).
+
+  O nome usa Barlow Condensed 700, que é a mesma letra dos títulos da app
+  (`typography.headline` em `src/lib/theme.ts`). As duas palavras levam o mesmo
+  peso e a mesma cor: são uma marca só, não duas.
+
+  ATENÇÃO: o texto aqui é texto vivo, não contornos — esta máquina não tem
+  nenhuma ferramenta de fontes instalada para o converter. Abre bem em quem
+  tiver Barlow Condensed; para lojas, imprensa ou gráfica é preciso passar o
+  texto a curvas primeiro. Dentro da app o problema não existe: o componente
+  `src/components/common/Logo.tsx` usa a fonte já carregada.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 100" width="330" height="100">
+  <title>Cadence Club</title>
+  <g>
+    <path d="M 74.136 72.505 A 33 33 0 1 1 74.136 27.495"
+          fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round"/>
+    <path d="M 32 50 H 42 L 48 38 L 55 62 L 60 50 H 68"
+          fill="none" stroke="currentColor" stroke-width="8"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="104" y="45" fill="currentColor"
+        font-family="Barlow Condensed, BarlowCondensed, sans-serif"
+        font-weight="700" font-size="40" letter-spacing="2.4">CADENCE</text>
+  <text x="104" y="83" fill="currentColor"
+        font-family="Barlow Condensed, BarlowCondensed, sans-serif"
+        font-weight="700" font-size="40" letter-spacing="2.4">CLUB</text>
+</svg>
